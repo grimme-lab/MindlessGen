@@ -1,0 +1,13 @@
+# conda env create -f environment.yaml
+name: mlmgen
+channels:
+  - conda-forge
+dependencies:
+  - ruff
+  - coverage
+  - numpy
+  - pre-commit
+  - pytest
+  - tox
+  - pip:
+      - covdefaults

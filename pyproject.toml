@@ -1,0 +1,54 @@
+[build-system]
+requires = ["wheel", "setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlmgen"
+authors = [
+    { name = "Marcel Müller", email = "marcel.mueller@thch.uni-bonn.de" },
+]
+description = "MindLess Molecule GENerator"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE.md" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+dependencies = ["numpy"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "covdefaults",
+    "coverage",
+    "pre-commit",
+    "pytest",
+    "tox",
+    "setuptools_scm>=8",
+]
+
+[project.scripts]
+mlmgen = "mlmgen:console_entry_point"
+
+[tool.setuptools_scm]
+version_file = "src/mlmgen/__version__.py"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+plugins = ["covdefaults"]
+source = ["./src"]
+
+[tool.coverage.report]
+fail_under = 50
