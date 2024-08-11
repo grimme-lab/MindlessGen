@@ -16,35 +16,12 @@ on:
       - "*.rst"
   workflow_dispatch:
 jobs:
-  # Run linting with ruff
-  ruff:
+  # Run linting and formatting with and static type checking with mypy
+  static-tests:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12"]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install ruff
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff==0.5.7
-      - name: Run ruff linting
-        run: ruff check --no-fix
-      - name: Run ruff format
-        run: ruff format --check
-        # Run static type checking with mypy
-  mypy:
-    needs: ruff
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -57,11 +34,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+      - name: Run ruff linting
+        run: ruff check --no-fix
+      - name: Run ruff format
+        run: ruff format --check
       - name: Run mypy
         run: mypy .
   # Run unittests with tox
   tox:
-    needs: mypy
+    needs: static-tests
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
