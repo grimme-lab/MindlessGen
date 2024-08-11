@@ -28,6 +28,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = [
     "ruff",
+    "mypy",
     "covdefaults",
     "coverage",
     "pre-commit",

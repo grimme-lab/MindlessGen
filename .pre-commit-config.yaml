@@ -1,39 +1,35 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-shebang-scripts-are-executable
-  - id: check-toml
-  - id: check-yaml
-  - id: check-added-large-files
-  - id: debug-statements
-    language_version: python3
-
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.5.7
-  hooks:
-  # Run the linter.
-  - id: ruff
-    types_or: [ python, pyi, jupyter ]
-    args: [ --fix ]
-  # Run the formatter.
-  - id: ruff-format
-    types_or: [ python, pyi, jupyter ]
-
-- repo: https://github.com/asottile/pyupgrade
-  rev: v3.17.0
-  hooks:
-  - id: pyupgrade
-
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.11.1
-  hooks:
-  - id: mypy
-
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-shebang-scripts-are-executable
+      - id: check-toml
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: debug-statements
+        language_version: python3
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.5.7
+    hooks:
+      # Run the linter.
+      - id: ruff
+        types_or: [python, pyi, jupyter]
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.17.0
+    hooks:
+      - id: pyupgrade
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
 default_language_version:
-    python: python3.12
+  python: python3.12
