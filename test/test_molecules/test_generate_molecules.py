@@ -16,7 +16,7 @@ def test_generate_molecule() -> None:
     mol = generate_molecule()
 
     assert mol.num_atoms > 0
-    assert mol.num_atoms == np.sum(mol.ati)
+    assert mol.num_atoms == np.sum(mol.atlist)
     assert mol.num_atoms == len(mol.xyz)
     # assert that sum of absolute value of mol.xyz is greater than 0
     assert np.sum(np.abs(mol.xyz)) > 0

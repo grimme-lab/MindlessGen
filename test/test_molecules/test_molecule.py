@@ -18,7 +18,7 @@ def test_generate_molecule() -> None:
     mol = generate_molecule()
 
     assert mol.num_atoms > 0
-    assert mol.num_atoms == np.sum(mol.ati)
+    assert mol.num_atoms == np.sum(mol.atlist)
     assert mol.num_atoms == len(mol.xyz)
     # assert that sum of absolute value of mol.xyz is greater than 0
     assert np.sum(np.abs(mol.xyz)) > 0
@@ -104,12 +104,12 @@ def test_xyz_property(xyz_value, expected_exception):
 def test_ati_property():
     mol = Molecule()
     # create an empty array with dimension 1 and length 86
-    mol.ati = np.zeros(102, dtype=int)
-    assert mol.ati.shape == (102,)
+    mol.atlist = np.zeros(102, dtype=int)
+    assert mol.atlist.shape == (102,)
 
     # set the first element to 4 and the sixth element to 2
-    mol.ati[0] = 4
-    mol.ati[5] = 2
+    mol.atlist[0] = 4
+    mol.atlist[5] = 2
 
     # generate the sum formula, which should be 'C4H2'
     assert mol.sum_formula() == "C2H4"

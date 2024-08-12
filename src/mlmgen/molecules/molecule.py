@@ -151,8 +151,9 @@ class Molecule:
         self._num_atoms: int | None = None
         self._charge: int | None = None
         self._uhf: int | None = None
-        self._ati: np.ndarray = np.array([], dtype=int)
+        self._atlist: np.ndarray = np.array([], dtype=int)
         self._xyz: np.ndarray = np.array([], dtype=float)
+        self._ati: np.ndarray = np.array([], dtype=int)
 
     def __str__(self) -> str:
         """
@@ -167,10 +168,12 @@ class Molecule:
             returnstr += f"total charge: {self.charge}\n"
         if self._uhf:
             returnstr += f"# unpaired electrons: {self.uhf}\n"
-        if self._ati.size:
-            returnstr += f"atomic numbers: {self.ati}\n"
+        if self._atlist.size:
+            returnstr += f"atomic numbers: {self.atlist}\n"
         if self._xyz.size:
             returnstr += f"atomic coordinates:\n{self.xyz}\n"
+        if self._ati.size:
+            returnstr += f"atomic number per index: {self._ati}\n"
         return returnstr
 
     def __repr__(self) -> str:
@@ -183,7 +186,7 @@ class Molecule:
             + f"num_atoms={self._num_atoms}, "
             + f"charge={self._charge}, "
             + f"uhf={self._uhf}, "
-            + f"ati={self._ati}, "
+            + f"atlist={self._atlist}, "
             + f"xyz={self._xyz})"
         )
         return returnstr
@@ -341,7 +344,7 @@ class Molecule:
         # raise an error if the number of atoms is not set
         if self._num_atoms is None:
             raise ValueError("Number of atoms not set.")
-        if not self._ati.size:
+        if not self._atlist.size:
             raise ValueError("Atomic numbers not set.")
         if not self._xyz.size:
             raise ValueError("Atomic coordinates not set.")
@@ -358,16 +361,16 @@ class Molecule:
                 )
 
     @property
-    def ati(self) -> np.ndarray:
+    def atlist(self) -> np.ndarray:
         """
         Get the atomic numbers of the molecule.
 
         :return: The atomic numbers of the molecule.
         """
-        return self._ati
+        return self._atlist
 
-    @ati.setter
-    def ati(self, value: np.ndarray):
+    @atlist.setter
+    def atlist(self, value: np.ndarray):
         """
         Set the atomic numbers of the molecule.
 
@@ -385,7 +388,7 @@ class Molecule:
             if value.shape[0] != self._num_atoms:
                 raise ValueError("Shape of array must be (num_atoms,).")
 
-        self._ati = value
+        self._atlist = value
 
     def sum_formula(self) -> str:
         """
@@ -395,10 +398,40 @@ class Molecule:
         sumformula = ""
         # begin with C, H, N, O (i.e., 6, 1, 7, 8)
         for i in [5, 0, 6, 7]:
-            if self._ati[i] > 0:
-                sumformula += PSE[i + 1] + str(self._ati[i])
+            if self._atlist[i] > 0:
+                sumformula += PSE[i + 1] + str(self.atlist[i])
         # Go through all entries of self._ati that are not zero
-        for elem, count in enumerate(self._ati):
+        for elem, count in enumerate(self.atlist):
             if elem not in [5, 0, 6, 7] and count > 0:
-                sumformula += PSE[elem + 1] + str(self._ati[elem])
+                sumformula += PSE[elem + 1] + str(self.atlist[elem])
         return sumformula
+
+    @property
+    def ati(self) -> np.ndarray:
+        """
+        Get the atomic number per index of the molecule.
+
+        :return: The atomic number per index of the molecule.
+        """
+        return self._ati
+
+    @ati.setter
+    def ati(self, value: np.ndarray):
+        """
+        Set the atomic number per index of the molecule.
+
+        :param value: The atomic number per index to set.
+        :raise TypeError: If the value is not a numpy array.
+        :raise ValueError: If the shape of the array is not (num_atoms,).
+        """
+        if not isinstance(value, np.ndarray):
+            raise TypeError("Numpy array expected.")
+        # check if array has the right shape
+        if value.ndim != 1:
+            raise ValueError("Array must have one dimension.")
+        # if num_atoms is set, check if the array has the right length
+        if self._num_atoms:
+            if value.shape[0] != self._num_atoms:
+                raise ValueError("Shape of array must be (num_atoms,).")
+
+        self._ati = value

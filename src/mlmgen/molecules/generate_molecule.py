@@ -15,9 +15,9 @@ def generate_molecule(verbosity: int = 1) -> Molecule:
     """
 
     mol = Molecule()
-    mol.ati = generate_atom_list(verbosity)
-    mol.num_atoms = np.sum(mol.ati)
-    mol.xyz = generate_coordinates(mol.ati, 3.0, 1.2)
+    mol.atlist = generate_atom_list(verbosity)
+    mol.num_atoms = np.sum(mol.atlist)
+    mol.xyz, mol.ati = generate_coordinates(mol.atlist, 3.0, 1.2)
 
     # if verbosity > 0, print the molecule and its sum formula
     if verbosity > 0:
@@ -93,16 +93,20 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
     natoms = np.zeros(102, dtype=int)
 
     # Generating random atoms from whole PSE if no input file is found
+    # Add random elements from the whole PSE
+    # Define the number of atom types to be added
     numatoms_all = np.random.randint(0, 3)
-    for _ in range(1, numatoms_all + 1):
-        ati = np.random.randint(0, 85)
+    for _ in range(numatoms_all):
+        # Define the atom type to be added
+        ati = np.random.randint(0, 86)
         while (ati + 1) in not_included:
-            ati = np.random.randint(0, 85)
+            ati = np.random.randint(0, 86)
+        # Add a random number of atoms of the defined type
         natoms[ati] = natoms[ati] + np.random.randint(0, 3)
 
     # Add Elements between B and F (5-9)
-    for _ in range(1, 5):
-        i = np.random.randint(4, 9)
+    for _ in range(5):
+        i = np.random.randint(4, 10)
         natoms[i] = natoms[i] + np.random.randint(0, 3)
 
     # If no H is included, add H atoms
@@ -124,40 +128,45 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
 
 def generate_coordinates(
     at: np.ndarray, scaling: float, dist_threshold: float
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
     """
 
     # eff_scaling is a deep copy of scaling
     eff_scaling = copy.deepcopy(scaling)
-    xyz = generate_random_coordinates(at)
+    xyz, ati = generate_random_coordinates(at)
     xyz = xyz * eff_scaling
     # do while check_distances is False
     while not check_distances(xyz, dist_threshold):
-        xyz = generate_random_coordinates(at)
+        xyz, ati = generate_random_coordinates(at)
         eff_scaling = eff_scaling * 1.3
         xyz = xyz * eff_scaling
 
-    return xyz
+    return xyz, ati
 
 
-def generate_random_coordinates(at: np.ndarray) -> np.ndarray:
+def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
     """
+    atilist: list[int] = []
     xyz = np.zeros((sum(at), 3))
     numatoms = 0
-    for k, i in enumerate(at):
-        for m in range(i):
+    for elem, count in enumerate(at):
+        for m in range(count):
             # different rules for hydrogen
-            if k == 0:
+            if elem == 0:
                 xyz[numatoms + m, :] = np.random.rand(3) * 3 - 1.5
             else:
                 xyz[numatoms + m, :] = np.random.rand(3) * 2 - 1
-        numatoms += i
+            atilist.append(elem)
 
-    return xyz
+        numatoms += count
+
+    ati = np.array(atilist, dtype=int)
+
+    return xyz, ati
 
 
 def check_distances(xyz: np.ndarray, threshold: float) -> bool:
