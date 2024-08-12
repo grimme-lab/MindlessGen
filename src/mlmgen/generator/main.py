@@ -8,13 +8,14 @@ from __future__ import annotations
 from ..molecules import generate_molecule
 
 
-def generator(input: str | None = None, verbosity: int | None = 1) -> int:
+def generator(input: str | None = None, verbosity: int = 1) -> int:
     """
     Generate a molecule.
     """
-    if input is not None:
+    if input:
         print(f"Input file: {input}")
     else:
-        natoms = generate_molecule(verbosity)
-    print(f"Generated molecule:\n{natoms}")
+        mol = generate_molecule(verbosity)
+        mol.write_xyz_to_file("molecule.xyz")
+
     return 0

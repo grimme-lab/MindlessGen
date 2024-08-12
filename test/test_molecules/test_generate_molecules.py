@@ -6,27 +6,20 @@ from __future__ import annotations
 
 import numpy as np
 
-from mlmgen.molecules import generate_molecule
-
-
-# @pytest.mark.parametrize("value", [1.0, 2, -3.0])
-# def test_squarer(value: int | float) -> None:
-#     expected = value * value
-#     actual = generator(value)
-#
-#     assert pytest.approx(expected) == actual
+from mlmgen.molecules import generate_molecule  # type: ignore
 
 
 def test_generate_molecule() -> None:
     """
     Test the generation of an array of atomic numbers.
     """
-    natoms = generate_molecule()
+    mol = generate_molecule()
 
-    # assert that the array has this shape: natoms = np.zeros(87, dtype=int)
-    assert natoms.shape == (87,)
-    assert natoms.dtype == int
-    assert np.sum(natoms) > 0
+    assert mol.num_atoms > 0
+    assert mol.num_atoms == np.sum(mol.ati)
+    assert mol.num_atoms == len(mol.xyz)
+    # assert that sum of absolute value of mol.xyz is greater than 0
+    assert np.sum(np.abs(mol.xyz)) > 0
 
 
 def test_dummy() -> None:
