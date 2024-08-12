@@ -220,7 +220,7 @@ class Molecule:
 
         :return: The number of atoms in the molecule.
         """
-        if self._num_atoms:
+        if self._num_atoms is not None:
             return self._num_atoms
         else:
             if self._atlist.size:
@@ -258,7 +258,7 @@ class Molecule:
 
         :return: The charge of the molecule.
         """
-        if self._charge:
+        if self._charge is not None:
             return self._charge
         else:
             raise ValueError("Charge not set.")
@@ -285,7 +285,7 @@ class Molecule:
 
         :return: The UHF of the molecule.
         """
-        if self._uhf:
+        if self._uhf is not None:
             return self._uhf
         else:
             raise ValueError("UHF not set.")
@@ -369,6 +369,10 @@ class Molecule:
                     + f"{self.xyz[i, 1]:>12.7f} "
                     + f"{self.xyz[i, 2]:>12.7f}\n"
                 )
+        # if the charge is set, write it to a '.CHRG' file
+        if self._charge is not None:
+            with open(".CHRG", "w", encoding="utf8") as f:
+                f.write(f"{self.charge}\n")
 
     @property
     def atlist(self) -> np.ndarray:
@@ -405,7 +409,8 @@ class Molecule:
         """
         Get the sum formula of the molecule.
         """
-
+        if not self._atlist.size:
+            raise ValueError("Atomic numbers not set.")
         sumformula = ""
         # begin with C, H, N, O (i.e., 6, 1, 7, 8)
         for i in [5, 0, 6, 7]:

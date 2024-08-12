@@ -18,6 +18,7 @@ def generate_molecule(verbosity: int = 1) -> Molecule:
     mol.atlist = generate_atom_list(verbosity)
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(mol.atlist, 3.0, 1.2)
+    mol.charge = set_charge(mol.ati)
 
     # if verbosity > 0, print the molecule and its sum formula
     if verbosity > 0:
@@ -27,80 +28,111 @@ def generate_molecule(verbosity: int = 1) -> Molecule:
     return mol
 
 
+def set_charge(ati: np.ndarray) -> int:
+    """
+    Set the charge of a molecule so that unpaired electrons are avoided.
+    """
+    nel = int(sum(ati))
+    iseven = False
+    if nel % 2 == 0:
+        iseven = True
+    # if the number of electrons is even, the charge is -2, 0, or 2
+    # if the number of electrons is odd, the charge is -1, 1
+    randint = np.random.rand()
+    if iseven:
+        if randint < 1 / 3:
+            charge = -2
+        elif randint < 2 / 3:
+            charge = 0
+        else:
+            charge = 2
+    else:
+        if randint < 0.5:
+            charge = -1
+        else:
+            charge = 1
+    return charge
+
+
 def generate_atom_list(verbosity: int = 1) -> np.ndarray:
     """
     Generate a random molecule with a random number of atoms.
     """
-    not_included = (
-        1,
-        2,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        18,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        36,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        54,
-        57,
-        58,
-        59,
-        60,
-        61,
-        62,
-        63,
-        64,
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74,
-        75,
-        76,
-        77,
-        78,
-        79,
-        80,
-        86,
-    )
+    not_included = ()
+    # not_included = (
+    #     1,
+    #     2,
+    #     5,
+    #     6,
+    #     7,
+    #     8,
+    #     9,
+    #     10,
+    #     18,
+    #     21,
+    #     22,
+    #     23,
+    #     24,
+    #     25,
+    #     26,
+    #     27,
+    #     28,
+    #     29,
+    #     30,
+    #     36,
+    #     39,
+    #     40,
+    #     41,
+    #     42,
+    #     43,
+    #     44,
+    #     45,
+    #     46,
+    #     47,
+    #     48,
+    #     54,
+    #     57,
+    #     58,
+    #     59,
+    #     60,
+    #     61,
+    #     62,
+    #     63,
+    #     64,
+    #     65,
+    #     66,
+    #     67,
+    #     68,
+    #     69,
+    #     70,
+    #     71,
+    #     72,
+    #     73,
+    #     74,
+    #     75,
+    #     76,
+    #     77,
+    #     78,
+    #     79,
+    #     80,
+    #     86,
+    # )
 
     natoms = np.zeros(102, dtype=int)
 
     # Generating random atoms from whole PSE if no input file is found
     # Add random elements from the whole PSE
     # Define the number of atom types to be added
-    numatoms_all = np.random.randint(0, 3)
+    numatoms_all = np.random.randint(1, 4)
     for _ in range(numatoms_all):
         # Define the atom type to be added
         ati = np.random.randint(0, 86)
-        while (ati + 1) in not_included:
+        if verbosity > 1:
+            print(f"Adding atom type {ati}...")
+        while ati + 1 in not_included:
             ati = np.random.randint(0, 86)
+            if verbosity > 1:
+                print(f"Adding atom type {ati}...")
         # Add a random number of atoms of the defined type
         natoms[ati] = natoms[ati] + np.random.randint(0, 3)
 
@@ -111,17 +143,27 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
 
     # If no H is included, add H atoms
     if natoms[0] == 0:
-        natoms[0] = np.random.randint(0, 3)
+        nat = np.sum(natoms)
+        minnat = min(nat, 10)
+        randint = np.random.rand()
+        j = 1 + int(randint * minnat * 1.2)
+        natoms[0] = natoms[0] + j
 
-    # # > If too many metals are included, restart generation
-    # metals = (3, 4, 11, 12, 19, 20, 37, 38, 55, 56)
-    # nmetals = 0
-    # for i in metals:
-    #     if natoms[i] > 0:
-    #         nmetals += 1
-    # if nmetals > 3:
-    #     print("Too many metals. Restarting...")
-    #     generate_molecule(natoms)
+    # > If too many metals are included, restart generation
+    metals = (3, 4, 11, 12, 19, 20, 37, 38, 55, 56)
+    nmetals = 0
+    for i in metals:
+        if natoms[i] > 0:
+            nmetals += 1
+    if nmetals > 3:
+        # reduce number of metals starting from 3, going to 56
+        while nmetals > 3:
+            for i in metals:
+                if natoms[i] > 0:
+                    natoms[i] = natoms[i] - 1
+                    nmetals -= 1
+                if nmetals == 3:
+                    break
 
     return natoms
 

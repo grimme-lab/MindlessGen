@@ -14,7 +14,7 @@ def test_generate_molecule() -> None:
     """
     Test the generation of an array of atomic numbers.
     """
-    mol = generate_molecule()
+    mol = generate_molecule(verbosity=0)
 
     assert mol.num_atoms > 0
     assert mol.num_atoms == np.sum(mol.atlist)
