@@ -101,7 +101,7 @@ def test_xyz_property(xyz_value, expected_exception):
         np.testing.assert_array_equal(mol.xyz, xyz_value)
 
 
-def test_ati_property():
+def test_atlist_property():
     mol = Molecule()
     # create an empty array with dimension 1 and length 86
     mol.atlist = np.zeros(102, dtype=int)
@@ -113,6 +113,25 @@ def test_ati_property():
 
     # generate the sum formula, which should be 'C4H2'
     assert mol.sum_formula() == "C2H4"
+
+
+@pytest.mark.parametrize(
+    "ati_value, num_atoms_value, expected_exception",
+    [
+        (np.array([1, 6]), 2, None),  # Valid array
+        ([1, 6], 2, TypeError),  # Invalid type (list instead of numpy array)
+        (np.array([1, 6, 8]), 2, ValueError),  # Invalid shape (length mismatch)
+    ],
+)
+def test_ati_property(ati_value, num_atoms_value, expected_exception):
+    mol = Molecule()
+    mol.num_atoms = num_atoms_value
+    if expected_exception:
+        with pytest.raises(expected_exception):
+            mol.ati = ati_value
+    else:
+        mol.ati = ati_value
+        np.testing.assert_array_equal(mol.ati, ati_value)
 
 
 def test_dummy() -> None:

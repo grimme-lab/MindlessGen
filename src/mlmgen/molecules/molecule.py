@@ -220,9 +220,19 @@ class Molecule:
 
         :return: The number of atoms in the molecule.
         """
-        if self._num_atoms is None:
-            raise ValueError("Number of atoms not set.")
-        return self._num_atoms
+        if self._num_atoms:
+            return self._num_atoms
+        else:
+            if self._atlist.size:
+                self.num_atoms = np.sum(self._atlist)
+            elif self._xyz.size:
+                self.num_atoms = len(self._xyz)
+            elif self._ati.size:
+                self.num_atoms = len(self._ati)
+            if self._num_atoms:
+                return self._num_atoms
+            else:
+                raise ValueError("Number of atoms not present and could not be set.")
 
     @num_atoms.setter
     # can be either int or numpy.int64
@@ -363,16 +373,17 @@ class Molecule:
     @property
     def atlist(self) -> np.ndarray:
         """
-        Get the atomic numbers of the molecule.
+        Get the initial array with the len 103 (number of elements in the periodic table)
+        with the number of atoms of each element.
 
-        :return: The atomic numbers of the molecule.
+        :return: The array with the number of atoms of each element.
         """
         return self._atlist
 
     @atlist.setter
     def atlist(self, value: np.ndarray):
         """
-        Set the atomic numbers of the molecule.
+        Set the array with the number of atoms of each element.
 
         :param value: The atomic numbers to set.
         :raise TypeError: If the value is not a numpy array.
@@ -418,7 +429,7 @@ class Molecule:
     @ati.setter
     def ati(self, value: np.ndarray):
         """
-        Set the atomic number per index of the molecule.
+        Set the atomic number per atom in the molecule.
 
         :param value: The atomic number per index to set.
         :raise TypeError: If the value is not a numpy array.
