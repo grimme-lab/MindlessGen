@@ -5,6 +5,6 @@ Math
 This module contains all mathematical functions.
 """
 
-from .calc import square_a_number
+from .main import generator
 
-__all__ = ["square_a_number"]
+__all__ = ["generator"]
