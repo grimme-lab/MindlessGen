@@ -3,17 +3,13 @@ Test the xtb interface.
 """
 
 from __future__ import annotations
-
 import pytest
-
 import numpy as np
-
-# mark all tests as optional as they depend on the availability of xtb
-
 from mlmgen.qm import XTB, get_xtb_path  # type: ignore
 from mlmgen.molecules import Molecule  # type: ignore
 
 
+# mark all tests as optional as they depend on the availability of xtb
 # test the XTB optimizer using the ethanol molecule
 @pytest.mark.optional
 def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:

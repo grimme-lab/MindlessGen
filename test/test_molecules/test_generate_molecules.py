@@ -3,9 +3,7 @@ Test the squaring function.
 """
 
 from __future__ import annotations
-
 import numpy as np
-
 from mlmgen.molecules import generate_molecule, generate_coordinates  # type: ignore
 from mlmgen.molecules.molecule import Molecule  # type: ignore
 

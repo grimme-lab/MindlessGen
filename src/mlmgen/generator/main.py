@@ -3,17 +3,19 @@ Mathematical functions.
 """
 
 from __future__ import annotations
-
-
 from ..molecules import generate_molecule
 from ..qm import XTB, get_xtb_path
+
+try:
+    xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+except ImportError as e:
+    raise ImportError("xtb not found.") from e
 
 
 def generator(input: str | None = None, verbosity: int = 1) -> int:
     """
     Generate a molecule.
     """
-    xtb_path = get_xtb_path(["xtb_dev", "xtb"])
     if xtb_path:
         xtb = XTB(xtb_path, verbosity)
     else:

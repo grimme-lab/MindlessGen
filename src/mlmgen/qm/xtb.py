@@ -5,9 +5,7 @@ This module handles all xtb-related functionality.
 import subprocess as sp
 from pathlib import Path
 import shutil
-
 from tempfile import TemporaryDirectory
-
 from ..molecules import Molecule
 
 
@@ -99,5 +97,4 @@ def get_xtb_path(binary_names: list[str]) -> Path | None:
         if which_xtb:
             xtb_path = Path(which_xtb)
             return xtb_path
-    print("xtb not found.")
-    return None
+    raise ImportError("'xtb' or 'xtb_dev' not found.")

@@ -3,9 +3,7 @@ This module generates a random molecule with a random number of atoms.
 """
 
 import copy
-
 import numpy as np
-
 from .molecule import Molecule
 
 

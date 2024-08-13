@@ -3,10 +3,8 @@ Test the squaring function.
 """
 
 from __future__ import annotations
-
 import numpy as np
 import pytest
-
 from mlmgen.molecules import generate_molecule  # type: ignore
 from mlmgen.molecules.molecule import Molecule  # type: ignore
 
