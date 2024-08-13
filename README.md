@@ -36,6 +36,10 @@ Before start to make changes in the code, activate the `pre-commit` hooks via:
 ```
 pre-commit install
 ```
+Before pushing a commit to the repository, please run also the optional tests, which depend on external dependencies like xtb, via
+```
+pytest -vv --optional
+```
 
 ## Usage
 
