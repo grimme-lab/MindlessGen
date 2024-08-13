@@ -14,19 +14,13 @@ from mlmgen.qm import XTB, get_xtb_path  # type: ignore
 from mlmgen.molecules import Molecule  # type: ignore
 
 
-xtb_path = get_xtb_path(["xtb_dev", "xtb"])
-if xtb_path:
-    xtb = XTB(xtb_path, 2)
-else:
-    raise RuntimeError("xtb not found.")
-
-
 # test the XTB optimizer using the ethanol molecule
 @pytest.mark.optional
 def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:
     """
     Test the optimization of ethanol with xtb.
     """
+    xtb_path = get_xtb_path(["xtb_dev", "xtb"])
     if xtb_path:
         xtb = XTB(xtb_path)
     else:
