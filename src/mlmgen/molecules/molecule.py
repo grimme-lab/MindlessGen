@@ -370,8 +370,9 @@ class Molecule:
                     + f"{self.xyz[i, 2]:>12.7f}\n"
                 )
         # if the charge is set, write it to a '.CHRG' file
+        parent_dir = Path(filename).resolve().parent
         if self._charge is not None:
-            with open(".CHRG", "w", encoding="utf8") as f:
+            with open(parent_dir / ".CHRG", "w", encoding="utf8") as f:
                 f.write(f"{self.charge}\n")
 
     def read_xyz_from_file(self, filename: str | Path):

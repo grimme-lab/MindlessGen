@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
-dependencies = ["numpy"]
+dependencies = ["numpy", "networkx"]
 dynamic = ["version"]
 
 [project.optional-dependencies]

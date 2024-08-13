@@ -5,6 +5,7 @@ This module generates a random molecule with a random number of atoms.
 import copy
 import numpy as np
 from .molecule import Molecule
+from .miscellaneous import set_random_charge
 
 
 def generate_random_molecule(verbosity: int = 1) -> Molecule:
@@ -16,7 +17,7 @@ def generate_random_molecule(verbosity: int = 1) -> Molecule:
     mol.atlist = generate_atom_list(verbosity)
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(mol.atlist, 3.0, 1.2)
-    mol.charge = set_charge(mol.ati)
+    mol.charge = set_random_charge(mol.ati)
 
     # if verbosity > 0, print the molecule and its sum formula
     if verbosity > 0:
@@ -24,32 +25,6 @@ def generate_random_molecule(verbosity: int = 1) -> Molecule:
         print(mol.sum_formula())
 
     return mol
-
-
-def set_charge(ati: np.ndarray) -> int:
-    """
-    Set the charge of a molecule so that unpaired electrons are avoided.
-    """
-    nel = int(sum(ati))
-    iseven = False
-    if nel % 2 == 0:
-        iseven = True
-    # if the number of electrons is even, the charge is -2, 0, or 2
-    # if the number of electrons is odd, the charge is -1, 1
-    randint = np.random.rand()
-    if iseven:
-        if randint < 1 / 3:
-            charge = -2
-        elif randint < 2 / 3:
-            charge = 0
-        else:
-            charge = 2
-    else:
-        if randint < 0.5:
-            charge = -1
-        else:
-            charge = 1
-    return charge
 
 
 def generate_atom_list(verbosity: int = 1) -> np.ndarray:
@@ -121,7 +96,7 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
     # Generating random atoms from whole PSE if no input file is found
     # Add random elements from the whole PSE
     # Define the number of atom types to be added
-    numatoms_all = np.random.randint(1, 6)
+    numatoms_all = np.random.randint(1, 7)
     for _ in range(numatoms_all):
         # Define the atom type to be added
         ati = np.random.randint(0, 86)
