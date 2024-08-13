@@ -5,11 +5,16 @@ Molecule-related helper tools.
 import numpy as np
 
 
-def set_random_charge(ati: np.ndarray) -> int:
+def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> int:
     """
     Set the charge of a molecule so that unpaired electrons are avoided.
     """
-    nel = int(sum(ati))
+    # go through all ati and its own value + 1 to get the number of protons
+    nel = 0
+    for atom in ati:
+        nel += atom + 1
+    if verbosity > 1:
+        print(f"Number of protons in molecule: {nel}")
     iseven = False
     if nel % 2 == 0:
         iseven = True

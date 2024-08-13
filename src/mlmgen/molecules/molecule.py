@@ -162,11 +162,11 @@ class Molecule:
         returnstr: str = ""
         if self._name:
             returnstr += f"Molecule: {self.name}\n"
-        if self._num_atoms:
+        if self._num_atoms is not None:
             returnstr += f"# atoms: {self.num_atoms}\n"
-        if self._charge:
+        if self._charge is not None:
             returnstr += f"total charge: {self.charge}\n"
-        if self._uhf:
+        if self._uhf is not None:
             returnstr += f"# unpaired electrons: {self.uhf}\n"
         if self._atlist.size:
             returnstr += f"atomic numbers: {self.atlist}\n"
@@ -336,7 +336,7 @@ class Molecule:
         """
         print(self._xyz)
 
-    def write_xyz_to_file(self, filename: str):
+    def write_xyz_to_file(self, filename: str | Path):
         """
         Write the XYZ coordinates of the molecule to a file.
 
@@ -358,6 +358,9 @@ class Molecule:
             raise ValueError("Atomic numbers not set.")
         if not self._xyz.size:
             raise ValueError("Atomic coordinates not set.")
+
+        if not isinstance(filename, Path):
+            filename = Path(filename).resolve()
 
         with open(filename, "w", encoding="utf8") as f:
             f.write(f"{self.num_atoms}\n")

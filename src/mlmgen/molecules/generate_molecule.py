@@ -17,7 +17,7 @@ def generate_random_molecule(verbosity: int = 1) -> Molecule:
     mol.atlist = generate_atom_list(verbosity)
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(mol.atlist, 3.0, 1.2)
-    mol.charge = set_random_charge(mol.ati)
+    mol.charge = set_random_charge(mol.ati, verbosity)
 
     # if verbosity > 0, print the molecule and its sum formula
     if verbosity > 0:

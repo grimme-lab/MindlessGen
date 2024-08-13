@@ -1,9 +1,11 @@
 from pathlib import Path
-import networkx as nx
+import networkx as nx  # type: ignore
 import numpy as np
 from ..qm.base import QMMethod
 from .molecule import Molecule
 from .miscellaneous import set_random_charge
+
+COV_RADII = "pyykko"
 
 
 def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule:
@@ -19,10 +21,9 @@ def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule
             Path(f"fragment_{i}").mkdir(exist_ok=True)
             fragmol.write_xyz_to_file(f"fragment_{i}/fragment_{i}.xyz")
 
-    # return first fragment
-    if verbosity > 1:
-        print(f"Returning fragment 0: {fragmols[0]}")
-    return fragmols[0]
+    optfragmol = engine.optimize(fragmols[0])
+
+    return optfragmol
 
 
 def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
@@ -47,8 +48,10 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
     for i in range(mol.num_atoms - 1):
         for j in range(i + 1, mol.num_atoms):
             distance = np.linalg.norm(mol.xyz[i] - mol.xyz[j])
-            sum_radii = get_cov_radii(mol.ati[i]) + get_cov_radii(mol.ati[j])
-            if distance <= sum_radii * 0.9:
+            sum_radii = get_cov_radii(mol.ati[i], COV_RADII) + get_cov_radii(
+                mol.ati[j], COV_RADII
+            )
+            if distance <= sum_radii * 1:
                 graph.add_edge(i, j)
 
     # Detect connected components (fragments)
@@ -58,9 +61,9 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
 
     # Generate a Molecule object for each fragment
     fragment_molecules = []
-    for fragment in fragments:
+    for counter, fragment in enumerate(fragments):
         if verbosity > 1:
-            print(f"Fragment: {fragment}")
+            print(f"Fragment: {counter}:\n{fragment}")
         fragment_molecule = mol.copy()
         # Update the number of atoms
         fragment_molecule.num_atoms = len(fragment)
@@ -73,7 +76,7 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
         for atom in fragment_molecule.ati:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
-        fragment_molecule.charge = set_random_charge(fragment_molecule.ati)
+        fragment_molecule.charge = set_random_charge(fragment_molecule.ati, verbosity)
         if verbosity > 1:
             print(f"Fragment molecule: {fragment_molecule}")
         # Append the fragment molecule to the list
@@ -82,104 +85,233 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
     return fragment_molecules
 
 
-def get_cov_radii(at: int) -> float:
+def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
     """
     D3 covalent radii.
     """
-    rcov = [
-        0.80628308,
-        1.15903197,
-        3.02356173,
-        2.36845659,
-        1.94011865,
-        1.88972601,
-        1.78894056,
-        1.58736983,
-        1.61256616,
-        1.68815527,
-        3.52748848,
-        3.14954334,
-        2.84718717,
-        2.62041997,
-        2.77159820,
-        2.57002732,
-        2.49443835,
-        2.41884923,
-        4.43455700,
-        3.88023730,
-        3.35111422,
-        3.07395437,
-        3.04875805,
-        2.77159820,
-        2.69600923,
-        2.62041997,
-        2.51963467,
-        2.49443835,
-        2.54483100,
-        2.74640188,
-        2.82199085,
-        2.74640188,
-        2.89757982,
-        2.77159820,
-        2.87238349,
-        2.94797246,
-        4.76210950,
-        4.20778980,
-        3.70386304,
-        3.50229216,
-        3.32591790,
-        3.12434702,
-        2.89757982,
-        2.84718717,
-        2.84718717,
-        2.72120556,
-        2.89757982,
-        3.09915070,
-        3.22513231,
-        3.17473967,
-        3.17473967,
-        3.09915070,
-        3.32591790,
-        3.30072128,
-        5.26603625,
-        4.43455700,
-        4.08180818,
-        3.70386304,
-        3.98102289,
-        3.95582657,
-        3.93062995,
-        3.90543362,
-        3.80464833,
-        3.82984466,
-        3.80464833,
-        3.77945201,
-        3.75425569,
-        3.75425569,
-        3.72905937,
-        3.85504098,
-        3.67866672,
-        3.45189952,
-        3.30072128,
-        3.09915070,
-        2.97316878,
-        2.92277614,
-        2.79679452,
-        2.82199085,
-        2.84718717,
-        3.32591790,
-        3.27552496,
-        3.27552496,
-        3.42670319,
-        3.30072128,
-        3.47709584,
-        3.57788113,
-        5.06446567,
-        4.56053862,
-        4.20778980,
-        3.98102289,
-        3.82984466,
-        3.85504098,
-        3.88023730,
-        3.90543362,
-    ]
-    return rcov[at]
+    if vdw_radii == "mlmgen":
+        rcov = [
+            0.80628308,
+            1.15903197,
+            3.02356173,
+            2.36845659,
+            1.94011865,
+            1.88972601,
+            1.78894056,
+            1.58736983,
+            1.61256616,
+            1.68815527,
+            3.52748848,
+            3.14954334,
+            2.84718717,
+            2.62041997,
+            2.77159820,
+            2.57002732,
+            2.49443835,
+            2.41884923,
+            4.43455700,
+            3.88023730,
+            3.35111422,
+            3.07395437,
+            3.04875805,
+            2.77159820,
+            2.69600923,
+            2.62041997,
+            2.51963467,
+            2.49443835,
+            2.54483100,
+            2.74640188,
+            2.82199085,
+            2.74640188,
+            2.89757982,
+            2.77159820,
+            2.87238349,
+            2.94797246,
+            4.76210950,
+            4.20778980,
+            3.70386304,
+            3.50229216,
+            3.32591790,
+            3.12434702,
+            2.89757982,
+            2.84718717,
+            2.84718717,
+            2.72120556,
+            2.89757982,
+            3.09915070,
+            3.22513231,
+            3.17473967,
+            3.17473967,
+            3.09915070,
+            3.32591790,
+            3.30072128,
+            5.26603625,
+            4.43455700,
+            4.08180818,
+            3.70386304,
+            3.98102289,
+            3.95582657,
+            3.93062995,
+            3.90543362,
+            3.80464833,
+            3.82984466,
+            3.80464833,
+            3.77945201,
+            3.75425569,
+            3.75425569,
+            3.72905937,
+            3.85504098,
+            3.67866672,
+            3.45189952,
+            3.30072128,
+            3.09915070,
+            2.97316878,
+            2.92277614,
+            2.79679452,
+            2.82199085,
+            2.84718717,
+            3.32591790,
+            3.27552496,
+            3.27552496,
+            3.42670319,
+            3.30072128,
+            3.47709584,
+            3.57788113,
+            5.06446567,
+            4.56053862,
+            4.20778980,
+            3.98102289,
+            3.82984466,
+            3.85504098,
+            3.88023730,
+            3.90543362,
+        ]
+        return rcov[at]
+    elif vdw_radii == "pyykko":
+        # Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197)
+        # Values for metals decreased by 10%
+        covalent_rad_2009 = [
+            0.32,
+            0.46,  # H, He
+            1.20,
+            0.94,
+            0.77,
+            0.75,
+            0.71,
+            0.63,
+            0.64,
+            0.67,  # Li-Ne
+            1.40,
+            1.25,
+            1.13,
+            1.04,
+            1.10,
+            1.02,
+            0.99,
+            0.96,  # Na-Ar
+            1.76,
+            1.54,  # K, Ca
+            1.33,
+            1.22,
+            1.21,
+            1.10,
+            1.07,  # Sc-
+            1.04,
+            1.00,
+            0.99,
+            1.01,
+            1.09,  # -Zn
+            1.12,
+            1.09,
+            1.15,
+            1.10,
+            1.14,
+            1.17,  # Ga-Kr
+            1.89,
+            1.67,  # Rb, Sr
+            1.47,
+            1.39,
+            1.32,
+            1.24,
+            1.15,  # Y-
+            1.13,
+            1.13,
+            1.08,
+            1.15,
+            1.23,  # -Cd
+            1.28,
+            1.26,
+            1.26,
+            1.23,
+            1.32,
+            1.31,  # In-Xe
+            2.09,
+            1.76,  # Cs, Ba
+            1.62,
+            1.47,
+            1.58,
+            1.57,
+            1.56,
+            1.55,
+            1.51,  # La-Eu
+            1.52,
+            1.51,
+            1.50,
+            1.49,
+            1.49,
+            1.48,
+            1.53,  # Gd-Yb
+            1.46,
+            1.37,
+            1.31,
+            1.23,
+            1.18,  # Lu-
+            1.16,
+            1.11,
+            1.12,
+            1.13,
+            1.32,  # -Hg
+            1.30,
+            1.30,
+            1.36,
+            1.31,
+            1.38,
+            1.42,  # Tl-Rn
+            2.01,
+            1.81,  # Fr, Ra
+            1.67,
+            1.58,
+            1.52,
+            1.53,
+            1.54,
+            1.55,
+            1.49,  # Ac-Am
+            1.49,
+            1.51,
+            1.51,
+            1.48,
+            1.50,
+            1.56,
+            1.58,  # Cm-No
+            1.45,
+            1.41,
+            1.34,
+            1.29,
+            1.27,  # Lr-
+            1.21,
+            1.16,
+            1.15,
+            1.09,
+            1.22,  # -Cn
+            1.36,
+            1.43,
+            1.46,
+            1.58,
+            1.48,
+            1.57,  # Nh-Og
+        ]
+        # D3 covalent radii used to construct the coordination number
+        covalent_rad_d3 = [4.0 / 3.0 * rad for rad in covalent_rad_2009]
+        return covalent_rad_d3[at]
+    else:
+        raise ValueError("Invalid vdw_radii argument.")
