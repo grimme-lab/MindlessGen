@@ -46,6 +46,8 @@ version_file = "src/mlmgen/__version__.py"
 [tool.pytest.ini_options]
 testpaths = ["test"]
 pythonpath = ["src"]
+# set marker for optional tests
+markers = "optional: mark test as optional"
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
