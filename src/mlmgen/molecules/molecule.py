@@ -398,7 +398,7 @@ class Molecule:
             self.ati = np.zeros(self.num_atoms, dtype=int)
             for i in range(self.num_atoms):
                 line = lines[i + 2].split()
-                self.ati[i] = PSE_NUMBERS[line[0].lower()]
+                self.ati[i] = PSE_NUMBERS[line[0].lower()] - 1
                 self.xyz[i, 0] = float(line[1])
                 self.xyz[i, 1] = float(line[2])
                 self.xyz[i, 2] = float(line[3])

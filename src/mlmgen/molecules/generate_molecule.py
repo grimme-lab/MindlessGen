@@ -121,7 +121,7 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
     # Generating random atoms from whole PSE if no input file is found
     # Add random elements from the whole PSE
     # Define the number of atom types to be added
-    numatoms_all = np.random.randint(1, 4)
+    numatoms_all = np.random.randint(1, 6)
     for _ in range(numatoms_all):
         # Define the atom type to be added
         ati = np.random.randint(0, 86)
