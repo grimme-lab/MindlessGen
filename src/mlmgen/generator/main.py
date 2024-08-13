@@ -33,28 +33,37 @@ def generator(inputdict: dict) -> int:
     else:
         raise NotImplementedError("Engine not implemented.")
 
-    #   _____                           _
-    #  / ____|                         | |
-    # | |  __  ___ _ __   ___ _ __ __ _| |_ ___  _ __
-    # | | |_ |/ _ \ '_ \ / _ \ '__/ _` | __/ _ \| '__|
-    # | |__| |  __/ | | |  __/ | | (_| | || (_) | |
-    #  \_____|\___|_| |_|\___|_|  \__,_|\__\___/|_|
+    for cycle in range(inputdict["max_cycles"]):
+        print(f"Cycle {cycle + 1}...")
+        #   _____                           _
+        #  / ____|                         | |
+        # | |  __  ___ _ __   ___ _ __ __ _| |_ ___  _ __
+        # | | |_ |/ _ \ '_ \ / _ \ '__/ _` | __/ _ \| '__|
+        # | |__| |  __/ | | |  __/ | | (_| | || (_) | |
+        #  \_____|\___|_| |_|\___|_|  \__,_|\__\___/|_|
 
-    if inputdict["input"]:
-        print(f"Input file: {input}")
-    else:
-        mol = generate_random_molecule(inputdict["verbosity"])
+        if inputdict["input"]:
+            print(f"Input file: {input}")
+        else:
+            mol = generate_random_molecule(inputdict["verbosity"])
 
-    #    ____        _   _           _
-    #   / __ \      | | (_)         (_)
-    #  | |  | |_ __ | |_ _ _ __ ___  _ _______
-    #  | |  | | '_ \| __| | '_ ` _ \| |_  / _ \
-    #  | |__| | |_) | |_| | | | | | | |/ /  __/
-    #   \____/| .__/ \__|_|_| |_| |_|_/___\___|
-    #         | |
-    #         |_|
-    optimized_molecule = postprocess(
-        mol=mol, engine=engine, verbosity=inputdict["verbosity"]
-    )
-    optimized_molecule.write_xyz_to_file("optimized_molecule.xyz")
-    return 0
+        try:
+            #    ____        _   _           _
+            #   / __ \      | | (_)         (_)
+            #  | |  | |_ __ | |_ _ _ __ ___  _ _______
+            #  | |  | | '_ \| __| | '_ ` _ \| |_  / _ \
+            #  | |__| | |_) | |_| | | | | | | |/ /  __/
+            #   \____/| .__/ \__|_|_| |_| |_|_/___\___|
+            #         | |
+            #         |_|
+            optimized_molecule = postprocess(
+                mol=mol, engine=engine, verbosity=inputdict["verbosity"]
+            )
+            print("Postprocessing successful. Optimized molecule:")
+            print(optimized_molecule)
+            optimized_molecule.write_xyz_to_file("optimized_molecule.xyz")
+            return 0
+        except RuntimeError:
+            print(f"Postprocessing failed for cycle {cycle + 1}.\n")
+            continue
+    raise RuntimeError("Postprocessing failed for all cycles.")

@@ -16,13 +16,14 @@ def generate_random_molecule(verbosity: int = 1) -> Molecule:
     mol = Molecule()
     mol.atlist = generate_atom_list(verbosity)
     mol.num_atoms = np.sum(mol.atlist)
-    mol.xyz, mol.ati = generate_coordinates(mol.atlist, 3.0, 1.2)
+    mol.xyz, mol.ati = generate_coordinates(
+        at=mol.atlist, scaling=3.0, dist_threshold=1.2, verbosity=verbosity
+    )
     mol.charge = set_random_charge(mol.ati, verbosity)
 
-    # if verbosity > 0, print the molecule and its sum formula
-    if verbosity > 0:
+    # if verbosity > 1, print the molecule
+    if verbosity > 1:
         print(mol)
-        print(mol.sum_formula())
 
     return mol
 
@@ -109,6 +110,26 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
         # Add a random number of atoms of the defined type
         natoms[ati] = natoms[ati] + np.random.randint(0, 3)
 
+    # > If too many alkaline and alkine earth metals are included, restart generation
+    metals = (2, 3, 10, 11, 18, 19, 36, 37, 54, 55)
+    nmetals = 0
+    for i in metals:
+        nmetals += natoms[i]
+    if nmetals > 3:
+        # reduce number of metals starting from 2, going to 55
+        while nmetals > 3:
+            for i in metals:
+                if natoms[i] > 0:
+                    natoms[i] = natoms[i] - 1
+                    nmetals -= 1
+                if nmetals <= 3:
+                    break
+
+    # If too many transition or lanthanide metals are included, reduce their number
+    for i in get_metal_z():
+        if natoms[i] > 1:
+            natoms[i] = 1
+
     # Add Elements between B and F (5-9)
     for _ in range(5):
         i = np.random.randint(4, 10)
@@ -122,27 +143,11 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
         j = 1 + int(randint * minnat * 1.2)
         natoms[0] = natoms[0] + j
 
-    # > If too many metals are included, restart generation
-    metals = (3, 4, 11, 12, 19, 20, 37, 38, 55, 56)
-    nmetals = 0
-    for i in metals:
-        if natoms[i] > 0:
-            nmetals += 1
-    if nmetals > 3:
-        # reduce number of metals starting from 3, going to 56
-        while nmetals > 3:
-            for i in metals:
-                if natoms[i] > 0:
-                    natoms[i] = natoms[i] - 1
-                    nmetals -= 1
-                if nmetals == 3:
-                    break
-
     return natoms
 
 
 def generate_coordinates(
-    at: np.ndarray, scaling: float, dist_threshold: float
+    at: np.ndarray, scaling: float, dist_threshold: float, verbosity: int = 1
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
@@ -154,6 +159,8 @@ def generate_coordinates(
     xyz = xyz * eff_scaling
     # do while check_distances is False
     while not check_distances(xyz, dist_threshold):
+        if verbosity > 1:
+            print("Distance check failed. Regenerating coordinates...")
         xyz, ati = generate_random_coordinates(at)
         eff_scaling = eff_scaling * 1.3
         xyz = xyz * eff_scaling
@@ -195,3 +202,12 @@ def check_distances(xyz: np.ndarray, threshold: float) -> bool:
             if r < threshold:
                 return False
     return True
+
+
+def get_metal_z() -> list[int]:
+    """
+    Get the atomic numbers of transition metals and lanthanides, for which different rules apply.
+    """
+    metals = list(range(20, 30)) + list(range(38, 48)) + list(range(56, 80))
+
+    return metals

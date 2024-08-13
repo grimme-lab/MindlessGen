@@ -12,7 +12,9 @@ def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule
     """
     Postprocess the molecule.
     """
+    # Optimize the initial random molecule
     optmol = engine.optimize(mol)
+    # Get all fragments
     fragmols = detect_fragments(optmol, verbosity)
 
     if verbosity > 1:
@@ -21,7 +23,10 @@ def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule
             Path(f"fragment_{i}").mkdir(exist_ok=True)
             fragmol.write_xyz_to_file(f"fragment_{i}/fragment_{i}.xyz")
 
+    # Optimize the first fragment
     optfragmol = engine.optimize(fragmols[0])
+    # Differentiate again in fragments and take only the first one
+    optfragmol = detect_fragments(optfragmol, verbosity)[0]
 
     return optfragmol
 

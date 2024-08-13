@@ -170,6 +170,7 @@ class Molecule:
             returnstr += f"# unpaired electrons: {self.uhf}\n"
         if self._atlist.size:
             returnstr += f"atomic numbers: {self.atlist}\n"
+            returnstr += f"sum formula: {self.sum_formula()}\n"
         if self._xyz.size:
             returnstr += f"atomic coordinates:\n{self.xyz}\n"
         if self._ati.size:

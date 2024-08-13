@@ -32,6 +32,14 @@ def cli_parser(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default="xtb",
         help="QM engine to use.",
     )
+    parser.add_argument(
+        "-mc",
+        "--max-cycles",
+        type=int,
+        default=100,
+        required=False,
+        help="Maximum number of optimization cycles.",
+    )
     args = parser.parse_args(argv)
 
     return args
