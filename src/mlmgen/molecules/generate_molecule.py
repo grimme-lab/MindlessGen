@@ -196,9 +196,9 @@ def check_distances(xyz: np.ndarray, threshold: float) -> bool:
     Check if the distances between atoms are larger than a threshold.
     """
     # go through the atoms dimension of the xyz array
-    for i in range(1, xyz.shape[1]):
-        for j in range(i - 1):
-            r = np.linalg.norm(xyz[:, i] - xyz[:, j])
+    for i in range(xyz.shape[0] - 1):
+        for j in range(i + 1, xyz.shape[0]):
+            r = np.linalg.norm(xyz[i, :] - xyz[j, :])
             if r < threshold:
                 return False
     return True

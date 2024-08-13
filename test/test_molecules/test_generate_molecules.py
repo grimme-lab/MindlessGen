@@ -3,8 +3,15 @@ Test the squaring function.
 """
 
 from __future__ import annotations
+import pytest
 import numpy as np
-from mlmgen.molecules import generate_random_molecule, generate_coordinates  # type: ignore
+from mlmgen.molecules import (  # type: ignore
+    generate_random_molecule,
+    generate_coordinates,
+    generate_atom_list,
+    get_metal_z,
+    check_distances,
+)
 from mlmgen.molecules.molecule import Molecule  # type: ignore
 
 
@@ -41,6 +48,81 @@ def test_generate_coordinates() -> None:
     assert mol.num_atoms == np.sum(mol.atlist)
     assert mol.num_atoms == len(mol.xyz)
     assert mol.num_atoms == len(mol.ati)
+
+
+def test_generate_atom_list() -> None:
+    """
+    Test the generation of an array of atomic numbers.
+    """
+    atlist = generate_atom_list()
+    assert atlist.shape == (102,)
+    assert np.sum(atlist) > 0
+    # check that for the transition and lanthanide metals, the occurence is never greater than 1
+    for z in get_metal_z():
+        assert atlist[z] <= 1
+    alkmetals = (2, 3, 10, 11, 18, 19, 36, 37, 54, 55)
+    # check that the sum of alkali and alkaline earth metals is never greater than 3
+    assert np.sum([atlist[z] for z in alkmetals]) <= 3
+
+
+@pytest.mark.parametrize(
+    "xyz, threshold, expected, description",
+    [
+        (
+            np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+            0.5,
+            True,
+            "Two atoms with distance greater than threshold (1.0 > 0.5)",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [0.4, 0.0, 0.0]]),
+            0.5,
+            False,
+            "Two atoms with distance less than threshold (0.4 < 0.5)",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]]),
+            0.5,
+            True,
+            "Three atoms in a line with distances greater than threshold",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [0.4, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+            0.5,
+            False,
+            "Three atoms with one pair close together: distance between first two is less than threshold",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0]]),
+            0.5,
+            True,
+            "Single atom, no distances to compare",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
+            0.5,
+            False,
+            "Two atoms at identical positions: distance is zero, less than threshold",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]),
+            1.7320,
+            True,
+            "Two atoms with diagonal distance just above threshold (sqrt(3) ≈ 1.732)",
+        ),
+    ],
+    ids=[
+        "far_apart",
+        "close_together",
+        "three_in_line",
+        "three_with_one_close",
+        "single_atom",
+        "two_identical",
+        "diagonal_distance",
+    ],
+)
+def test_check_distances(xyz, threshold, expected, description):
+    assert check_distances(xyz, threshold) == expected
 
 
 def test_dummy() -> None:
