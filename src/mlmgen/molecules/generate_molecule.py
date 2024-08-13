@@ -7,7 +7,7 @@ import numpy as np
 from .molecule import Molecule
 
 
-def generate_molecule(verbosity: int = 1) -> Molecule:
+def generate_random_molecule(verbosity: int = 1) -> Molecule:
     """
     Generate a random molecule of type Molecule.
     """

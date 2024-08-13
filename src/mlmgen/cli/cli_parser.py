@@ -24,6 +24,14 @@ def cli_parser(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=1,
         help="Verbosity level (0, 1, or 2).",
     )
+    parser.add_argument(
+        "-e",
+        "--engine",
+        type=str,
+        choices=["xtb", "orca"],
+        default="xtb",
+        help="QM engine to use.",
+    )
     args = parser.parse_args(argv)
 
     return args

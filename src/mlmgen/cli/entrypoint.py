@@ -17,5 +17,5 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
     args = cl(argv)
     # convert args to dictionary
     kwargs = vars(args)
-    exitcode = generator(**kwargs)
+    exitcode = generator(kwargs)
     return exitcode

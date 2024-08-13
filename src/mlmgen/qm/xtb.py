@@ -7,18 +7,22 @@ from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
 from ..molecules import Molecule
+from .base import QMMethod
 
 
-class XTB:
+class XTB(QMMethod):
     """
     This class handles all xtb-related functionality.
     """
 
-    def __init__(self, xtb_path: str | Path = "xtb", verbosity: int = 1):
-        if isinstance(xtb_path, str):
-            self.xtb_path: Path = Path(xtb_path).resolve()
-        elif isinstance(xtb_path, Path):
-            self.xtb_path = xtb_path
+    def __init__(self, path: str | Path = "xtb", verbosity: int = 1):
+        """
+        Initialize the XTB class.
+        """
+        if isinstance(path, str):
+            self.xtb_path: Path = Path(path).resolve()
+        elif isinstance(path, Path):
+            self.xtb_path = path
         else:
             raise TypeError("xtb_path should be a string or a Path object.")
         self.verbosity = verbosity
@@ -44,7 +48,7 @@ class XTB:
             if self.verbosity > 1:
                 print(f"Running command: {' '.join(arguments)}")
 
-            xtb_log_out, xtb_log_err, return_code = self.run_xtb(
+            xtb_log_out, xtb_log_err, return_code = self.run(
                 temp_path=temp_path, arguments=arguments
             )
             if return_code != 0:
@@ -58,7 +62,7 @@ class XTB:
 
             return optimized_molecule
 
-    def run_xtb(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
+    def run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
         """
         Run xtb with the given arguments.
 

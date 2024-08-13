@@ -3,28 +3,30 @@ Mathematical functions.
 """
 
 from __future__ import annotations
-from ..molecules import generate_molecule
+from ..molecules import generate_random_molecule
 from ..qm import XTB, get_xtb_path
 
-try:
-    xtb_path = get_xtb_path(["xtb_dev", "xtb"])
-except ImportError as e:
-    raise ImportError("xtb not found.") from e
 
-
-def generator(input: str | None = None, verbosity: int = 1) -> int:
+def generator(inputdict: dict) -> int:
     """
     Generate a molecule.
     """
-    if xtb_path:
-        xtb = XTB(xtb_path, verbosity)
+    # Get desired engine from inputdict
+    if inputdict["engine"] == "xtb":
+        try:
+            xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+            if not xtb_path:
+                raise ImportError("xtb not found.")
+        except ImportError as e:
+            raise ImportError("xtb not found.") from e
+        xtb = XTB(xtb_path, inputdict["verbosity"])
     else:
-        raise RuntimeError("xtb not found.")
+        raise NotImplementedError("Engine not implemented.")
 
-    if input:
+    if inputdict["input"]:
         print(f"Input file: {input}")
     else:
-        mol = generate_molecule(verbosity)
+        mol = generate_random_molecule(inputdict["verbosity"])
 
     optimized_molecule = xtb.optimize(mol)
     optimized_molecule.write_xyz_to_file("optimized_molecule.xyz")
