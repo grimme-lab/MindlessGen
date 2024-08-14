@@ -9,17 +9,26 @@ from mlmgen.molecules import (  # type: ignore
     generate_random_molecule,
     generate_coordinates,
     generate_atom_list,
-    get_metal_z,
     check_distances,
+    get_three_d_metals,
+    get_four_d_metals,
+    get_five_d_metals,
+    get_lanthanides,
+    get_alkali_metals,
+    get_alkaline_earth_metals,
 )
 from mlmgen.molecules.molecule import Molecule  # type: ignore
+from mlmgen.prog import ConfigManager  # type: ignore
 
 
 def test_generate_molecule() -> None:
     """
     Test the generation of an array of atomic numbers.
     """
-    mol = generate_random_molecule(verbosity=0)
+    # create a ConfigManager object with verbosity set to 0
+    config = ConfigManager()
+    config.general.verbosity = 0
+    mol = generate_random_molecule(config.general)
 
     assert mol.num_atoms > 0
     assert mol.num_atoms == np.sum(mol.atlist)
@@ -57,10 +66,16 @@ def test_generate_atom_list() -> None:
     atlist = generate_atom_list()
     assert atlist.shape == (102,)
     assert np.sum(atlist) > 0
-    # check that for the transition and lanthanide metals, the occurence is never greater than 1
-    for z in get_metal_z():
-        assert atlist[z] <= 1
-    alkmetals = (2, 3, 10, 11, 18, 19, 36, 37, 54, 55)
+    # check that for the transition and lanthanide metals, the occurence is never greater than 3
+    all_metals = (
+        get_three_d_metals()
+        + get_four_d_metals()
+        + get_five_d_metals()
+        + get_lanthanides()
+    )
+    for z in all_metals:
+        assert atlist[z] <= 3
+    alkmetals = get_alkali_metals() + get_alkaline_earth_metals()
     # check that the sum of alkali and alkaline earth metals is never greater than 3
     assert np.sum([atlist[z] for z in alkmetals]) <= 3
 

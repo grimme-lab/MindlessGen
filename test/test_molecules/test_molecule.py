@@ -5,21 +5,7 @@ Test the squaring function.
 from __future__ import annotations
 import numpy as np
 import pytest
-from mlmgen.molecules import generate_random_molecule  # type: ignore
 from mlmgen.molecules.molecule import Molecule  # type: ignore
-
-
-def test_generate_molecule() -> None:
-    """
-    Test the generation of an array of atomic numbers.
-    """
-    mol = generate_random_molecule()
-
-    assert mol.num_atoms > 0
-    assert mol.num_atoms == np.sum(mol.atlist)
-    assert mol.num_atoms == len(mol.xyz)
-    # assert that sum of absolute value of mol.xyz is greater than 0
-    assert np.sum(np.abs(mol.xyz)) > 0
 
 
 @pytest.mark.parametrize(

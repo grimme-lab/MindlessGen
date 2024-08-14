@@ -8,7 +8,13 @@ from .miscellaneous import set_random_charge
 COV_RADII = "pyykko"
 
 
-def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule:
+def postprocess(
+    mol: Molecule,
+    engine: QMMethod,
+    min_nat: int = 1,
+    max_nat: int = 100,
+    verbosity: int = 1,
+) -> Molecule:
     """
     Postprocess the molecule.
     """
@@ -26,6 +32,13 @@ def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule
             Path(f"fragment_{i}").mkdir(exist_ok=True)
             fragmol.write_xyz_to_file(f"fragment_{i}/fragment_{i}.xyz")
 
+    # if first fragment has less atoms than min_nat or more than max_nat, raise an error
+    # NOTE: MM Check only for min_nat,
+    # as fragment can still fragment into smaller fragments at the next step
+    if fragmols[0].num_atoms < min_nat:
+        raise RuntimeError(
+            "First fragment has less atoms than the minimum number of atoms."
+        )
     # Optimize the first fragment
     try:
         optfragmol = engine.optimize(fragmols[0])
@@ -33,6 +46,10 @@ def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule
         raise RuntimeError(f"Fragment optimization failed: {e}") from e
     # Differentiate again in fragments and take only the first one
     optfragmol = detect_fragments(optfragmol, verbosity)[0]
+
+    # Check again if the fragment has less atoms than min_nat or more than max_nat, raise an error
+    if optfragmol.num_atoms < min_nat or optfragmol.num_atoms > max_nat:
+        raise RuntimeError("Fragment has less atoms than the minimum number of atoms.")
 
     # Check if the HL gap is larger than a given threshold
     if not engine.check_gap(optfragmol):

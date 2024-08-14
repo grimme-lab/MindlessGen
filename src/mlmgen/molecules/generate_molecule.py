@@ -4,31 +4,45 @@ This module generates a random molecule with a random number of atoms.
 
 import copy
 import numpy as np
+from ..prog import GeneralConfig
 from .molecule import Molecule
 from .miscellaneous import set_random_charge
 
+DEFAULT_SCALING = 3.0
+DEFAULT_DIST_THRESHOLD = 1.2
+EXPANSION_FACTOR = 1.3
 
-def generate_random_molecule(verbosity: int = 1) -> Molecule:
+
+def generate_random_molecule(config_general: GeneralConfig) -> Molecule:
     """
     Generate a random molecule of type Molecule.
     """
 
     mol = Molecule()
-    mol.atlist = generate_atom_list(verbosity)
+    mol.atlist = generate_atom_list(
+        config_general.verbosity,
+        config_general.min_num_atoms,
+        config_general.max_num_atoms,
+    )
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(
-        at=mol.atlist, scaling=3.0, dist_threshold=1.2, verbosity=verbosity
+        at=mol.atlist,
+        scaling=DEFAULT_SCALING,
+        dist_threshold=DEFAULT_DIST_THRESHOLD,
+        verbosity=config_general.verbosity,
     )
-    mol.charge = set_random_charge(mol.ati, verbosity)
+    mol.charge = set_random_charge(mol.ati, config_general.verbosity)
 
     # if verbosity > 1, print the molecule
-    if verbosity > 1:
+    if config_general.verbosity > 1:
         print(mol)
 
     return mol
 
 
-def generate_atom_list(verbosity: int = 1) -> np.ndarray:
+def generate_atom_list(
+    verbosity: int = 1, min_nat: int = 2, max_nat: int = 100
+) -> np.ndarray:
     """
     Generate a random molecule with a random number of atoms.
     """
@@ -111,24 +125,36 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
         natoms[ati] = natoms[ati] + np.random.randint(0, 3)
 
     # > If too many alkaline and alkine earth metals are included, restart generation
-    metals = (2, 3, 10, 11, 18, 19, 36, 37, 54, 55)
+    group_one_two = get_alkali_metals() + get_alkaline_earth_metals()
     nmetals = 0
-    for i in metals:
+    for i in group_one_two:
         nmetals += natoms[i]
-    if nmetals > 3:
-        # reduce number of metals starting from 2, going to 55
-        while nmetals > 3:
-            for i in metals:
-                if natoms[i] > 0:
-                    natoms[i] = natoms[i] - 1
-                    nmetals -= 1
-                if nmetals <= 3:
-                    break
+    # reduce number of metals starting from 2, going to 55
+    while nmetals > 3:
+        for i in group_one_two:
+            if natoms[i] > 0:
+                natoms[i] = natoms[i] - 1
+                nmetals -= 1
+            if nmetals <= 3:
+                break
 
-    # If too many transition or lanthanide metals are included, reduce their number
-    for i in get_metal_z():
-        if natoms[i] > 1:
-            natoms[i] = 1
+    # If the sum of all other metals is larger than three, reduce the number of metals
+    other_metals = (
+        get_three_d_metals()
+        + get_four_d_metals()
+        + get_five_d_metals()
+        + get_lanthanides()
+    )
+    n_othermetals = 0
+    for i in other_metals:
+        n_othermetals += natoms[i]
+    while n_othermetals > 3:
+        for i in other_metals:
+            if natoms[i] > 0:
+                natoms[i] = natoms[i] - 1
+                n_othermetals -= 1
+            if n_othermetals <= 3:
+                break
 
     # Add Elements between B and F (5-9)
     for _ in range(5):
@@ -143,6 +169,17 @@ def generate_atom_list(verbosity: int = 1) -> np.ndarray:
         j = 1 + int(randint * minnat * 1.2)
         natoms[0] = natoms[0] + j
 
+    # If the number of atoms is smaller than the minimum number of atoms, add atoms
+    while np.sum(natoms) < min_nat:
+        i = np.random.randint(0, 86)
+        if i not in not_included:
+            natoms[i] = natoms[i] + 1
+    # If the number of atoms is larger than the maximum number of atoms, remove atoms randomly
+    while np.sum(natoms) > max_nat:
+        i = np.random.randint(0, 86)
+        if natoms[i] > 0:
+            natoms[i] = natoms[i] - 1
+
     return natoms
 
 
@@ -152,8 +189,6 @@ def generate_coordinates(
     """
     Generate random coordinates for a molecule.
     """
-
-    EXPANSION_FACTOR = 1.3
 
     # eff_scaling is a deep copy of scaling
     eff_scaling = copy.deepcopy(scaling)
@@ -208,10 +243,51 @@ def check_distances(xyz: np.ndarray, threshold: float) -> bool:
     return True
 
 
-def get_metal_z() -> list[int]:
+def get_alkali_metals() -> list[int]:
     """
-    Get the atomic numbers of transition metals and lanthanides, for which different rules apply.
+    Get the atomic numbers of alkali metals.
     """
-    metals = list(range(20, 30)) + list(range(38, 48)) + list(range(56, 80))
+    alkali = [2, 10, 18, 36, 54]
+    return alkali
 
-    return metals
+
+def get_alkaline_earth_metals() -> list[int]:
+    """
+    Get the atomic numbers of alkaline earth metals.
+    """
+    alkaline = [3, 11, 19, 37, 55]
+    return alkaline
+
+
+def get_three_d_metals() -> list[int]:
+    """
+    Get the atomic numbers of three d metals.
+    """
+    threedmetals = list(range(20, 30))
+
+    return threedmetals
+
+
+def get_four_d_metals() -> list[int]:
+    """
+    Get the atomic numbers of four d metals.
+    """
+
+    fourdmetals = list(range(38, 48))
+    return fourdmetals
+
+
+def get_five_d_metals() -> list[int]:
+    """
+    Get the atomic numbers of five d metals.
+    """
+    fivedmetals = list(range(71, 80))
+    return fivedmetals
+
+
+def get_lanthanides() -> list[int]:
+    """
+    Get the atomic numbers of lanthanides.
+    """
+    lanthanides = list(range(56, 71))
+    return lanthanides

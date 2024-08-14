@@ -15,6 +15,8 @@ class GeneralConfig:
         self._verbosity: int = 1
         self._max_cycles: int = 100
         self._engine: str = "xtb"
+        self._min_num_atoms: int = 2
+        self._max_num_atoms: int = 100
 
     @property
     def verbosity(self):
@@ -69,6 +71,42 @@ class GeneralConfig:
         if engine not in ["xtb", "orca"]:
             raise ValueError("Engine can only be xtb or orca.")
         self._engine = engine
+
+    @property
+    def min_num_atoms(self):
+        """
+        Get the minimum number of atoms.
+        """
+        return self._min_num_atoms
+
+    @min_num_atoms.setter
+    def min_num_atoms(self, min_num_atoms: int):
+        """
+        Set the minimum number of atoms.
+        """
+        if not isinstance(min_num_atoms, int):
+            raise TypeError("Min num atoms should be an integer.")
+        if min_num_atoms < 1:
+            raise ValueError("Min num atoms should be greater than 0.")
+        self._min_num_atoms = min_num_atoms
+
+    @property
+    def max_num_atoms(self):
+        """
+        Get the maximum number of atoms.
+        """
+        return self._max_num_atoms
+
+    @max_num_atoms.setter
+    def max_num_atoms(self, max_num_atoms: int):
+        """
+        Set the maximum number of atoms.
+        """
+        if not isinstance(max_num_atoms, int):
+            raise TypeError("Max num atoms should be an integer.")
+        if max_num_atoms < 1:
+            raise ValueError("Max num atoms should be greater than 0.")
+        self._max_num_atoms = max_num_atoms
 
 
 class XTBConfig:
@@ -198,15 +236,25 @@ class ConfigManager:
         # work with fixed indentation and line breaks, e.g.: ":<10}", "\n"
         configstr = "General configuration:\n"
         # indent the sub settings
-        configstr += f"{'Verbosity':>20}:" + 3 * " " + f"{self.general.verbosity}\n"
+        configstr += f"{'Verbosity':>30}:" + 3 * " " + f"{self.general.verbosity}\n"
         configstr += (
-            f"{'Maximum cycles':>20}:" + 3 * " " + f"{self.general.max_cycles}\n"
+            f"{'Maximum cycles':>30}:" + 3 * " " + f"{self.general.max_cycles}\n"
         )
-        configstr += f"{'QM engine':>20}:" + 3 * " " + f"{self.general.engine}\n"
+        configstr += f"{'QM engine':>30}:" + 3 * " " + f"{self.general.engine}\n"
+        configstr += (
+            f"{'Minimum number of atoms':>30}:"
+            + 3 * " "
+            + f"{self.general.min_num_atoms}\n"
+        )
+        configstr += (
+            f"{'Maximum number of atoms':>30}:"
+            + 3 * " "
+            + f"{self.general.max_num_atoms}\n"
+        )
         configstr += "\n"
         configstr += "xTB configuration:\n"
-        configstr += f"{'xTB option':>20}:" + 3 * " " + f"{self.xtb.xtb_option}\n"
+        configstr += f"{'xTB option':>30}:" + 3 * " " + f"{self.xtb.xtb_option}\n"
         configstr += "\n"
         configstr += "ORCA configuration:\n"
-        configstr += f"{'ORCA option':>20}:" + 3 * " " + f"{self.orca.orca_option}\n"
+        configstr += f"{'ORCA option':>30}:" + 3 * " " + f"{self.orca.orca_option}\n"
         return configstr

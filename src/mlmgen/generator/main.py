@@ -44,7 +44,7 @@ def generator(config: ConfigManager) -> int:
         # | |__| |  __/ | | |  __/ | | (_| | || (_) | |
         #  \_____|\___|_| |_|\___|_|  \__,_|\__\___/|_|
 
-        mol = generate_random_molecule(config.general.verbosity)
+        mol = generate_random_molecule(config.general)
 
         try:
             #    ____        _   _           _
@@ -56,7 +56,11 @@ def generator(config: ConfigManager) -> int:
             #         | |
             #         |_|
             optimized_molecule = postprocess(
-                mol=mol, engine=engine, verbosity=config.general.verbosity
+                mol=mol,
+                engine=engine,
+                min_nat=config.general.min_num_atoms,
+                max_nat=config.general.max_num_atoms,
+                verbosity=config.general.verbosity,
             )
             print("Postprocessing successful. Optimized molecule:")
             print(optimized_molecule)

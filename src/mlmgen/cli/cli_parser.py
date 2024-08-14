@@ -44,6 +44,18 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Maximum number of optimization cycles.",
     )
+    parser.add_argument(
+        "--min-num-atoms",
+        type=int,
+        required=False,
+        help="Minimum number of atoms in a molecule.",
+    )
+    parser.add_argument(
+        "--max-num-atoms",
+        type=int,
+        required=False,
+        help="Maximum number of atoms in a molecule.",
+    )
     # XTB specific arguments
     # TODO: Add XTB specific arguments
     # ORCA specific arguments
@@ -58,6 +70,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "verbosity": args_dict["verbosity"],
         "engine": args_dict["engine"],
         "max_cycles": args_dict["max_cycles"],
+        "min_num_atoms": args_dict["min_num_atoms"],
+        "max_num_atoms": args_dict["max_num_atoms"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {}
