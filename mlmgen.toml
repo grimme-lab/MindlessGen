@@ -1,0 +1,27 @@
+# Default configuration for the 'MindLess Molecule GENerator' (MLMGen)
+# Following file locations are searched for in the following order:
+# 1. Location specified by the `--config < str | Path >` command-line argument
+# 2. Current working directory (`Path.cwd()`)
+# 3. User's home directory (`Path.home()`)
+
+[general]
+# Verbosity level defining the printout: Options: 0 = silent, 1 = default, 2 = verbose
+verbosity = 1
+
+# Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
+engine = "xtb"
+
+# Maximum number of optimization cycles. Options: <int>
+max_cycles = 100
+
+[xtb]
+# TODO
+# Specific configurations for the XTB engine (if needed)
+# xtb_option_1 = "value1"
+# xtb_option_2 = "value2"
+
+[orca]
+# TODO
+# Specific configurations for the ORCA engine (if needed)
+# orca_option_1 = "value1"
+# orca_option_2 = "value2"

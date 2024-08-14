@@ -8,7 +8,7 @@ from ..qm import XTB, get_xtb_path
 from ..molecules import postprocess
 
 
-def generator(inputdict: dict) -> int:
+def generator(config: dict) -> int:
     """
     Generate a molecule.
     """
@@ -22,18 +22,19 @@ def generator(inputdict: dict) -> int:
     #                __/ |
     #               |___/
 
-    if inputdict["engine"] == "xtb":
+    if config["general"]["engine"] == "xtb":
         try:
             xtb_path = get_xtb_path(["xtb_dev", "xtb"])
             if not xtb_path:
                 raise ImportError("xtb not found.")
         except ImportError as e:
             raise ImportError("xtb not found.") from e
-        engine = XTB(xtb_path, inputdict["verbosity"])
+        engine = XTB(xtb_path, config["general"]["verbosity"])
     else:
         raise NotImplementedError("Engine not implemented.")
 
-    for cycle in range(inputdict["max_cycles"]):
+    print(f"Config: {config}")
+    for cycle in range(config["general"]["max_cycles"]):
         print(f"Cycle {cycle + 1}...")
         #   _____                           _
         #  / ____|                         | |
@@ -42,11 +43,7 @@ def generator(inputdict: dict) -> int:
         # | |__| |  __/ | | |  __/ | | (_| | || (_) | |
         #  \_____|\___|_| |_|\___|_|  \__,_|\__\___/|_|
 
-        if inputdict["input"]:
-            print(f"Input file: {input}")
-            raise NotImplementedError("Input file not implemented.")
-        else:
-            mol = generate_random_molecule(inputdict["verbosity"])
+        mol = generate_random_molecule(config["general"]["verbosity"])
 
         try:
             #    ____        _   _           _
@@ -58,7 +55,7 @@ def generator(inputdict: dict) -> int:
             #         | |
             #         |_|
             optimized_molecule = postprocess(
-                mol=mol, engine=engine, verbosity=inputdict["verbosity"]
+                mol=mol, engine=engine, verbosity=config["general"]["verbosity"]
             )
             print("Postprocessing successful. Optimized molecule:")
             print(optimized_molecule)
@@ -66,7 +63,7 @@ def generator(inputdict: dict) -> int:
             return 0
         except RuntimeError as e:
             print(f"Postprocessing failed for cycle {cycle + 1}.\n")
-            if inputdict["verbosity"] > 1:
+            if config["general"]["verbosity"] > 1:
                 print(e)
             continue
     raise RuntimeError("Postprocessing failed for all cycles.")

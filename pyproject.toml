@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
-dependencies = ["numpy", "networkx"]
+dependencies = ["numpy", "networkx", "toml"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -33,6 +33,7 @@ dev = [
     "pytest",
     "tox",
     "setuptools_scm>=8",
+    "types-toml",
 ]
 
 [project.scripts]
