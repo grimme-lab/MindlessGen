@@ -8,6 +8,9 @@
 # Verbosity level defining the printout: Options: 0 = silent, 1 = default, 2 = verbose
 verbosity = 1
 
+# Number of parallel processes to use. Options: <int>
+parallel = 1
+
 # Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
 engine = "xtb"
 

@@ -63,6 +63,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Print the configuration and exit.",
     )
+    parser.add_argument(
+        "-P",
+        "--parallel",
+        type=int,
+        required=False,
+        help="Number of parallel processes to run.",
+    )
     # XTB specific arguments
     # TODO: Add XTB specific arguments
     # ORCA specific arguments
@@ -75,6 +82,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     rev_args_dict["general"] = {
         "config": args_dict["config"],
         "verbosity": args_dict["verbosity"],
+        "parallel": args_dict["parallel"],
         "engine": args_dict["engine"],
         "max_cycles": args_dict["max_cycles"],
         "min_num_atoms": args_dict["min_num_atoms"],

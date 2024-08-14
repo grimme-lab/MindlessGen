@@ -18,6 +18,7 @@ class GeneralConfig:
         self._min_num_atoms: int = 2
         self._max_num_atoms: int = 100
         self._print_config: bool = False
+        self._parallel: int = 1
 
     @property
     def verbosity(self):
@@ -124,6 +125,24 @@ class GeneralConfig:
         if not isinstance(print_config, bool):
             raise TypeError("Print config should be a boolean.")
         self._print_config = print_config
+
+    @property
+    def parallel(self):
+        """
+        Get the parallel flag.
+        """
+        return self._parallel
+
+    @parallel.setter
+    def parallel(self, parallel: int):
+        """
+        Set the parallel flag.
+        """
+        if not isinstance(parallel, int):
+            raise TypeError("Parallel should be an integer.")
+        if parallel < 1:
+            raise ValueError("Parallel should be greater than 0.")
+        self._parallel = parallel
 
 
 class XTBConfig:
@@ -254,6 +273,9 @@ class ConfigManager:
         configstr = "General configuration:\n"
         # indent the sub settings
         configstr += f"{'Verbosity':>30}:" + 3 * " " + f"{self.general.verbosity}\n"
+        configstr += (
+            f"{'Parallel processes':>30}:" + 3 * " " + f"{self.general.parallel}\n"
+        )
         configstr += (
             f"{'Maximum cycles':>30}:" + 3 * " " + f"{self.general.max_cycles}\n"
         )

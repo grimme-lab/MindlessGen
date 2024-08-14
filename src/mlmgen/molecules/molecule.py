@@ -339,7 +339,7 @@ class Molecule:
         """
         print(self._xyz)
 
-    def write_xyz_to_file(self, filename: str | Path):
+    def write_xyz_to_file(self, filename: str | Path | None = None):
         """
         Write the XYZ coordinates of the molecule to a file.
 
@@ -362,8 +362,11 @@ class Molecule:
         if not self._xyz.size:
             raise ValueError("Atomic coordinates not set.")
 
-        if not isinstance(filename, Path):
-            filename = Path(filename).resolve()
+        if filename:
+            if not isinstance(filename, Path):
+                filename = Path(filename).resolve()
+        else:
+            filename = Path(self.name + ".xyz").resolve()
 
         with open(filename, "w", encoding="utf8") as f:
             f.write(f"{self.num_atoms}\n")
