@@ -23,6 +23,10 @@ def generator(config: ConfigManager) -> int:
     #                __/ |
     #               |___/
 
+    if config.general.print_config:
+        print(config)
+        return 0
+
     if config.general.engine == "xtb":
         try:
             xtb_path = get_xtb_path(["xtb_dev", "xtb"])
@@ -34,7 +38,8 @@ def generator(config: ConfigManager) -> int:
     else:
         raise NotImplementedError("Engine not implemented.")
 
-    print(f"Config: {config}")
+    if config.general.verbosity > 0:
+        print(f"Config: {config}")
     for cycle in range(config.general.max_cycles):
         print(f"Cycle {cycle + 1}...")
         #   _____                           _
@@ -67,8 +72,9 @@ def generator(config: ConfigManager) -> int:
             optimized_molecule.write_xyz_to_file("optimized_molecule.xyz")
             return 0
         except RuntimeError as e:
-            print(f"Postprocessing failed for cycle {cycle + 1}.\n")
-            if config.general.verbosity > 1:
-                print(e)
+            if config.general.verbosity > 0:
+                print(f"Postprocessing failed for cycle {cycle + 1}.\n")
+                if config.general.verbosity > 1:
+                    print(e)
             continue
     raise RuntimeError("Postprocessing failed for all cycles.")

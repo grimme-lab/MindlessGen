@@ -17,6 +17,7 @@ class GeneralConfig:
         self._engine: str = "xtb"
         self._min_num_atoms: int = 2
         self._max_num_atoms: int = 100
+        self._print_config: bool = False
 
     @property
     def verbosity(self):
@@ -107,6 +108,22 @@ class GeneralConfig:
         if max_num_atoms < 1:
             raise ValueError("Max num atoms should be greater than 0.")
         self._max_num_atoms = max_num_atoms
+
+    @property
+    def print_config(self):
+        """
+        Get the print config flag.
+        """
+        return self._print_config
+
+    @print_config.setter
+    def print_config(self, print_config: bool):
+        """
+        Set the print config flag.
+        """
+        if not isinstance(print_config, bool):
+            raise TypeError("Print config should be a boolean.")
+        self._print_config = print_config
 
 
 class XTBConfig:

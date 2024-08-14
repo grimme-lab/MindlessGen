@@ -56,6 +56,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Maximum number of atoms in a molecule.",
     )
+    parser.add_argument(
+        "--print-config",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Print the configuration and exit.",
+    )
     # XTB specific arguments
     # TODO: Add XTB specific arguments
     # ORCA specific arguments
@@ -72,6 +79,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "max_cycles": args_dict["max_cycles"],
         "min_num_atoms": args_dict["min_num_atoms"],
         "max_num_atoms": args_dict["max_num_atoms"],
+        "print_config": args_dict["print_config"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {}
