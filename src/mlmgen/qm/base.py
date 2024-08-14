@@ -32,6 +32,25 @@ class QMMethod(ABC):
         """
 
     @abstractmethod
+    def singlepoint(self, molecule: Molecule) -> str:
+        """
+        Define the single point calculation process.
+
+        Arguments:
+        molecule (Molecule): Molecule to calculate
+        """
+
+    @abstractmethod
+    def check_gap(self, molecule: Molecule, threshold: float = 0.5) -> bool:
+        """
+        Check if the HL gap is larger than a given threshold.
+
+        Arguments:
+        molecule (Molecule): Molecule to check
+        threshold (float): Threshold for the gap
+        """
+
+    @abstractmethod
     def run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
         """
         Execute the algorithm.

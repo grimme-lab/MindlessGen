@@ -9,7 +9,7 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> int:
     """
     Set the charge of a molecule so that unpaired electrons are avoided.
     """
-    # go through all ati and its own value + 1 to get the number of protons
+    # go through all ati and add its own value + 1 to get the number of protons
     nel = 0
     for atom in ati:
         nel += atom + 1

@@ -44,6 +44,7 @@ def generator(inputdict: dict) -> int:
 
         if inputdict["input"]:
             print(f"Input file: {input}")
+            raise NotImplementedError("Input file not implemented.")
         else:
             mol = generate_random_molecule(inputdict["verbosity"])
 
@@ -63,7 +64,9 @@ def generator(inputdict: dict) -> int:
             print(optimized_molecule)
             optimized_molecule.write_xyz_to_file("optimized_molecule.xyz")
             return 0
-        except RuntimeError:
+        except RuntimeError as e:
             print(f"Postprocessing failed for cycle {cycle + 1}.\n")
+            if inputdict["verbosity"] > 1:
+                print(e)
             continue
     raise RuntimeError("Postprocessing failed for all cycles.")
