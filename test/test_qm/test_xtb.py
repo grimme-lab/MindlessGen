@@ -3,6 +3,7 @@ Test the xtb interface.
 """
 
 from __future__ import annotations
+from pathlib import Path
 import pytest
 import numpy as np
 from mlmgen.qm import XTB, get_xtb_path  # type: ignore
@@ -71,3 +72,58 @@ def coordinates_ethanol() -> np.ndarray:
         ],
         dtype=float,
     )
+
+
+# load the molecule: C2H4N1O1Au1
+@pytest.fixture
+def mol_C2H4N1O1Au1() -> Molecule:
+    """
+    Load the molecule C2H4N1O1Au1 from fixtues/C2H4N1O1Au1.xyz.
+    """
+    mol = Molecule("C2H4N1O1Au1")
+    # get the Path of this file
+    testsdir = Path(__file__).resolve().parents[1]
+    xyz_file = testsdir / "fixtures/C2H4N1O1Au1.xyz"
+    mol.read_xyz_from_file(xyz_file)
+    with open(testsdir / "fixtures/C2H4N1O1Au1.CHRG", encoding="utf8") as f:
+        mol.charge = int(f.read())
+    mol.uhf = 0
+    return mol
+
+
+# load the molecule: H3B4Pd1Rn1
+@pytest.fixture
+def mol_H3B4Pd1Rn1() -> Molecule:
+    """
+    Load the molecule H3B4Pd1Rn1 from fixtues/H3B4Pd1Rn1.xyz.
+    """
+    mol = Molecule("H3B4Pd1Rn1")
+    # get the Path of this file
+    testsdir = Path(__file__).resolve().parents[1]
+    xyz_file = testsdir / "fixtures/H3B4Pd1Rn1.xyz"
+    mol.read_xyz_from_file(xyz_file)
+    with open(testsdir / "fixtures/H3B4Pd1Rn1.CHRG", encoding="utf8") as f:
+        mol.charge = int(f.read())
+    return mol
+
+
+@pytest.mark.optional
+def test_check_gap_low_gap(mol_C2H4N1O1Au1: Molecule, mol_H3B4Pd1Rn1: Molecule):
+    """
+    Test check_gap with a molecule that has a low HOMO-LUMO gap and one with a sufficient gap.
+    """
+
+    try:
+        xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+        if not xtb_path:
+            raise ImportError("xtb not found.")
+    except ImportError as e:
+        raise ImportError("xtb not found.") from e
+    engine = XTB(xtb_path, 0)
+    # Test for molecule with low gap
+    result_low_gap = engine.check_gap(mol_H3B4Pd1Rn1, threshold=0.5)
+    assert result_low_gap is False
+
+    # Test for molecule with high gap
+    result_high_gap = engine.check_gap(mol_C2H4N1O1Au1, threshold=0.5)
+    assert result_high_gap is True

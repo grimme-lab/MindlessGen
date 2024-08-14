@@ -187,8 +187,10 @@ class Molecule:
             + f"num_atoms={self._num_atoms}, "
             + f"charge={self._charge}, "
             + f"uhf={self._uhf}, "
+            + f"ati={self._ati}, "
             + f"atlist={self._atlist}, "
-            + f"xyz={self._xyz})"
+            + f"xyz={self._xyz}), "
+            + f"sum_formula: {self.sum_formula()}"
         )
         return returnstr
 

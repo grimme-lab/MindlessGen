@@ -18,8 +18,8 @@ def mol_H6O2B2Ne2I1Os1Tl1() -> Molecule:
     """
     mol = Molecule("H6O2B2Ne2I1Os1Tl1")
     # get the Path of this file
-    path = Path(__file__).resolve().parent
-    xyz_file = path / "fixtures/H6O2B2Ne2I1Os1Tl1.xyz"
+    testsdir = Path(__file__).resolve().parents[1]
+    xyz_file = testsdir / "fixtures/H6O2B2Ne2I1Os1Tl1.xyz"
     mol.read_xyz_from_file(xyz_file)
     return mol
 
@@ -31,8 +31,8 @@ def mol_H2O2B2I1Os1() -> Molecule:
     """
     mol = Molecule("H2O2B2I1Os1")
     # get the Path of this file
-    path = Path(__file__).resolve().parent
-    xyz_file = path / "fixtures/H2O2B2I1Os1.xyz"
+    testsdir = Path(__file__).resolve().parents[1]
+    xyz_file = testsdir / "fixtures/H2O2B2I1Os1.xyz"
     mol.read_xyz_from_file(xyz_file)
     return mol
 
