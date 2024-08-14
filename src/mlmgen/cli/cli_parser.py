@@ -26,8 +26,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "--verbosity",
         type=int,
         required=False,
-        choices=[0, 1, 2],
-        help="Verbosity level (0, 1, or 2).",
+        choices=[0, 1, 2, 3],
+        help="Verbosity level (0, 1, 2, or 3).",
     )
     parser.add_argument(
         "-e",

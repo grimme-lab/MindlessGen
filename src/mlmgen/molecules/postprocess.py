@@ -14,7 +14,7 @@ def postprocess(mol: Molecule, engine: QMMethod, verbosity: int = 1) -> Molecule
     """
     # Optimize the initial random molecule
     try:
-        optmol = engine.optimize(mol)
+        optmol = engine.optimize(mol, verbosity)
     except RuntimeError as e:
         raise RuntimeError(f"First optimization failed: {e}") from e
     # Get all fragments

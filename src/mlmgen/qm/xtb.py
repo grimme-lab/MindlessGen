@@ -27,7 +27,7 @@ class XTB(QMMethod):
             raise TypeError("xtb_path should be a string or a Path object.")
         self.verbosity = verbosity
 
-    def optimize(self, molecule: Molecule) -> Molecule:
+    def optimize(self, molecule: Molecule, verbosity: int = 1) -> Molecule:
         """
         Optimize a molecule using xtb.
         """
@@ -52,6 +52,8 @@ class XTB(QMMethod):
                 temp_path=temp_path, arguments=arguments
             )
             if return_code != 0:
+                if verbosity > 2:
+                    print(xtb_log_out)
                 raise RuntimeError(
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
@@ -146,12 +148,12 @@ class XTB(QMMethod):
                 check=True,
             )
             # get the output of the xtb calculation (of both stdout and stderr)
-            xtb_log_out = xtb_out.stdout.decode("utf-8")
-            xtb_log_err = xtb_out.stderr.decode("utf-8")
+            xtb_log_out = xtb_out.stdout.decode("utf8")
+            xtb_log_err = xtb_out.stderr.decode("utf8")
             return xtb_log_out, xtb_log_err, 0
         except sp.CalledProcessError as e:
-            xtb_log_out = e.stdout.decode("utf-8")
-            xtb_log_err = e.stderr.decode("utf-8")
+            xtb_log_out = e.stdout.decode("utf8")
+            xtb_log_err = e.stderr.decode("utf8")
             return xtb_log_out, xtb_log_err, e.returncode
 
 

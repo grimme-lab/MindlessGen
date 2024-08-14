@@ -153,6 +153,8 @@ def generate_coordinates(
     Generate random coordinates for a molecule.
     """
 
+    EXPANSION_FACTOR = 1.3
+
     # eff_scaling is a deep copy of scaling
     eff_scaling = copy.deepcopy(scaling)
     xyz, ati = generate_random_coordinates(at)
@@ -160,9 +162,11 @@ def generate_coordinates(
     # do while check_distances is False
     while not check_distances(xyz, dist_threshold):
         if verbosity > 1:
-            print("Distance check failed. Regenerating coordinates...")
+            print(
+                f"Distance check failed. Increasing expansion factor by {EXPANSION_FACTOR}..."
+            )
         xyz, ati = generate_random_coordinates(at)
-        eff_scaling = eff_scaling * 1.3
+        eff_scaling = eff_scaling * EXPANSION_FACTOR
         xyz = xyz * eff_scaling
 
     return xyz, ati
