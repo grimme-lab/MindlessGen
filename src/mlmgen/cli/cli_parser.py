@@ -25,6 +25,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     parser.add_argument(
         "--verbosity",
         type=int,
+        required=False,
         choices=[0, 1, 2],
         help="Verbosity level (0, 1, or 2).",
     )
@@ -32,6 +33,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "-e",
         "--engine",
         type=str,
+        required=False,
         choices=["xtb", "orca"],
         help="QM engine to use.",
     )
@@ -50,7 +52,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     args_dict = vars(args)
 
     # General arguments
-    rev_args_dict = {}
+    rev_args_dict: dict[str, dict] = {}
     rev_args_dict["general"] = {
         "config": args_dict["config"],
         "verbosity": args_dict["verbosity"],
