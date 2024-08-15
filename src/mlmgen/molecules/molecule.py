@@ -5,8 +5,8 @@ Molecule class.
 from __future__ import annotations
 import copy
 from pathlib import Path
-import numpy as np
 import hashlib
+import numpy as np
 from ..__version__ import __version__
 
 
