@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 from pathlib import Path
 import numpy as np
+import hashlib
 from ..__version__ import __version__
 
 
@@ -511,3 +512,17 @@ class Molecule:
             new_molecule.ati = copy.deepcopy(self.ati)
 
         return new_molecule
+
+    def set_name_from_formula(self) -> None:
+        """
+        Get the name of the molecule from its sum formula.
+
+        :Arguments: None
+
+        :Returns: None
+        """
+
+        molname = self.sum_formula()
+        # add a random hash to the name
+        hashname = hashlib.sha256(np.random.bytes(32)).hexdigest()[:6]
+        self.name = f"{molname}_{hashname}"

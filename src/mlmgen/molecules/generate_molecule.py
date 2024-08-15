@@ -32,6 +32,7 @@ def generate_random_molecule(config_general: GeneralConfig) -> Molecule:
         verbosity=config_general.verbosity,
     )
     mol.charge = set_random_charge(mol.ati, config_general.verbosity)
+    mol.set_name_from_formula()
 
     # if verbosity > 1, print the molecule
     if config_general.verbosity > 1:
