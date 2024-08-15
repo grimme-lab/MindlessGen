@@ -1,4 +1,4 @@
-# MindLess Molecule GENerator
+# Mindless Molecule Generator
 
 ![CI](https://github.com/marcelmbn/MindlessGen/actions/workflows/ci.yml/badge.svg)
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
