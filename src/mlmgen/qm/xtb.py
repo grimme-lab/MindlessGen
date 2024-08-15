@@ -45,7 +45,7 @@ class XTB(QMMethod):
                 "--gfn",
                 "2",
             ]
-            if self.verbosity > 1:
+            if self.verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
             xtb_log_out, xtb_log_err, return_code = self.run(

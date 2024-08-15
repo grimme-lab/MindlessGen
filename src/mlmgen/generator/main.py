@@ -62,6 +62,11 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
         print(f"Running with {num_cores} cores.")
     backup_verbosity: int | None = None
     if num_cores > 1 and config.general.verbosity > 0:
+        # raise warning that parallelization will disable verbosity
+        warnings.warn(
+            "Parallelization will disable verbosity during iterative search. "
+            + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
+        )
         backup_verbosity = config.general.verbosity  # Save verbosity level for later
         config.general.verbosity = 0  # Disable verbosity if parallel
 
@@ -71,6 +76,8 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
             single_molecule_generator,
             [(config, engine, cycle, stop_event) for cycle in cycles],
         )
+    if config.general.verbosity == 0:
+        print()  # introduce a new line after the cycle dots
 
     # Restore verbosity level if it was changed
     if backup_verbosity is not None:
