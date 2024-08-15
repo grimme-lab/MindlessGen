@@ -12,6 +12,7 @@ import warnings
 from ..generator import generator
 from .cli_parser import cli_parser as cl
 from ..prog import ConfigManager
+from ..molecules import Molecule
 
 
 def console_entry_point(argv: Sequence[str] | None = None) -> int:
@@ -37,7 +38,18 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
     # Step 5: Run the generator
     if config.general.verbosity > 1:
         print(config)
-    raise SystemExit(generator(config))
+
+    try:
+        returnobject: Molecule | int | None = generator(config)
+    except RuntimeError as e:
+        print(f"\nGeneration failed: {e}")
+        raise RuntimeError("Generation failed.") from e
+    if isinstance(returnobject, int):
+        raise SystemExit(returnobject)
+    if isinstance(returnobject, Molecule):
+        returnobject.write_xyz_to_file()
+        raise SystemExit(0)
+    raise SystemExit(1)
 
 
 def find_config_file(cli_config_path: str | Path | None = None) -> Path | None:

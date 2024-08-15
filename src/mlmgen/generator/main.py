@@ -13,7 +13,7 @@ from ..molecules import postprocess
 from ..prog import ConfigManager
 
 
-def generator(config: ConfigManager) -> int:
+def generator(config: ConfigManager) -> Molecule | int | None:
     """
     Generate a molecule.
     """
@@ -86,10 +86,10 @@ def generator(config: ConfigManager) -> int:
     if optimized_molecule is None:
         raise RuntimeError("Postprocessing failed for all cycles.")
 
-    print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
-    print(optimized_molecule)
-    optimized_molecule.write_xyz_to_file("optimized_molecule.xyz")
-    return 0
+    if config.general.verbosity > 0:
+        print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
+        print(optimized_molecule)
+    return optimized_molecule
 
 
 def single_molecule_generator(
