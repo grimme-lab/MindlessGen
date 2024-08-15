@@ -5,7 +5,7 @@ Test the squaring function.
 from __future__ import annotations
 import pytest
 import numpy as np
-from mlmgen.molecules import (  # type: ignore
+from mindlessgen.molecules import (  # type: ignore
     generate_random_molecule,
     generate_coordinates,
     generate_atom_list,
@@ -17,8 +17,8 @@ from mlmgen.molecules import (  # type: ignore
     get_alkali_metals,
     get_alkaline_earth_metals,
 )
-from mlmgen.molecules.molecule import Molecule  # type: ignore
-from mlmgen.prog import ConfigManager  # type: ignore
+from mindlessgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.prog import ConfigManager  # type: ignore
 
 
 def test_generate_molecule() -> None:

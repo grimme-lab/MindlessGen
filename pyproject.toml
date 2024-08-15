@@ -3,11 +3,11 @@ requires = ["wheel", "setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mlmgen"
+name = "mindlessgen"
 authors = [
     { name = "Marcel Müller", email = "marcel.mueller@thch.uni-bonn.de" },
 ]
-description = "MindLess Molecule GENerator"
+description = "Mindless Molecule GENerator"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE.md" }
@@ -37,10 +37,10 @@ dev = [
 ]
 
 [project.scripts]
-mlmgen = "mlmgen:console_entry_point"
+mindlessgen = "mindlessgen:console_entry_point"
 
 [tool.setuptools_scm]
-version_file = "src/mlmgen/__version__.py"
+version_file = "src/mindlessgen/__version__.py"
 
 [tool.pytest.ini_options]
 testpaths = ["test"]

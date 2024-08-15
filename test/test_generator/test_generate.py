@@ -1,8 +1,8 @@
 import pytest
 
-from mlmgen.generator import generator  # type: ignore
-from mlmgen.prog import ConfigManager  # type: ignore
-from mlmgen.molecules import Molecule  # type: ignore
+from mindlessgen.generator import generator  # type: ignore
+from mindlessgen.prog import ConfigManager  # type: ignore
+from mindlessgen.molecules import Molecule  # type: ignore
 
 
 @pytest.mark.optional

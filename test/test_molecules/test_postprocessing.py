@@ -7,8 +7,8 @@ from __future__ import annotations
 from pathlib import Path
 import numpy as np
 import pytest
-from mlmgen.molecules import detect_fragments  # type: ignore
-from mlmgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.molecules import detect_fragments  # type: ignore
+from mindlessgen.molecules.molecule import Molecule  # type: ignore
 
 
 @pytest.fixture

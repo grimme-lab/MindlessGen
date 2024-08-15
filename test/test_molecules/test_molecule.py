@@ -5,7 +5,7 @@ Test the squaring function.
 from __future__ import annotations
 import numpy as np
 import pytest
-from mlmgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.molecules.molecule import Molecule  # type: ignore
 
 
 @pytest.mark.parametrize(

@@ -65,8 +65,8 @@ def find_config_file(cli_config_path: str | Path | None = None) -> Path | None:
 
     # Search paths
     search_paths = [
-        Path.home() / "mlmgen.toml",  # $USER/mlmgen.toml
-        Path.cwd() / "mlmgen.toml",  # Current directory
+        Path.home() / "mindlessgen.toml",  # $USER/mindlessgen.toml
+        Path.cwd() / "mindlessgen.toml",  # Current directory
     ]
 
     # Find the config file

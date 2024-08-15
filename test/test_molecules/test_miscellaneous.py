@@ -4,7 +4,7 @@ Test the miscellaneous functions in the molecules module.
 
 import pytest
 import numpy as np
-from mlmgen.molecules.miscellaneous import set_random_charge  # type: ignore
+from mindlessgen.molecules.miscellaneous import set_random_charge  # type: ignore
 
 
 # CAUTION: We use 0-based indexing for atoms and molecules!

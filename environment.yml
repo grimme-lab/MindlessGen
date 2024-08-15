@@ -1,5 +1,5 @@
 # conda env create -f environment.yaml
-name: mlmgen
+name: mindlessgen
 channels:
   - conda-forge
 dependencies:

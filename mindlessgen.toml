@@ -1,4 +1,4 @@
-# Default configuration for the 'MindLess Molecule GENerator' (MLMGen)
+# Default configuration for the 'Mindless Molecule GENerator' (MindlessGen) package
 # Following file locations are searched for in the following order:
 # 1. Location specified by the `--config < str | Path >` command-line argument
 # 2. Current working directory (`Path.cwd()`)

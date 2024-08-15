@@ -6,8 +6,8 @@ from __future__ import annotations
 from pathlib import Path
 import pytest
 import numpy as np
-from mlmgen.qm import XTB, get_xtb_path  # type: ignore
-from mlmgen.molecules import Molecule  # type: ignore
+from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
+from mindlessgen.molecules import Molecule  # type: ignore
 
 
 # mark all tests as optional as they depend on the availability of xtb

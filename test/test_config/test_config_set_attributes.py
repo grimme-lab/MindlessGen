@@ -1,5 +1,5 @@
 import pytest
-from mlmgen.prog import GeneralConfig  # type: ignore
+from mindlessgen.prog import GeneralConfig  # type: ignore
 
 
 @pytest.mark.parametrize(
