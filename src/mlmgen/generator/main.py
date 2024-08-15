@@ -43,7 +43,7 @@ def generator(config: ConfigManager) -> int:
         raise NotImplementedError("Engine not implemented.")
 
     if config.general.verbosity > 0:
-        print(f"Config: {config}")
+        print(config)
 
     manager = mp.Manager()
     stop_event = manager.Event()
