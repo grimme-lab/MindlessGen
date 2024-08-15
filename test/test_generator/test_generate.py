@@ -10,10 +10,11 @@ def test_generator():
     config = ConfigManager()
     config.general.engine = "xtb"
     config.general.max_cycles = 10000
-    config.general.parallel = 16
+    config.general.parallel = 8
     config.general.min_num_atoms = 2
     config.general.max_num_atoms = 100
     config.general.verbosity = 0
 
-    molecule = generator(config)
+    molecule, exitcode = generator(config)
+    assert exitcode == 0
     assert isinstance(molecule, Molecule)

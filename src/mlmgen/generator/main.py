@@ -13,7 +13,7 @@ from ..molecules import postprocess
 from ..prog import ConfigManager
 
 
-def generator(config: ConfigManager) -> Molecule | int | None:
+def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
     """
     Generate a molecule.
     """
@@ -29,7 +29,7 @@ def generator(config: ConfigManager) -> Molecule | int | None:
 
     if config.general.print_config:
         print(config)
-        return 0
+        return None, 0
 
     if config.general.engine == "xtb":
         try:
@@ -89,7 +89,7 @@ def generator(config: ConfigManager) -> Molecule | int | None:
     if config.general.verbosity > 0:
         print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
         print(optimized_molecule)
-    return optimized_molecule
+    return optimized_molecule, 0
 
 
 def single_molecule_generator(

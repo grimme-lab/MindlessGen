@@ -12,7 +12,6 @@ import warnings
 from ..generator import generator
 from .cli_parser import cli_parser as cl
 from ..prog import ConfigManager
-from ..molecules import Molecule
 
 
 def console_entry_point(argv: Sequence[str] | None = None) -> int:
@@ -40,14 +39,14 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
         print(config)
 
     try:
-        returnobject: Molecule | int | None = generator(config)
+        molecule, exitcode = generator(config)
     except RuntimeError as e:
         print(f"\nGeneration failed: {e}")
         raise RuntimeError("Generation failed.") from e
-    if isinstance(returnobject, int):
-        raise SystemExit(returnobject)
-    if isinstance(returnobject, Molecule):
-        returnobject.write_xyz_to_file()
+    if molecule and exitcode == 0:
+        molecule.write_xyz_to_file()
+        raise SystemExit(0)
+    elif exitcode == 0:
         raise SystemExit(0)
     raise SystemExit(1)
 
