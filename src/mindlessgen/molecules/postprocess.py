@@ -34,7 +34,7 @@ def iterative_optimization(
         # Extract the number of atoms from each fragment for comparison
         current_atom_counts = [fragmol.num_atoms for fragmol in fragmols]
 
-        # Check if the current atom counts are the same as in the previous cycle
+        # Check if the current atom counts are the same as in the previous cycle or if there is only one fragment
         if previous_fragments is not None:
             if current_atom_counts == previous_fragments:
                 if verbosity > 0:
@@ -42,6 +42,12 @@ def iterative_optimization(
                         f"Fragments are identical to the previous cycle by atom count. Stopping at cycle {cycle + 1}."
                     )
                 break  # Stop if the atom counts are the same as in the previous cycle
+        if len(fragmols) == 1:
+            if verbosity > 0:
+                print(
+                    f"Only one fragment detected in cycle {cycle + 1}. Stopping at cycle {cycle + 1}."
+                )
+            break
         if verbosity > 1:
             print(f"Fragmentation cycle {cycle + 1}: Fragments: {current_atom_counts}")
 
@@ -112,6 +118,11 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
 
     # Generate a Molecule object for each fragment
     fragment_molecules = []
+    # if there is only one fragment, return the molecule as is
+    if len(fragments) == 1:
+        fragment_molecule = mol.copy()
+        fragment_molecules.append(fragment_molecule)
+        return fragment_molecules
     for counter, fragment in enumerate(fragments):
         if verbosity > 1:
             print(f"Fragment: {counter}:\n{fragment}")
