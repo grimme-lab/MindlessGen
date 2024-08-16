@@ -2,9 +2,13 @@
 Contains the configuration Class for the program.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 import toml
 from abc import ABC, abstractmethod
+
+from ..molecules import PSE_NUMBERS
 
 
 # abstract base class for configuration
@@ -135,6 +139,8 @@ class GenerateConfig(BaseConfig):
         self._init_coord_scaling: float = 3.0
         self._dist_threshold: float = 1.2
         self._increase_scaling_factor: float = 1.3
+        self._element_composition: dict = {int: (int, int)}
+        self._forbidden_elements: list[int] | None = None
 
     def get_identifier(self) -> str:
         return "generate"
@@ -228,6 +234,70 @@ class GenerateConfig(BaseConfig):
         if increase_scaling_factor <= 1:
             raise ValueError("Increase scaling factor should be greater than 1.")
         self._increase_scaling_factor = increase_scaling_factor
+
+    @property
+    def element_composition(self):
+        return self._element_composition
+
+    @element_composition.setter
+    def element_composition(self, composition_str):
+        """
+        Parses the element_composition string and stores the parsed data
+        in the _element_composition dictionary.
+
+        Format: "C:2-10, H:10-20, O:1-5, N:1-*"
+        """
+
+        if not isinstance(composition_str, str):
+            raise TypeError("Element composition should be a string.")
+
+        element_dict = {}
+        elements = composition_str.split(",")
+        # remove leading and trailing whitespaces
+        elements = [element.strip() for element in elements]
+
+        for element in elements:
+            element_type, range_str = element.split(":")
+            min_count, max_count = range_str.split("-")
+            element_number = PSE_NUMBERS.get(element_type.lower(), None) - 1
+
+            # Convert counts, handle wildcard '*'
+            min_count = None if min_count == "*" else int(min_count)
+            max_count = None if max_count == "*" else int(max_count)
+
+            element_dict[element_number] = (min_count, max_count)
+
+        self._element_composition = element_dict
+
+    @property
+    def forbidden_elements(self):
+        # return sorted list of forbidden elements
+        return self._forbidden_elements
+
+    @forbidden_elements.setter
+    def forbidden_elements(self, forbidden_str):
+        """
+        Parses the forbidden_elements string and stores the parsed data
+        in the _forbidden_elements set.
+
+        Format: "57-71, 8, 1"
+        """
+        forbidden_set: set[int] = set()
+        elements = forbidden_str.split(",")
+        elements = [element.strip() for element in elements]
+
+        for item in elements:
+            if "-" in item:
+                start, end = map(int, item.split("-"))
+                forbidden_set.update(
+                    range(start - 1, end)
+                )  # Subtract 1 to convert to 0-based indexing
+            else:
+                forbidden_set.add(
+                    int(item - 1)
+                )  # Subtract 1 to convert to 0-based indexing
+
+        self._forbidden_elements = sorted(list(forbidden_set))
 
 
 class RefineConfig(BaseConfig):

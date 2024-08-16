@@ -90,6 +90,18 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Distance threshold for generating coordinates.",
     )
     parser.add_argument(
+        "--element-composition",
+        type=str,
+        required=False,
+        help="Element composition of the molecule.",
+    )
+    parser.add_argument(
+        "--forbidden-elements",
+        type=str,
+        required=False,
+        help="List of forbidden elements.",
+    )
+    parser.add_argument(
         "--max-frag-cycles",
         type=int,
         required=False,
@@ -126,6 +138,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "init_coord_scaling": args_dict["init_coord_scaling"],
         "increase_scaling_factor": args_dict["increase_scaling_factor"],
         "dist_threshold": args_dict["dist_threshold"],
+        "element_composition": args_dict["element_composition"],
+        "forbidden_elements": args_dict["forbidden_elements"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

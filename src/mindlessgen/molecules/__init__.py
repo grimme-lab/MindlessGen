@@ -2,7 +2,7 @@
 This module contains all molecule-related functionality.
 """
 
-from .molecule import Molecule
+from .molecule import Molecule, PSE_NUMBERS, PSE_SYMBOLS
 from .generate_molecule import (
     generate_random_molecule,
     generate_coordinates,
@@ -33,4 +33,6 @@ __all__ = [
     "get_lanthanides",
     "get_alkali_metals",
     "get_alkaline_earth_metals",
+    "PSE_NUMBERS",
+    "PSE_SYMBOLS",
 ]
