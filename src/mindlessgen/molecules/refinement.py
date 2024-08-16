@@ -139,6 +139,7 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
         fragment_molecule.charge = set_random_charge(fragment_molecule.ati, verbosity)
+        fragment_molecule.set_name_from_formula()
         if verbosity > 1:
             print(f"Fragment molecule: {fragment_molecule}")
         # Append the fragment molecule to the list
