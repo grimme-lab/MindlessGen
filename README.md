@@ -43,6 +43,9 @@ pytest -vv --optional
 
 ## Usage
 
+> [!WARNING]  
+> `mindlessgen` is still subject of drastic API changes and in the early development phase.
+
 `mindlessgen` can be executed after installation in the desired environment via:
 ```
 mindlessgen -h
