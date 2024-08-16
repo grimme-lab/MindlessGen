@@ -15,7 +15,7 @@ from .generate_molecule import (
     get_alkaline_earth_metals,
     check_distances,
 )
-from .postprocess import iterative_optimization, detect_fragments
+from .refinement import iterative_optimization, detect_fragments
 from .miscellaneous import set_random_charge
 
 __all__ = [
