@@ -23,11 +23,25 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "-v", "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument(
+        "--print-config",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Print the configuration and exit.",
+    )
+    parser.add_argument(
         "--verbosity",
         type=int,
         required=False,
         choices=[0, 1, 2, 3],
         help="Verbosity level (0, 1, 2, or 3).",
+    )
+    parser.add_argument(
+        "-P",
+        "--parallel",
+        type=int,
+        required=False,
+        help="Number of parallel processes to run.",
     )
     parser.add_argument(
         "-e",
@@ -57,18 +71,10 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Maximum number of atoms in a molecule.",
     )
     parser.add_argument(
-        "--print-config",
-        action="store_true",
-        default=False,
-        required=False,
-        help="Print the configuration and exit.",
-    )
-    parser.add_argument(
-        "-P",
-        "--parallel",
+        "--max-frag-cycles",
         type=int,
         required=False,
-        help="Number of parallel processes to run.",
+        help="Maximum number of fragment optimization cycles.",
     )
     # XTB specific arguments
     # TODO: Add XTB specific arguments
@@ -85,9 +91,14 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "parallel": args_dict["parallel"],
         "engine": args_dict["engine"],
         "max_cycles": args_dict["max_cycles"],
+        "print_config": args_dict["print_config"],
+    }
+    rev_args_dict["refine"] = {
+        "max_frag_cycles": args_dict["max_frag_cycles"],
+    }
+    rev_args_dict["generate"] = {
         "min_num_atoms": args_dict["min_num_atoms"],
         "max_num_atoms": args_dict["max_num_atoms"],
-        "print_config": args_dict["print_config"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {}

@@ -28,7 +28,7 @@ def test_generate_molecule() -> None:
     # create a ConfigManager object with verbosity set to 0
     config = ConfigManager()
     config.general.verbosity = 0
-    mol = generate_random_molecule(config.general)
+    mol = generate_random_molecule(config.generate, config.general.verbosity)
 
     assert mol.num_atoms > 0
     assert mol.num_atoms == np.sum(mol.atlist)

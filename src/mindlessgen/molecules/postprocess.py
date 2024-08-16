@@ -2,60 +2,79 @@ from pathlib import Path
 import networkx as nx  # type: ignore
 import numpy as np
 from ..qm.base import QMMethod
+from ..prog import GenerateConfig, RefineConfig
 from .molecule import Molecule
 from .miscellaneous import set_random_charge
 
 COV_RADII = "pyykko"
 
 
-def postprocess(
+def iterative_optimization(
     mol: Molecule,
     engine: QMMethod,
-    min_nat: int = 1,
-    max_nat: int = 100,
+    config_generate: GenerateConfig,
+    config_refine: RefineConfig,
     verbosity: int = 1,
 ) -> Molecule:
-    """
-    Postprocess the molecule.
-    """
-    # Optimize the initial random molecule
-    try:
-        optmol = engine.optimize(mol, verbosity)
-    except RuntimeError as e:
-        raise RuntimeError(f"First optimization failed: {e}") from e
-    # Get all fragments
-    fragmols = detect_fragments(optmol, verbosity)
+    rev_mol = mol.copy()
+    previous_fragments = None  # To store atom counts from the previous cycle
 
-    if verbosity > 1:
-        for i, fragmol in enumerate(fragmols):
-            # generate a directory for each fragment
-            Path(f"fragment_{i}").mkdir(exist_ok=True)
-            fragmol.write_xyz_to_file(f"fragment_{i}/fragment_{i}.xyz")
+    for cycle in range(config_refine.max_frag_cycles):
+        # Optimize the current molecule
+        try:
+            rev_mol = engine.optimize(rev_mol, verbosity)
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Optimization failed at fragmentation cycle {cycle}: {e}"
+            ) from e
 
-    # if first fragment has less atoms than min_nat or more than max_nat, raise an error
-    # NOTE: MM Check only for min_nat,
-    # as fragment can still fragment into smaller fragments at the next step
-    if fragmols[0].num_atoms < min_nat:
+        # Detect fragments from the optimized molecule
+        fragmols = detect_fragments(rev_mol, verbosity)
+
+        # Extract the number of atoms from each fragment for comparison
+        current_atom_counts = [fragmol.num_atoms for fragmol in fragmols]
+
+        # Check if the current atom counts are the same as in the previous cycle
+        if previous_fragments is not None:
+            if current_atom_counts == previous_fragments:
+                if verbosity > 0:
+                    print(
+                        f"Fragments are identical to the previous cycle by atom count. Stopping at cycle {cycle + 1}."
+                    )
+                break  # Stop if the atom counts are the same as in the previous cycle
+        if verbosity > 1:
+            print(f"Fragmentation cycle {cycle + 1}: Fragments: {current_atom_counts}")
+
+        previous_fragments = current_atom_counts  # Update for the next cycle
+
+        if verbosity > 2:
+            for i, fragmol in enumerate(fragmols):
+                # Generate a directory for each fragment
+                Path(f"cycle_{cycle + 1}_fragment_{i}").mkdir(exist_ok=True)
+                fragmol.write_xyz_to_file(
+                    f"cycle_{cycle + 1}_fragment_{i}/fragment_{i}.xyz"
+                )
+
+        # Select the first fragment for the next cycle
+        if fragmols[0].num_atoms < config_generate.min_num_atoms:
+            raise RuntimeError(
+                f"First fragment in cycle {cycle + 1} has fewer atoms than the minimum required."
+            )
+
+        rev_mol = fragmols[
+            0
+        ]  # Set current_mol to the first fragment for the next cycle
+
+    # Final check after all cycles
+    if (
+        rev_mol.num_atoms < config_generate.min_num_atoms
+        or rev_mol.num_atoms > config_generate.max_num_atoms
+    ):
         raise RuntimeError(
-            "First fragment has less atoms than the minimum number of atoms."
+            "Final fragment has an invalid number of atoms (less than min or more than max)."
         )
-    # Optimize the first fragment
-    try:
-        optfragmol = engine.optimize(fragmols[0])
-    except RuntimeError as e:
-        raise RuntimeError(f"Fragment optimization failed: {e}") from e
-    # Differentiate again in fragments and take only the first one
-    optfragmol = detect_fragments(optfragmol, verbosity)[0]
 
-    # Check again if the fragment has less atoms than min_nat or more than max_nat, raise an error
-    if optfragmol.num_atoms < min_nat or optfragmol.num_atoms > max_nat:
-        raise RuntimeError("Fragment has less atoms than the minimum number of atoms.")
-
-    # Check if the HL gap is larger than a given threshold
-    if not engine.check_gap(optfragmol):
-        raise RuntimeError("HL gap is smaller than the threshold.")
-
-    return optfragmol
+    return rev_mol
 
 
 def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:

@@ -17,11 +17,16 @@ engine = "xtb"
 # Maximum number of optimization cycles. Options: <int>
 max_cycles = 100
 
+[generate]
 # Minimum number of atoms in the generated molecule. Options: <int>
 min_num_atoms = 2
 
 # Maximum number of atoms in the generated molecule. Options: <int>
 max_num_atoms = 100
+
+[refine]
+# Maximum number of fragment optimization cycles. Options: <int>
+max_frag_cycles = 100
 
 [xtb]
 # TODO

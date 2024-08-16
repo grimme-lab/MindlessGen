@@ -9,7 +9,7 @@ import warnings
 
 from ..molecules import generate_random_molecule, Molecule
 from ..qm import XTB, get_xtb_path, QMMethod
-from ..molecules import postprocess
+from ..molecules import iterative_optimization
 from ..prog import ConfigManager
 
 
@@ -70,7 +70,8 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
         backup_verbosity = config.general.verbosity  # Save verbosity level for later
         config.general.verbosity = 0  # Disable verbosity if parallel
 
-    print("Cycle... ", end="", flush=True)
+    if config.general.verbosity == 0:
+        print("Cycle... ", end="", flush=True)
     with mp.Pool(processes=num_cores) as pool:
         results = pool.starmap(
             single_molecule_generator,
@@ -120,7 +121,7 @@ def single_molecule_generator(
     # | |__| |  __/ | | |  __/ | | (_| | || (_) | |
     #  \_____|\___|_| |_|\___|_|  \__,_|\__\___/|_|
 
-    mol = generate_random_molecule(config.general)
+    mol = generate_random_molecule(config.generate, config.general.verbosity)
 
     try:
         #    ____        _   _           _
@@ -131,11 +132,11 @@ def single_molecule_generator(
         #   \____/| .__/ \__|_|_| |_| |_|_/___\___|
         #         | |
         #         |_|
-        optimized_molecule = postprocess(
+        optimized_molecule = iterative_optimization(
             mol=mol,
             engine=engine,
-            min_nat=config.general.min_num_atoms,
-            max_nat=config.general.max_num_atoms,
+            config_generate=config.generate,
+            config_refine=config.refine,
             verbosity=config.general.verbosity,
         )
         if not stop_event.is_set():

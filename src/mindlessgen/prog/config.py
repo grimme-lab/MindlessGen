@@ -4,9 +4,27 @@ Contains the configuration Class for the program.
 
 from pathlib import Path
 import toml
+from abc import ABC, abstractmethod
 
 
-class GeneralConfig:
+# abstract base class for configuration
+class BaseConfig(ABC):
+    """
+    Abstract base class for configuration settings.
+    """
+
+    @abstractmethod
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def get_identifier(self) -> str:
+        """
+        Get the identifier of the configuration.
+        """
+
+
+class GeneralConfig(BaseConfig):
     """
     Configuration class for general settings.
     """
@@ -15,10 +33,11 @@ class GeneralConfig:
         self._verbosity: int = 1
         self._max_cycles: int = 100
         self._engine: str = "xtb"
-        self._min_num_atoms: int = 2
-        self._max_num_atoms: int = 100
         self._print_config: bool = False
         self._parallel: int = 1
+
+    def get_identifier(self) -> str:
+        return "general"
 
     @property
     def verbosity(self):
@@ -75,6 +94,49 @@ class GeneralConfig:
         self._engine = engine
 
     @property
+    def print_config(self):
+        """
+        Get the print config flag.
+        """
+        return self._print_config
+
+    @print_config.setter
+    def print_config(self, print_config: bool):
+        """
+        Set the print config flag.
+        """
+        if not isinstance(print_config, bool):
+            raise TypeError("Print config should be a boolean.")
+        self._print_config = print_config
+
+    @property
+    def parallel(self):
+        """
+        Get the parallel flag.
+        """
+        return self._parallel
+
+    @parallel.setter
+    def parallel(self, parallel: int):
+        """
+        Set the parallel flag.
+        """
+        if not isinstance(parallel, int):
+            raise TypeError("Parallel should be an integer.")
+        if parallel < 1:
+            raise ValueError("Parallel should be greater than 0.")
+        self._parallel = parallel
+
+
+class GenerateConfig(BaseConfig):
+    def __init__(self):
+        self._min_num_atoms: int = 2
+        self._max_num_atoms: int = 100
+
+    def get_identifier(self) -> str:
+        return "generate"
+
+    @property
     def min_num_atoms(self):
         """
         Get the minimum number of atoms.
@@ -110,48 +172,47 @@ class GeneralConfig:
             raise ValueError("Max num atoms should be greater than 0.")
         self._max_num_atoms = max_num_atoms
 
-    @property
-    def print_config(self):
-        """
-        Get the print config flag.
-        """
-        return self._print_config
 
-    @print_config.setter
-    def print_config(self, print_config: bool):
-        """
-        Set the print config flag.
-        """
-        if not isinstance(print_config, bool):
-            raise TypeError("Print config should be a boolean.")
-        self._print_config = print_config
+class RefineConfig(BaseConfig):
+    """
+    Configuration class for refinement settings.
+    """
+
+    def __init__(self):
+        self._max_frag_cycles: int = 100
+
+    def get_identifier(self) -> str:
+        return "refine"
 
     @property
-    def parallel(self):
+    def max_frag_cycles(self):
         """
-        Get the parallel flag.
+        Get the maximum number of fragment cycles.
         """
-        return self._parallel
+        return self._max_frag_cycles
 
-    @parallel.setter
-    def parallel(self, parallel: int):
+    @max_frag_cycles.setter
+    def max_frag_cycles(self, max_frag_cycles: int):
         """
-        Set the parallel flag.
+        Set the maximum number of fragment cycles.
         """
-        if not isinstance(parallel, int):
-            raise TypeError("Parallel should be an integer.")
-        if parallel < 1:
-            raise ValueError("Parallel should be greater than 0.")
-        self._parallel = parallel
+        if not isinstance(max_frag_cycles, int):
+            raise TypeError("Max fragment cycles should be an integer.")
+        if max_frag_cycles < 1:
+            raise ValueError("Max fragment cycles should be greater than 0.")
+        self._max_frag_cycles = max_frag_cycles
 
 
-class XTBConfig:
+class XTBConfig(BaseConfig):
     """
     Configuration class for XTB.
     """
 
     def __init__(self):
         self._xtb_option: str = "dummy"
+
+    def get_identifier(self) -> str:
+        return "xtb"
 
     @property
     def xtb_option(self):
@@ -170,13 +231,16 @@ class XTBConfig:
         self._xtb_option = xtb_option
 
 
-class ORCAConfig:
+class ORCAConfig(BaseConfig):
     """
     Configuration class for ORCA.
     """
 
     def __init__(self):
         self._orca_option: str = "dummy"
+
+    def get_identifier(self) -> str:
+        return "orca"
 
     @property
     def orca_option(self):
@@ -207,10 +271,20 @@ class ConfigManager:
         self.general = GeneralConfig()
         self.xtb = XTBConfig()
         self.orca = ORCAConfig()
-        self.sub_configs = ["general", "xtb", "orca"]
+        self.refine = RefineConfig()
+        self.generate = GenerateConfig()
 
         if config_file:
             self.load_from_toml(config_file)
+
+    def get_all_identifiers(self):
+        identifiers = []
+        for attr_name in dir(self):
+            attr_value = getattr(self, attr_name)
+            # Check if the attribute is an instance of BaseConfig
+            if isinstance(attr_value, BaseConfig):
+                identifiers.append(attr_value.get_identifier())
+        return identifiers
 
     def load_from_toml(self, config_file: str | Path) -> None:
         """
@@ -256,44 +330,33 @@ class ConfigManager:
         """
         # Check for unknown keys
         for key in config_dict:
-            if key not in self.sub_configs:
+            if key not in self.get_all_identifiers():
                 raise KeyError(f"Unknown key in configuration file: {key}")
 
-        for sub_config in self.sub_configs:
+        for sub_config in self.get_all_identifiers():
+            if sub_config not in config_dict:
+                continue
             for config_key, config_value in config_dict[sub_config].items():
                 # check if config_value is not None and if the attribute exists
-                if config_value is not None and hasattr(self.general, config_key):
-                    setattr(self.general, config_key, config_value)
+                if config_value is not None and hasattr(
+                    getattr(self, sub_config), config_key
+                ):
+                    setattr(getattr(self, sub_config), config_key, config_value)
 
     def __str__(self) -> str:
         """
-        Method to display current configuration
+        Automated method to display the current configuration.
         """
-        # work with fixed indentation and line breaks, e.g.: ":<10}", "\n"
-        configstr = "General configuration:\n"
-        # indent the sub settings
-        configstr += f"{'Verbosity':>30}:" + 3 * " " + f"{self.general.verbosity}\n"
-        configstr += (
-            f"{'Parallel processes':>30}:" + 3 * " " + f"{self.general.parallel}\n"
-        )
-        configstr += (
-            f"{'Maximum cycles':>30}:" + 3 * " " + f"{self.general.max_cycles}\n"
-        )
-        configstr += f"{'QM engine':>30}:" + 3 * " " + f"{self.general.engine}\n"
-        configstr += (
-            f"{'Minimum number of atoms':>30}:"
-            + 3 * " "
-            + f"{self.general.min_num_atoms}\n"
-        )
-        configstr += (
-            f"{'Maximum number of atoms':>30}:"
-            + 3 * " "
-            + f"{self.general.max_num_atoms}\n"
-        )
-        configstr += "\n"
-        configstr += "xTB configuration:\n"
-        configstr += f"{'xTB option':>30}:" + 3 * " " + f"{self.xtb.xtb_option}\n"
-        configstr += "\n"
-        configstr += "ORCA configuration:\n"
-        configstr += f"{'ORCA option':>30}:" + 3 * " " + f"{self.orca.orca_option}\n"
+        configstr = ""
+        for attr_name in dir(self):
+            attr_value = getattr(self, attr_name)
+            if isinstance(attr_value, BaseConfig):
+                configstr += (
+                    f"{attr_value.get_identifier().capitalize()} configuration:\n"
+                )
+                for key, value in attr_value.__dict__.items():
+                    configstr += (
+                        f"{key[1:]:>30}:   {value}\n"  # Skip the leading underscore
+                    )
+                configstr += "\n"
         return configstr

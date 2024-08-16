@@ -4,7 +4,7 @@ This module generates a random molecule with a random number of atoms.
 
 import copy
 import numpy as np
-from ..prog import GeneralConfig
+from ..prog import GenerateConfig
 from .molecule import Molecule
 from .miscellaneous import set_random_charge
 
@@ -13,29 +13,31 @@ DEFAULT_DIST_THRESHOLD = 1.2
 EXPANSION_FACTOR = 1.3
 
 
-def generate_random_molecule(config_general: GeneralConfig) -> Molecule:
+def generate_random_molecule(
+    config_generate: GenerateConfig, verbosity: int
+) -> Molecule:
     """
     Generate a random molecule of type Molecule.
     """
 
     mol = Molecule()
     mol.atlist = generate_atom_list(
-        config_general.verbosity,
-        config_general.min_num_atoms,
-        config_general.max_num_atoms,
+        verbosity,
+        config_generate.min_num_atoms,
+        config_generate.max_num_atoms,
     )
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(
         at=mol.atlist,
         scaling=DEFAULT_SCALING,
         dist_threshold=DEFAULT_DIST_THRESHOLD,
-        verbosity=config_general.verbosity,
+        verbosity=verbosity,
     )
-    mol.charge = set_random_charge(mol.ati, config_general.verbosity)
+    mol.charge = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
     # if verbosity > 1, print the molecule
-    if config_general.verbosity > 1:
+    if verbosity > 1:
         print(mol)
 
     return mol

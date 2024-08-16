@@ -1,5 +1,5 @@
 import pytest
-from mindlessgen.prog import GeneralConfig  # type: ignore
+from mindlessgen.prog import GeneralConfig, GenerateConfig, RefineConfig  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -11,10 +11,6 @@ from mindlessgen.prog import GeneralConfig  # type: ignore
         ("max_cycles", 50, "100", TypeError),
         ("engine", "orca", "mopac", ValueError),
         ("engine", "orca", 123, TypeError),
-        ("min_num_atoms", 5, 0, ValueError),
-        ("min_num_atoms", 5, "two", TypeError),
-        ("max_num_atoms", 80, -10, ValueError),
-        ("max_num_atoms", 80, None, TypeError),
         ("print_config", True, "yes", TypeError),
         ("parallel", 4, 0, ValueError),
         ("parallel", 4, "four", TypeError),
@@ -34,18 +30,85 @@ def test_general_config_property_setters(
         setattr(config, property_name, invalid_value)
 
 
+# create a similar test for GenerateConfig
+@pytest.mark.parametrize(
+    "property_name, valid_value, invalid_value, expected_exception",
+    [
+        ("min_num_atoms", 5, 0, ValueError),
+        ("min_num_atoms", 5, "two", TypeError),
+        ("max_num_atoms", 80, -10, ValueError),
+        ("max_num_atoms", 80, None, TypeError),
+    ],
+)
+def test_generate_config_property_setters(
+    property_name, valid_value, invalid_value, expected_exception
+):
+    config = GenerateConfig()
+
+    # Test valid value
+    setattr(config, property_name, valid_value)
+    assert getattr(config, property_name) == valid_value
+
+    # Test invalid value
+    with pytest.raises(expected_exception):
+        setattr(config, property_name, invalid_value)
+
+
+# create a similar test for RefineConfig
+@pytest.mark.parametrize(
+    "property_name, valid_value, invalid_value, expected_exception",
+    [
+        ("max_frag_cycles", 100, -1, ValueError),
+        ("max_frag_cycles", 100, "100", TypeError),
+    ],
+)
+def test_refine_config_property_setters(
+    property_name, valid_value, invalid_value, expected_exception
+):
+    config = RefineConfig()
+
+    # Test valid value
+    setattr(config, property_name, valid_value)
+    assert getattr(config, property_name) == valid_value
+
+    # Test invalid value
+    with pytest.raises(expected_exception):
+        setattr(config, property_name, invalid_value)
+
+
 @pytest.mark.parametrize(
     "property_name, initial_value",
     [
         ("verbosity", 1),
         ("max_cycles", 100),
         ("engine", "xtb"),
-        ("min_num_atoms", 2),
-        ("max_num_atoms", 100),
         ("print_config", False),
         ("parallel", 1),
     ],
 )
 def test_general_config_default_values(property_name, initial_value):
     config = GeneralConfig()
+    assert getattr(config, property_name) == initial_value
+
+
+@pytest.mark.parametrize(
+    "property_name, initial_value",
+    [
+        ("min_num_atoms", 2),
+        ("max_num_atoms", 100),
+    ],
+)
+def test_generate_config_default_values(property_name, initial_value):
+    config = GenerateConfig()
+    assert getattr(config, property_name) == initial_value
+
+
+@pytest.mark.parametrize(
+    "property_name, initial_value",
+    [
+        ("max_frag_cycles", 100),
+    ],
+)
+def test_refine_config_default_values(property_name, initial_value):
+    config = RefineConfig()
     assert getattr(config, property_name) == initial_value
