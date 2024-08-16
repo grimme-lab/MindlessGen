@@ -8,10 +8,6 @@ from ..prog import GenerateConfig
 from .molecule import Molecule
 from .miscellaneous import set_random_charge
 
-DEFAULT_SCALING = 3.0
-DEFAULT_DIST_THRESHOLD = 1.2
-EXPANSION_FACTOR = 1.3
-
 
 def generate_random_molecule(
     config_generate: GenerateConfig, verbosity: int
@@ -29,8 +25,9 @@ def generate_random_molecule(
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(
         at=mol.atlist,
-        scaling=DEFAULT_SCALING,
-        dist_threshold=DEFAULT_DIST_THRESHOLD,
+        scaling=config_generate.init_coord_scaling,
+        dist_threshold=config_generate.dist_threshold,
+        inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
     )
     mol.charge = set_random_charge(mol.ati, verbosity)
@@ -187,7 +184,11 @@ def generate_atom_list(
 
 
 def generate_coordinates(
-    at: np.ndarray, scaling: float, dist_threshold: float, verbosity: int = 1
+    at: np.ndarray,
+    scaling: float,
+    dist_threshold: float,
+    inc_scaling_factor: float = 1.3,
+    verbosity: int = 1,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
@@ -201,10 +202,10 @@ def generate_coordinates(
     while not check_distances(xyz, dist_threshold):
         if verbosity > 1:
             print(
-                f"Distance check failed. Increasing expansion factor by {EXPANSION_FACTOR}..."
+                f"Distance check failed. Increasing expansion factor by {inc_scaling_factor}..."
             )
         xyz, ati = generate_random_coordinates(at)
-        eff_scaling = eff_scaling * EXPANSION_FACTOR
+        eff_scaling = eff_scaling * inc_scaling_factor
         xyz = xyz * eff_scaling
 
     return xyz, ati

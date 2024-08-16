@@ -17,7 +17,7 @@ def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:
     """
     Test the optimization of ethanol with xtb.
     """
-    xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+    xtb_path = get_xtb_path()
     if xtb_path:
         xtb = XTB(xtb_path)
     else:
@@ -114,7 +114,7 @@ def test_check_gap_low_gap(mol_C2H4N1O1Au1: Molecule, mol_H3B4Pd1Rn1: Molecule):
     """
 
     try:
-        xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+        xtb_path = get_xtb_path()
         if not xtb_path:
             raise ImportError("xtb not found.")
     except ImportError as e:

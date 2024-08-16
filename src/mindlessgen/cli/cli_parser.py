@@ -71,6 +71,25 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Maximum number of atoms in a molecule.",
     )
     parser.add_argument(
+        "--init-coord-scaling",
+        type=float,
+        required=False,
+        help="Initial coordinate scaling factor.",
+    )
+    parser.add_argument(
+        "--increase-scaling-factor",
+        type=float,
+        required=False,
+        help="Factor with which the coordinate scaling factor is increased "
+        + "after a failed attempt.",
+    )
+    parser.add_argument(
+        "--dist-threshold",
+        type=float,
+        required=False,
+        help="Distance threshold for generating coordinates.",
+    )
+    parser.add_argument(
         "--max-frag-cycles",
         type=int,
         required=False,
@@ -104,6 +123,9 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     rev_args_dict["generate"] = {
         "min_num_atoms": args_dict["min_num_atoms"],
         "max_num_atoms": args_dict["max_num_atoms"],
+        "init_coord_scaling": args_dict["init_coord_scaling"],
+        "increase_scaling_factor": args_dict["increase_scaling_factor"],
+        "dist_threshold": args_dict["dist_threshold"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

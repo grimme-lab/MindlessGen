@@ -79,7 +79,7 @@ def test_iterative_optimization(
     config.refine.max_frag_cycles = 1
     if config.general.engine == "xtb":
         try:
-            xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+            xtb_path = get_xtb_path()
             if not xtb_path:
                 raise ImportError("xtb not found.")
         except ImportError as e:

@@ -132,6 +132,9 @@ class GenerateConfig(BaseConfig):
     def __init__(self):
         self._min_num_atoms: int = 2
         self._max_num_atoms: int = 100
+        self._init_coord_scaling: float = 3.0
+        self._dist_threshold: float = 1.2
+        self._increase_scaling_factor: float = 1.3
 
     def get_identifier(self) -> str:
         return "generate"
@@ -171,6 +174,60 @@ class GenerateConfig(BaseConfig):
         if max_num_atoms < 1:
             raise ValueError("Max num atoms should be greater than 0.")
         self._max_num_atoms = max_num_atoms
+
+    @property
+    def init_coord_scaling(self):
+        """
+        Get the initial coordinate scaling.
+        """
+        return self._init_coord_scaling
+
+    @init_coord_scaling.setter
+    def init_coord_scaling(self, init_coord_scaling: float):
+        """
+        Set the initial coordinate scaling.
+        """
+        if not isinstance(init_coord_scaling, float):
+            raise TypeError("Initial coordinate scaling should be a float.")
+        if init_coord_scaling <= 0:
+            raise ValueError("Initial coordinate scaling should be greater than 0.")
+        self._init_coord_scaling = init_coord_scaling
+
+    @property
+    def dist_threshold(self):
+        """
+        Get the distance threshold.
+        """
+        return self._dist_threshold
+
+    @dist_threshold.setter
+    def dist_threshold(self, dist_threshold: float):
+        """
+        Set the distance threshold.
+        """
+        if not isinstance(dist_threshold, float):
+            raise TypeError("Distance threshold should be a float.")
+        if dist_threshold <= 0:
+            raise ValueError("Distance threshold should be greater than 0.")
+        self._dist_threshold = dist_threshold
+
+    @property
+    def increase_scaling_factor(self):
+        """
+        Get the increase scaling factor.
+        """
+        return self._increase_scaling_factor
+
+    @increase_scaling_factor.setter
+    def increase_scaling_factor(self, increase_scaling_factor: float):
+        """
+        Set the increase scaling factor.
+        """
+        if not isinstance(increase_scaling_factor, float):
+            raise TypeError("Increase scaling factor should be a float.")
+        if increase_scaling_factor <= 1:
+            raise ValueError("Increase scaling factor should be greater than 1.")
+        self._increase_scaling_factor = increase_scaling_factor
 
 
 class RefineConfig(BaseConfig):
