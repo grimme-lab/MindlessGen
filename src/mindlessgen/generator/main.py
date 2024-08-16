@@ -33,7 +33,7 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
 
     if config.general.engine == "xtb":
         try:
-            xtb_path = get_xtb_path(["xtb_dev", "xtb"])
+            xtb_path = get_xtb_path(config.xtb.xtb_path)
             if not xtb_path:
                 raise ImportError("xtb not found.")
         except ImportError as e:

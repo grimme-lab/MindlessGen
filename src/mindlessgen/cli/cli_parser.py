@@ -76,8 +76,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Maximum number of fragment optimization cycles.",
     )
-    # XTB specific arguments
-    # TODO: Add XTB specific arguments
+    # xTB specific arguments
+    parser.add_argument(
+        "--xtb-path",
+        type=str,
+        required=False,
+        help="Path to the xTB binary.",
+    )
     # ORCA specific arguments
     # TODO: Add ORCA specific arguments
     args = parser.parse_args(argv)
@@ -101,7 +106,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "max_num_atoms": args_dict["max_num_atoms"],
     }
     # XTB specific arguments
-    rev_args_dict["xtb"] = {}
+    rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
     # ORCA specific arguments
     rev_args_dict["orca"] = {}
 

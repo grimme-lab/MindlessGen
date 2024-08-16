@@ -159,15 +159,21 @@ class XTB(QMMethod):
             return xtb_log_out, xtb_log_err, e.returncode
 
 
-def get_xtb_path(binary_names: list[str]) -> Path | None:
+def get_xtb_path(binary_name: str | Path | None = None) -> Path:
     """
     Get the path to the xtb binary based on different possible names
     that are searched for in the PATH.
     """
+    default_xtb_names: list[str | Path] = ["xtb", "xtb_dev"]
+    # put binary name at the beginning of the lixt to prioritize it
+    if binary_name is not None:
+        binary_names = [binary_name] + default_xtb_names
+    else:
+        binary_names = default_xtb_names
     # Get xtb path from 'which xtb' command
-    for binary_name in binary_names:
-        which_xtb = shutil.which(binary_name)
+    for binpath in binary_names:
+        which_xtb = shutil.which(binpath)
         if which_xtb:
-            xtb_path = Path(which_xtb)
+            xtb_path = Path(which_xtb).resolve()
             return xtb_path
-    raise ImportError("'xtb' or 'xtb_dev' not found.")
+    raise ImportError("'xtb' binary could not be found.")

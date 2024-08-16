@@ -29,6 +29,7 @@ max_num_atoms = 100
 max_frag_cycles = 100
 
 [xtb]
+xtb_path = "/path/to/xtb"
 # TODO
 # Specific configurations for the XTB engine (if needed)
 # xtb_option_1 = "value1"

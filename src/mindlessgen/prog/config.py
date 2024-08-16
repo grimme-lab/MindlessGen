@@ -210,6 +210,7 @@ class XTBConfig(BaseConfig):
 
     def __init__(self):
         self._xtb_option: str = "dummy"
+        self._xtb_path: str | Path = "xtb"
 
     def get_identifier(self) -> str:
         return "xtb"
@@ -229,6 +230,22 @@ class XTBConfig(BaseConfig):
         if not isinstance(xtb_option, str):
             raise TypeError("xtb_option should be a string.")
         self._xtb_option = xtb_option
+
+    @property
+    def xtb_path(self):
+        """
+        Get the xtb path.
+        """
+        return self._xtb_path
+
+    @xtb_path.setter
+    def xtb_path(self, xtb_path: str | Path):
+        """
+        Set the xtb path.
+        """
+        if not isinstance(xtb_path, str | Path):
+            raise TypeError("xtb_path should be a string.")
+        self._xtb_path = xtb_path
 
 
 class ORCAConfig(BaseConfig):
