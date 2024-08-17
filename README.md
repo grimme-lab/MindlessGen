@@ -1,7 +1,5 @@
 # Mindless Molecule Generator
 
-<img style="float: right;" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" width="300">
-
 ![CI](https://github.com/marcelmbn/MindlessGen/actions/workflows/ci.yml/badge.svg)
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="Apache-2.0"/>
@@ -9,6 +7,10 @@
 <a href="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12-blue.svg">
   <img src="https://img.shields.io/badge/Python-3.10%20|%203.11|%203.12-blue.svg" alt="Python Versions"/>
 </a>
+<img align="right" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" height="150" />
+
+`mindlessgen` is a Python-based program for semi-automated generation of "mindless" small molecules, as described [here](https://pubs.acs.org/doi/full/10.1021/ct800511q).
+The rule-based algorithm places atoms randomly within the coordinate space and applies several optimization, fragment detection, and sanity check steps. The program is mainly controlled via a [TOML](https://github.com/marcelmbn/MindlessGen/blob/main/mindlessgen.toml) configuration file, see below for details.
 
 ## Installation
 
