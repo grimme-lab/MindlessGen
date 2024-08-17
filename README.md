@@ -14,7 +14,7 @@ The rule-based algorithm places atoms randomly within the coordinate space and a
 
 ## Installation
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > `xtb` has to be available on your machine, either via a `conda-forge` installation, a release binary, or compiled from source. Further information is available [here](https://github.com/grimme-lab/xtb).
 
 ### Non-development purposes
@@ -43,7 +43,7 @@ Before start to make changes in the code, activate the `pre-commit` hooks via:
 ```
 pre-commit install
 ```
-Before pushing a commit to the repository, please run also the optional tests, which depend on external dependencies like xtb, via
+Before pushing a commit to the repository, please run also the optional tests, which depend on external dependencies like `xtb`, via
 ```
 pytest -vv --optional
 ```

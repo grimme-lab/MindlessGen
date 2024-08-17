@@ -5,6 +5,7 @@ on:
       - main
     paths-ignore:
       - "docs/**"
+      - "assets/**"
       - "*.md"
       - "*.rst"
   pull_request:
