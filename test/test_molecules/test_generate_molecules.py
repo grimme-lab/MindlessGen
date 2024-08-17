@@ -63,7 +63,8 @@ def test_generate_atom_list() -> None:
     """
     Test the generation of an array of atomic numbers.
     """
-    atlist = generate_atom_list()
+    config = ConfigManager()
+    atlist = generate_atom_list(config.generate)
     assert atlist.shape == (102,)
     assert np.sum(atlist) > 0
     # check that for the transition and lanthanide metals, the occurence is never greater than 3

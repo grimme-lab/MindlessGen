@@ -380,9 +380,8 @@ class Molecule:
                     + f"{self.xyz[i, 2]:>12.7f}\n"
                 )
         # if the charge is set, write it to a '.CHRG' file
-        parent_dir = Path(filename).resolve().parent
         if self._charge is not None:
-            with open(parent_dir / ".CHRG", "w", encoding="utf8") as f:
+            with open(filename.with_suffix(".CHRG"), "w", encoding="utf8") as f:
                 f.write(f"{self.charge}\n")
 
     def read_xyz_from_file(self, filename: str | Path):
@@ -407,12 +406,14 @@ class Molecule:
             # read the atomic coordinates
             self.xyz = np.zeros((self.num_atoms, 3))
             self.ati = np.zeros(self.num_atoms, dtype=int)
+            self.atlist = np.zeros(102, dtype=int)
             for i in range(self.num_atoms):
                 line = lines[i + 2].split()
                 self.ati[i] = PSE_NUMBERS[line[0].lower()] - 1
                 self.xyz[i, 0] = float(line[1])
                 self.xyz[i, 1] = float(line[2])
                 self.xyz[i, 2] = float(line[3])
+                self.atlist[self.ati[i]] += 1
 
     @property
     def atlist(self) -> np.ndarray:

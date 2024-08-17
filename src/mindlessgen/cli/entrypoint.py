@@ -34,10 +34,6 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
     # Step 4: Merge with CLI arguments, giving precedence to CLI
     config.load_from_dict(args)
 
-    # Step 5: Run the generator
-    if config.general.verbosity > 1:
-        print(config)
-
     try:
         molecule, exitcode = generator(config)
     except RuntimeError as e:

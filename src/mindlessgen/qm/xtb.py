@@ -44,6 +44,8 @@ class XTB(QMMethod):
                 "--opt",
                 "--gfn",
                 "2",
+                "--chrg",
+                str(molecule.charge),
             ]
             if self.verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
@@ -80,6 +82,8 @@ class XTB(QMMethod):
                 "molecule.xyz",
                 "--gfn",
                 "2",
+                "--chrg",
+                str(molecule.charge),
             ]
             if self.verbosity > 1:
                 print(f"Running command: {' '.join(arguments)}")

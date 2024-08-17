@@ -11,8 +11,6 @@ def test_generator():
     config.general.engine = "xtb"
     config.general.max_cycles = 10000
     config.general.parallel = 8
-    config.general.min_num_atoms = 2
-    config.general.max_num_atoms = 100
     config.general.verbosity = 0
 
     molecule, exitcode = generator(config)

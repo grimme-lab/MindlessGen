@@ -18,9 +18,8 @@ def generate_random_molecule(
 
     mol = Molecule()
     mol.atlist = generate_atom_list(
+        config_generate,
         verbosity,
-        config_generate.min_num_atoms,
-        config_generate.max_num_atoms,
     )
     mol.num_atoms = np.sum(mol.atlist)
     mol.xyz, mol.ati = generate_coordinates(
@@ -40,87 +39,29 @@ def generate_random_molecule(
     return mol
 
 
-def generate_atom_list(
-    verbosity: int = 1, min_nat: int = 2, max_nat: int = 100
-) -> np.ndarray:
+def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     """
     Generate a random molecule with a random number of atoms.
     """
-    not_included = ()
-    # not_included = (
-    #     1,
-    #     2,
-    #     5,
-    #     6,
-    #     7,
-    #     8,
-    #     9,
-    #     10,
-    #     18,
-    #     21,
-    #     22,
-    #     23,
-    #     24,
-    #     25,
-    #     26,
-    #     27,
-    #     28,
-    #     29,
-    #     30,
-    #     36,
-    #     39,
-    #     40,
-    #     41,
-    #     42,
-    #     43,
-    #     44,
-    #     45,
-    #     46,
-    #     47,
-    #     48,
-    #     54,
-    #     57,
-    #     58,
-    #     59,
-    #     60,
-    #     61,
-    #     62,
-    #     63,
-    #     64,
-    #     65,
-    #     66,
-    #     67,
-    #     68,
-    #     69,
-    #     70,
-    #     71,
-    #     72,
-    #     73,
-    #     74,
-    #     75,
-    #     76,
-    #     77,
-    #     78,
-    #     79,
-    #     80,
-    #     86,
-    # )
 
-    natoms = np.zeros(102, dtype=int)
+    MAX_ELEM = 86
+    # Define a new set of all elements that can be included
+    set_all_elem = set(range(0, MAX_ELEM))
+    if cfg.forbidden_elements:
+        valid_elems = set_all_elem - set(cfg.forbidden_elements)
+    else:
+        valid_elems = set_all_elem
 
-    # Generating random atoms from whole PSE if no input file is found
-    # Add random elements from the whole PSE
-    # Define the number of atom types to be added
+    natoms = np.zeros(
+        102, dtype=int
+    )  # 102 is the number of accessible elements in the periodic table
+
     numatoms_all = np.random.randint(1, 7)
     for _ in range(numatoms_all):
-        # Define the atom type to be added
-        ati = np.random.randint(0, 86)
+        # Define the atom type to be added via a random choice from the set of valid elements
+        ati = np.random.choice(list(valid_elems))
         if verbosity > 1:
             print(f"Adding atom type {ati}...")
-        while ati + 1 in not_included:
-            ati = np.random.randint(0, 86)
-            if verbosity > 1:
-                print(f"Adding atom type {ati}...")
         # Add a random number of atoms of the defined type
         natoms[ati] = natoms[ati] + np.random.randint(0, 3)
 
@@ -169,16 +110,32 @@ def generate_atom_list(
         j = 1 + int(randint * minnat * 1.2)
         natoms[0] = natoms[0] + j
 
+    # Align with the given element_composition:
+    # CAUTION: The setting to min/max count may violate the metal count restrictions
+    for elem, count_range in cfg.element_composition.items():
+        min_count, max_count = count_range
+        if min_count is not None and natoms[elem] < min_count:
+            natoms[elem] = min_count
+        elif max_count is not None and natoms[elem] > max_count:
+            natoms[elem] = max_count
+
     # If the number of atoms is smaller than the minimum number of atoms, add atoms
-    while np.sum(natoms) < min_nat:
-        i = np.random.randint(0, 86)
-        if i not in not_included:
-            natoms[i] = natoms[i] + 1
+    while np.sum(natoms) < cfg.min_num_atoms:
+        ati = np.random.choice(list(valid_elems))
+        max_limit = cfg.element_composition.get(ati, (None, None))[1]
+        if max_limit is not None and natoms[ati] >= max_limit:
+            continue
+        natoms[ati] = natoms[ati] + 1
     # If the number of atoms is larger than the maximum number of atoms, remove atoms randomly
-    while np.sum(natoms) > max_nat:
-        i = np.random.randint(0, 86)
+    while np.sum(natoms) > cfg.max_num_atoms:
+        print(f"Number of atoms: {np.sum(natoms)}")
+        print(f"Max number of atoms: {cfg.max_num_atoms}")
+        i = np.random.randint(0, MAX_ELEM)
         if natoms[i] > 0:
-            natoms[i] = natoms[i] - 1
+            min_limit = cfg.element_composition.get(i, (None, None))[0]
+            if min_limit is not None and natoms[i] > min_limit:
+                print(f"Removing atom type {i}...")
+                natoms[i] = natoms[i] - 1
 
     return natoms
 

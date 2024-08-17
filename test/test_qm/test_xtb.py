@@ -104,6 +104,7 @@ def mol_H3B4Pd1Rn1() -> Molecule:
     mol.read_xyz_from_file(xyz_file)
     with open(testsdir / "fixtures/H3B4Pd1Rn1.CHRG", encoding="utf8") as f:
         mol.charge = int(f.read())
+    mol.uhf = 0
     return mol
 
 

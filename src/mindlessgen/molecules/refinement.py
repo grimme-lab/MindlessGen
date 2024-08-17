@@ -64,8 +64,22 @@ def iterative_optimization(
         # Select the first fragment for the next cycle
         if fragmols[0].num_atoms < config_generate.min_num_atoms:
             raise RuntimeError(
-                f"First fragment in cycle {cycle + 1} has fewer atoms than the minimum required."
+                f"Largest fragment in cycle {cycle + 1} has fewer atoms than the minimum required."
             )
+        # Check if the composition of the largest fragment is still in line with the cfg.element_composition
+        for ati, elem_range in config_generate.element_composition.items():
+            min_limit, max_limit = elem_range
+            count = fragmols[0].atlist[ati]
+            if min_limit is not None and count < min_limit:
+                raise RuntimeError(
+                    f"Element {ati} is underrepresented in the largest fragment in cycle {cycle + 1}."
+                )
+            if (
+                max_limit is not None and count > max_limit
+            ):  # Check is actually nonsense in the current workflow, but we want to have this as agnostic as possible
+                raise RuntimeError(
+                    f"Element {ati} is overrepresented in the largest fragment in cycle {cycle + 1}."
+                )
 
         rev_mol = fragmols[
             0

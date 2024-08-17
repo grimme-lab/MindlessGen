@@ -139,7 +139,7 @@ class GenerateConfig(BaseConfig):
         self._init_coord_scaling: float = 3.0
         self._dist_threshold: float = 1.2
         self._increase_scaling_factor: float = 1.3
-        self._element_composition: dict = {int: (int, int)}
+        self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
 
     def get_identifier(self) -> str:
@@ -264,6 +264,14 @@ class GenerateConfig(BaseConfig):
             # Convert counts, handle wildcard '*'
             min_count = None if min_count == "*" else int(min_count)
             max_count = None if max_count == "*" else int(max_count)
+            if (
+                min_count is not None
+                and max_count is not None
+                and min_count > max_count
+            ):
+                raise ValueError(
+                    f"Minimum count ({min_count}) is larger than maximum count ({max_count})."
+                )
 
             element_dict[element_number] = (min_count, max_count)
 
@@ -280,7 +288,7 @@ class GenerateConfig(BaseConfig):
         Parses the forbidden_elements string and stores the parsed data
         in the _forbidden_elements set.
 
-        Format: "57-71, 8, 1"
+        Format: "57-71, 8, 1" or "19-*"
         """
         forbidden_set: set[int] = set()
         elements = forbidden_str.split(",")
@@ -288,9 +296,15 @@ class GenerateConfig(BaseConfig):
 
         for item in elements:
             if "-" in item:
-                start, end = map(int, item.split("-"))
+                start, end = item.split("-")
+                if end == "*" and start == "*":
+                    raise ValueError("Both start and end cannot be wildcard '*'.")
+                if end == "*":
+                    end = 103  # Set to a the maximum atomic number in mindlessgen
+                if start == "*":
+                    start = 0
                 forbidden_set.update(
-                    range(start - 1, end)
+                    range(int(start) - 1, int(end))
                 )  # Subtract 1 to convert to 0-based indexing
             else:
                 forbidden_set.add(
