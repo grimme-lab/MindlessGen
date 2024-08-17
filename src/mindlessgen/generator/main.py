@@ -12,6 +12,8 @@ from ..qm import XTB, get_xtb_path, QMMethod
 from ..molecules import iterative_optimization
 from ..prog import ConfigManager
 
+from .. import __version__
+
 
 def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
     """
@@ -26,6 +28,9 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
     # |______|_| |_|\__, |_|_| |_|\___|
     #                __/ |
     #               |___/
+
+    if config.general.verbosity > 0:
+        print(header(str(__version__)))
 
     if config.general.print_config:
         print(config)
@@ -151,3 +156,29 @@ def single_molecule_generator(
             if config.general.verbosity > 1:
                 print(e)
         return None
+
+
+def header(version: str) -> str:
+    """
+    This function prints the header of the program.
+    """
+    headerstr = (
+        # pylint: disable=C0301
+        "╔══════════════════════════════════════════════════════════════════════════════════════════════════╗\n"
+        "║                                                                                                  ║\n"
+        "║   ███╗   ███╗██╗███╗   ██╗██████╗ ██╗     ███████╗███████╗███████╗ ██████╗ ███████╗███╗   ██╗    ║\n"
+        "║   ████╗ ████║██║████╗  ██║██╔══██╗██║     ██╔════╝██╔════╝██╔════╝██╔════╝ ██╔════╝████╗  ██║    ║\n"
+        "║   ██╔████╔██║██║██╔██╗ ██║██║  ██║██║     █████╗  ███████╗███████╗██║  ███╗█████╗  ██╔██╗ ██║    ║\n"
+        "║   ██║╚██╔╝██║██║██║╚██╗██║██║  ██║██║     ██╔══╝  ╚════██║╚════██║██║   ██║██╔══╝  ██║╚██╗██║    ║\n"
+        "║   ██║ ╚═╝ ██║██║██║ ╚████║██████╔╝███████╗███████╗███████║███████║╚██████╔╝███████╗██║ ╚████║    ║\n"
+        "║   ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝    ║\n"
+        "║                                                                                                  ║\n"
+        # take only the first five characters of the version
+        f"║                                      MindlessGen v{version[:5]}                                          ║\n"
+        "║                                 Semi-Automated Molecule Generator                                ║\n"
+        "║                                                                                                  ║\n"
+        "║                          Licensed under the Apache License, Version 2.0                          ║\n"
+        "║                           (http://www.apache.org/licenses/LICENSE-2.0)                           ║\n"
+        "╚══════════════════════════════════════════════════════════════════════════════════════════════════╝"
+    )
+    return headerstr
