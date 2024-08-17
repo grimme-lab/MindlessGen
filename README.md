@@ -12,6 +12,9 @@
 
 ## Installation
 
+> [!IMPORTANT]  
+> `xtb` has to be available on your machine, either via a `conda-forge` installation, a release binary, or compiled from source. Further information is available [here](https://github.com/grimme-lab/xtb).
+
 ### Non-development purposes
 
 The project can be simply installed in an existing virtual environment (by, e.g., `conda` or `mamba` (see also [here](https://github.com/conda-forge/miniforge) and [here](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html))) with
