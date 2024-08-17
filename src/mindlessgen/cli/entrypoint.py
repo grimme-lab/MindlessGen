@@ -26,13 +26,14 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
 
     # Step 3: Load the configuration
     if config_file:
-        print(f"Reading configuration from file: '{config_file}'")
         config = ConfigManager(config_file)
     else:
         config = ConfigManager()
 
     # Step 4: Merge with CLI arguments, giving precedence to CLI
     config.load_from_dict(args)
+    if config.general.verbosity >= 0:
+        print(f"Reading configuration from file: '{config_file}'")
 
     try:
         molecule, exitcode = generator(config)

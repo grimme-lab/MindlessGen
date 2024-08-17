@@ -57,8 +57,8 @@ class GeneralConfig(BaseConfig):
         """
         if not isinstance(verbosity, int):
             raise TypeError("Verbosity should be an integer.")
-        if verbosity not in [0, 1, 2, 3]:
-            raise ValueError("Verbosity can only be 0, 1, 2, or 3.")
+        if verbosity not in [-1, 0, 1, 2, 3]:
+            raise ValueError("Verbosity can only be -1, 0, 1, 2, or 3.")
         self._verbosity = verbosity
 
     @property

@@ -33,8 +33,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "--verbosity",
         type=int,
         required=False,
-        choices=[0, 1, 2, 3],
-        help="Verbosity level (0, 1, 2, or 3).",
+        choices=[-1, 0, 1, 2, 3],
+        help="Verbosity level "
+        + "(-1 (silent), "
+        + "0 (very basic), "
+        + "1 (default), "
+        + "2 (verbose), or "
+        + "3 (super verbose)).",
     )
     parser.add_argument(
         "-P",

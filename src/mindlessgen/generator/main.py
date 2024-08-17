@@ -112,7 +112,7 @@ def single_molecule_generator(
     if config.general.verbosity == 0:
         # print the cycle in one line, not starting a new line
         print("✔", end="", flush=True)
-    else:
+    elif config.general.verbosity > 0:
         print(f"Cycle {cycle + 1}:")
     #   _____                           _
     #  / ____|                         | |
