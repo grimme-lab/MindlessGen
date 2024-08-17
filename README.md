@@ -1,5 +1,7 @@
 # Mindless Molecule Generator
 
+<img style="float: right;" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" width="300">
+
 ![CI](https://github.com/marcelmbn/MindlessGen/actions/workflows/ci.yml/badge.svg)
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="Apache-2.0"/>
@@ -31,7 +33,7 @@ mamba create -n mindlessgen python=3.12
 mamba activate mindlessgen
 pip install -e '.[dev]'
 ```
-Thereby, all necessary development tools (e.g., `ruff`, `mypy`, and `pre-commit`) are installed. 
+Thereby, all necessary development tools (e.g., `ruff`, `mypy`, and `pre-commit`) are installed.
 Before start to make changes in the code, activate the `pre-commit` hooks via:
 ```
 pre-commit install
@@ -43,7 +45,7 @@ pytest -vv --optional
 
 ## Usage
 
-> [!WARNING]  
+> [!WARNING]
 > `mindlessgen` is still subject of drastic API changes and in the early development phase.
 
 `mindlessgen` can be executed after installation in the desired environment via:
