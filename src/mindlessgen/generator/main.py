@@ -181,7 +181,7 @@ def header(version: str) -> str:
         "║   ██║ ╚═╝ ██║██║██║ ╚████║██████╔╝███████╗███████╗███████║███████║╚██████╔╝███████╗██║ ╚████║    ║\n"
         "║   ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝    ║\n"
         "║                                                                                                  ║\n"
-        f"║                                       MindlessGen v{version[:5]}                                        ║\n"
+        f"║                                       MindlessGen v{version[:5]}                                         ║\n"
         "║                                 Semi-Automated Molecule Generator                                ║\n"
         "║                                                                                                  ║\n"
         "║                          Licensed under the Apache License, Version 2.0                          ║\n"
