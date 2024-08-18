@@ -64,6 +64,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Maximum number of optimization cycles.",
     )
     parser.add_argument(
+        "--num-molecules",
+        type=int,
+        required=False,
+        help="Number of molecules to generate.",
+    )
+    parser.add_argument(
         "--min-num-atoms",
         type=int,
         required=False,
@@ -133,6 +139,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "engine": args_dict["engine"],
         "max_cycles": args_dict["max_cycles"],
         "print_config": args_dict["print_config"],
+        "num_molecules": args_dict["num_molecules"],
     }
     rev_args_dict["refine"] = {
         "max_frag_cycles": args_dict["max_frag_cycles"],

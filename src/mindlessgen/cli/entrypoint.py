@@ -36,12 +36,15 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
         print(f"Reading configuration from file: '{config_file}'")
 
     try:
-        molecule, exitcode = generator(config)
+        molecules, exitcode = generator(config)
     except RuntimeError as e:
         print(f"\nGeneration failed: {e}")
         raise RuntimeError("Generation failed.") from e
-    if molecule and exitcode == 0:
-        molecule.write_xyz_to_file()
+    if molecules and exitcode == 0:
+        for molecule in molecules:
+            molecule.write_xyz_to_file()
+            if config.general.verbosity > 0:
+                print(f"Written molecule file '{molecule.name}.xyz'.")
         raise SystemExit(0)
     elif exitcode == 0:
         raise SystemExit(0)

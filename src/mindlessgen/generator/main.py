@@ -15,7 +15,7 @@ from ..prog import ConfigManager
 from .. import __version__
 
 
-def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
+def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     """
     Generate a molecule.
     """
@@ -50,10 +50,6 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
     if config.general.verbosity > 0:
         print(config)
 
-    manager = mp.Manager()
-    stop_event = manager.Event()
-    cycles = range(config.general.max_cycles)
-
     # lower number of the available cores and the configured parallelism
     num_cores = min(mp.cpu_count(), config.general.parallel)
     if config.general.parallel > mp.cpu_count():
@@ -62,47 +58,59 @@ def generator(config: ConfigManager) -> tuple[Molecule | None, int]:
             + f"than the number of available cores ({mp.cpu_count()})."
             + f"Using {num_cores} cores instead."
         )
-
     if config.general.verbosity > 0:
         print(f"Running with {num_cores} cores.")
-    backup_verbosity: int | None = None
+
     if num_cores > 1 and config.general.verbosity > 0:
         # raise warning that parallelization will disable verbosity
         warnings.warn(
             "Parallelization will disable verbosity during iterative search. "
             + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
         )
-        backup_verbosity = config.general.verbosity  # Save verbosity level for later
-        config.general.verbosity = 0  # Disable verbosity if parallel
 
-    if config.general.verbosity == 0:
-        print("Cycle... ", end="", flush=True)
-    with mp.Pool(processes=num_cores) as pool:
-        results = pool.starmap(
-            single_molecule_generator,
-            [(config, engine, cycle, stop_event) for cycle in cycles],
-        )
-    if config.general.verbosity == 0:
-        print()  # introduce a new line after the cycle dots
+    optimized_molecules: list[Molecule] = []
+    for molcount in range(config.general.num_molecules):
+        manager = mp.Manager()
+        stop_event = manager.Event()
+        cycles = range(config.general.max_cycles)
+        backup_verbosity: int | None = None
+        if num_cores > 1 and config.general.verbosity > 0:
+            backup_verbosity = (
+                config.general.verbosity
+            )  # Save verbosity level for later
+            config.general.verbosity = 0  # Disable verbosity if parallel
 
-    # Restore verbosity level if it was changed
-    if backup_verbosity is not None:
-        config.general.verbosity = backup_verbosity
+        if config.general.verbosity == 0:
+            print("Cycle... ", end="", flush=True)
+        with mp.Pool(processes=num_cores) as pool:
+            results = pool.starmap(
+                single_molecule_generator,
+                [(config, engine, cycle, stop_event) for cycle in cycles],
+            )
+        if config.general.verbosity == 0:
+            print("")
 
-    # Filter out None values and return the first successful molecule
-    optimized_molecule: Molecule | None = None
-    for i, result in enumerate(results):
-        if result is not None:
-            cycles_needed = i + 1
-            optimized_molecule = result
+        # Restore verbosity level if it was changed
+        if backup_verbosity is not None:
+            config.general.verbosity = backup_verbosity
 
-    if optimized_molecule is None:
-        raise RuntimeError("Postprocessing failed for all cycles.")
+        # Filter out None values and return the first successful molecule
+        optimized_molecule: Molecule | None = None
+        for i, result in enumerate(results):
+            if result is not None:
+                cycles_needed = i + 1
+                optimized_molecule = result
 
-    if config.general.verbosity > 0:
-        print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
-        print(optimized_molecule)
-    return optimized_molecule, 0
+        if optimized_molecule is None:
+            raise RuntimeError(
+                f"Postprocessing failed for all cycles for molecule {molcount + 1}."
+            )
+        if config.general.verbosity > 0:
+            print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
+            print(optimized_molecule)
+        optimized_molecules.append(optimized_molecule)
+
+    return optimized_molecules, 0
 
 
 def single_molecule_generator(

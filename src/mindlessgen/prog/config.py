@@ -39,6 +39,7 @@ class GeneralConfig(BaseConfig):
         self._engine: str = "xtb"
         self._print_config: bool = False
         self._parallel: int = 1
+        self._num_molecules: int = 1
 
     def get_identifier(self) -> str:
         return "general"
@@ -130,6 +131,24 @@ class GeneralConfig(BaseConfig):
         if parallel < 1:
             raise ValueError("Parallel should be greater than 0.")
         self._parallel = parallel
+
+    @property
+    def num_molecules(self):
+        """
+        Get the number of molecules.
+        """
+        return self._num_molecules
+
+    @num_molecules.setter
+    def num_molecules(self, num_molecules: int):
+        """
+        Set the number of molecules.
+        """
+        if not isinstance(num_molecules, int):
+            raise TypeError("Number of molecules should be an integer.")
+        if num_molecules < 1:
+            raise ValueError("Number of molecules should be greater than 0.")
+        self._num_molecules = num_molecules
 
 
 class GenerateConfig(BaseConfig):

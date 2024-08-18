@@ -11,8 +11,10 @@ verbosity = 1
 parallel = 1
 # > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
 engine = "xtb"
-# > Maximum number of optimization cycles. Options: <int>
+# > Maximum number of generation/optimization try-and-error cycles per molecule. Options: <int>
 max_cycles = 100
+# > Number of molecules to generate. Options: <int>
+num_molecules = 1
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>

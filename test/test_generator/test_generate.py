@@ -13,6 +13,7 @@ def test_generator():
     config.general.parallel = 8
     config.general.verbosity = 0
 
-    molecule, exitcode = generator(config)
+    molecules, exitcode = generator(config)
     assert exitcode == 0
-    assert isinstance(molecule, Molecule)
+    for molecule in molecules:
+        assert isinstance(molecule, Molecule)
