@@ -32,6 +32,7 @@ element_composition = "C:2-10, H:10-20, O:1-5, N:1-*"
 # > Atom types that are not chosen for random selection. Format: "<element1>, <element2>, ..."
 # > CAUTION: This option is overridden by the 'element_composition' option.
 # > I.e., if an element is specified in 'element_composition' with an occurrence > 0, it will be added to the molecule anyway.
+# > Example: forbidden_elements = "18,57-*"
 forbidden_elements = "57-71"
 
 [refine]
