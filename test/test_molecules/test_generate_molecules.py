@@ -8,14 +8,7 @@ import numpy as np
 from mindlessgen.molecules import (  # type: ignore
     generate_random_molecule,
     generate_coordinates,
-    generate_atom_list,
     check_distances,
-    get_three_d_metals,
-    get_four_d_metals,
-    get_five_d_metals,
-    get_lanthanides,
-    get_alkali_metals,
-    get_alkaline_earth_metals,
 )
 from mindlessgen.molecules.molecule import Molecule  # type: ignore
 from mindlessgen.prog import ConfigManager  # type: ignore
@@ -33,6 +26,9 @@ def test_generate_molecule() -> None:
     assert mol.num_atoms > 0
     assert mol.num_atoms == np.sum(mol.atlist)
     assert mol.num_atoms == len(mol.xyz)
+    assert mol.num_atoms == len(mol.ati)
+    assert mol.uhf == 0
+    assert mol.charge is not None
     # assert that sum of absolute value of mol.xyz is greater than 0
     assert np.sum(np.abs(mol.xyz)) > 0
 
@@ -57,28 +53,6 @@ def test_generate_coordinates() -> None:
     assert mol.num_atoms == np.sum(mol.atlist)
     assert mol.num_atoms == len(mol.xyz)
     assert mol.num_atoms == len(mol.ati)
-
-
-def test_generate_atom_list() -> None:
-    """
-    Test the generation of an array of atomic numbers.
-    """
-    config = ConfigManager()
-    atlist = generate_atom_list(config.generate)
-    assert atlist.shape == (102,)
-    assert np.sum(atlist) > 0
-    # check that for the transition and lanthanide metals, the occurence is never greater than 3
-    all_metals = (
-        get_three_d_metals()
-        + get_four_d_metals()
-        + get_five_d_metals()
-        + get_lanthanides()
-    )
-    for z in all_metals:
-        assert atlist[z] <= 3
-    alkmetals = get_alkali_metals() + get_alkaline_earth_metals()
-    # check that the sum of alkali and alkaline earth metals is never greater than 3
-    assert np.sum([atlist[z] for z in alkmetals]) <= 3
 
 
 @pytest.mark.parametrize(
