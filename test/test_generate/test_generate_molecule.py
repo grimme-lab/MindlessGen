@@ -2,15 +2,18 @@ import pytest
 import numpy as np
 from mindlessgen.molecules import (  # type: ignore
     generate_atom_list,
+    generate_random_molecule,
+    generate_coordinates,
+    check_distances,
     get_alkali_metals,
     get_alkaline_earth_metals,
     get_three_d_metals,
     get_four_d_metals,
     get_five_d_metals,
     get_lanthanides,
-    Molecule,
 )
-from mindlessgen.prog import GenerateConfig  # type: ignore
+from mindlessgen.prog import GenerateConfig, ConfigManager  # type: ignore
+from mindlessgen.molecules import Molecule  # type: ignore
 
 
 @pytest.fixture
@@ -25,14 +28,8 @@ def default_generate_config():
     return config
 
 
-@pytest.fixture
-def default_molecule():
-    """Fixture to provide a default Molecule object."""
-    return Molecule()
-
-
 @pytest.mark.parametrize("min_atoms,max_atoms", [(5, 15), (10, 20), (2, 10)])
-def test_generate_atom_list_combined(min_atoms, max_atoms, default_generate_config):
+def test_generate_atom_list(min_atoms, max_atoms, default_generate_config):
     """Test the generate_atom_list function with various atom ranges and validate metal constraints."""
     # Update the generate config with the parametrized values
     default_generate_config.min_num_atoms = min_atoms
@@ -43,26 +40,50 @@ def test_generate_atom_list_combined(min_atoms, max_atoms, default_generate_conf
 
     # Common assertions for atom count range
     assert isinstance(atom_list, np.ndarray)
+    assert atom_list.shape == (102,)
+    assert np.sum(atom_list) > 0
     assert np.sum(atom_list) >= min_atoms
     assert np.sum(atom_list) <= max_atoms
 
-    # Additional assertions from the second test
-    assert atom_list.shape == (102,)
-    assert np.sum(atom_list) > 0
-
-    # Check that for the transition and lanthanide metals, the occurrence is never greater than 3
+    # Check that the sum of transition and lanthanide metals is never greater than 3
     all_metals = (
         get_three_d_metals()
         + get_four_d_metals()
         + get_five_d_metals()
         + get_lanthanides()
     )
-    for z in all_metals:
-        assert atom_list[z] <= 3
+    assert np.sum([atom_list[z] for z in all_metals]) <= 3
 
     # Check that the sum of alkali and alkaline earth metals is never greater than 3
     alkmetals = get_alkali_metals() + get_alkaline_earth_metals()
     assert np.sum([atom_list[z] for z in alkmetals]) <= 3
+
+
+# Test the element composition property of the GenerateConfig class
+def test_generate_config_element_composition(default_generate_config):
+    """Test the element composition property of the GenerateConfig class."""
+    default_generate_config.min_num_atoms = 10
+    default_generate_config.max_num_atoms = 15
+    default_generate_config.element_composition = "C:2-2, N:3-3, O:1-1"
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Check that the atom list contains the correct number of atoms for each element
+    assert atom_list[5] == 2
+    assert atom_list[6] == 3
+    assert atom_list[7] == 1
+
+
+# Test the forbidden_elements property of the GenerateConfig class
+def test_generate_config_forbidden_elements(default_generate_config):
+    """Test the forbidden_elements property of the GenerateConfig class."""
+    default_generate_config.min_num_atoms = 10
+    default_generate_config.max_num_atoms = 15
+    default_generate_config.forbidden_elements = "7-9, 19-*"
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Check that the atom list does not contain any forbidden elements
+    assert np.sum([atom_list[z] for z in range(6, 9)]) == 0
+    assert np.sum([atom_list[z] for z in range(18, 102)]) == 0
 
 
 def test_get_alkali_metals():
@@ -105,3 +126,104 @@ def test_get_lanthanides():
     lanthanides = get_lanthanides()
     assert isinstance(lanthanides, list)
     assert all(isinstance(e, int) for e in lanthanides)
+
+
+def test_generate_molecule() -> None:
+    """
+    Test the generation of an array of atomic numbers.
+    """
+    # create a ConfigManager object with verbosity set to 0
+    config = ConfigManager()
+    config.general.verbosity = 0
+    mol = generate_random_molecule(config.generate, config.general.verbosity)
+
+    assert mol.num_atoms > 0
+    assert mol.num_atoms == np.sum(mol.atlist)
+    assert mol.num_atoms == len(mol.xyz)
+    assert mol.num_atoms == len(mol.ati)
+    assert mol.uhf == 0
+    assert mol.charge is not None
+    # assert that sum of absolute value of mol.xyz is greater than 0
+    assert np.sum(np.abs(mol.xyz)) > 0
+
+
+def test_generate_coordinates() -> None:
+    """
+    Test the generation of coordinates.
+    """
+    mol = Molecule()
+    # create an empty array with dimension 1 and length 86
+    mol.atlist = np.zeros(102, dtype=int)
+    assert mol.atlist.shape == (102,)
+
+    # set the first element to 4 and the sixth element to 2
+    mol.atlist[0] = 4
+    mol.atlist[5] = 2
+
+    mol.xyz, mol.ati = generate_coordinates(mol.atlist, 3.0, 1.2)
+    # assert that the shape of mol.xyz is (6, 3)
+    assert mol.xyz.shape == (6, 3)
+    assert mol.num_atoms == 6
+    assert mol.num_atoms == np.sum(mol.atlist)
+    assert mol.num_atoms == len(mol.xyz)
+    assert mol.num_atoms == len(mol.ati)
+
+
+@pytest.mark.parametrize(
+    "xyz, threshold, expected, description",
+    [
+        (
+            np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+            0.5,
+            True,
+            "Two atoms with distance greater than threshold (1.0 > 0.5)",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [0.4, 0.0, 0.0]]),
+            0.5,
+            False,
+            "Two atoms with distance less than threshold (0.4 < 0.5)",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]]),
+            0.5,
+            True,
+            "Three atoms in a line with distances greater than threshold",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [0.4, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+            0.5,
+            False,
+            "Three atoms with one pair close together: distance between first two is less than threshold",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0]]),
+            0.5,
+            True,
+            "Single atom, no distances to compare",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
+            0.5,
+            False,
+            "Two atoms at identical positions: distance is zero, less than threshold",
+        ),
+        (
+            np.array([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]),
+            1.7320,
+            True,
+            "Two atoms with diagonal distance just above threshold (sqrt(3) ≈ 1.732)",
+        ),
+    ],
+    ids=[
+        "far_apart",
+        "close_together",
+        "three_in_line",
+        "three_with_one_close",
+        "single_atom",
+        "two_identical",
+        "diagonal_distance",
+    ],
+)
+def test_check_distances(xyz, threshold, expected, description):
+    assert check_distances(xyz, threshold) == expected
