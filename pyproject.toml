@@ -51,6 +51,8 @@ markers = "optional: mark test as optional"
 [tool.coverage.run]
 plugins = ["covdefaults"]
 source = ["./src"]
+# Exclude interfaces to external programs from coverage
+omit = ["src/mindlessgen/qm/xtb.py", "src/mindlessgen/qm/orca.py"]
 
 [tool.coverage.report]
 fail_under = 50
