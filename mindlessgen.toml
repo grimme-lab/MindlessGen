@@ -46,7 +46,5 @@ max_frag_cycles = 100
 xtb_path = "/path/to/xtb"
 
 [orca]
-# TODO
-# Specific configurations for the ORCA engine (if needed)
-# orca_option_1 = "value1"
-# orca_option_2 = "value2"
+# > Path to the orca executable. Options: <str | Path>
+orca_path = "/path/to/orca"
