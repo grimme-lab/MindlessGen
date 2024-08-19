@@ -325,7 +325,7 @@ class GenerateConfig(BaseConfig):
                 )  # Subtract 1 to convert to 0-based indexing
             else:
                 forbidden_set.add(
-                    int(item - 1)
+                    int(item) - 1
                 )  # Subtract 1 to convert to 0-based indexing
 
         self._forbidden_elements = sorted(list(forbidden_set))
