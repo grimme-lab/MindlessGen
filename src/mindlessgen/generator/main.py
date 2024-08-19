@@ -8,7 +8,7 @@ import multiprocessing as mp
 import warnings
 
 from ..molecules import generate_random_molecule, Molecule
-from ..qm import XTB, get_xtb_path, QMMethod
+from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path
 from ..molecules import iterative_optimization
 from ..prog import ConfigManager
 
@@ -36,6 +36,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         print(config)
         return None, 0
 
+    engine: QMMethod
     if config.general.engine == "xtb":
         try:
             xtb_path = get_xtb_path(config.xtb.xtb_path)
@@ -43,7 +44,15 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
                 raise ImportError("xtb not found.")
         except ImportError as e:
             raise ImportError("xtb not found.") from e
-        engine = XTB(xtb_path, config.general.verbosity)
+        engine = XTB(xtb_path)
+    elif config.general.engine == "orca":
+        try:
+            orca_path = get_orca_path(config.orca.orca_path)
+            if not orca_path:
+                raise ImportError("orca not found.")
+        except ImportError as e:
+            raise ImportError("orca not found.") from e
+        engine = ORCA(orca_path)
     else:
         raise NotImplementedError("Engine not implemented.")
 

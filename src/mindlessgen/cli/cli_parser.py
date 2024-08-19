@@ -126,6 +126,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Path to the xTB binary.",
     )
     # ORCA specific arguments
+    parser.add_argument(
+        "--orca-path",
+        type=str,
+        required=False,
+        help="Path to the ORCA binary.",
+    )
     # TODO: Add ORCA specific arguments
     args = parser.parse_args(argv)
     args_dict = vars(args)
@@ -156,6 +162,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
     # ORCA specific arguments
-    rev_args_dict["orca"] = {}
+    rev_args_dict["orca"] = {"orca_path": args_dict["orca_path"]}
 
     return rev_args_dict

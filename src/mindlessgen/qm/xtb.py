@@ -15,17 +15,16 @@ class XTB(QMMethod):
     This class handles all xtb-related functionality.
     """
 
-    def __init__(self, path: str | Path = "xtb", verbosity: int = 1):
+    def __init__(self, path: str | Path = "xtb"):
         """
         Initialize the XTB class.
         """
         if isinstance(path, str):
-            self.xtb_path: Path = Path(path).resolve()
+            self.path: Path = Path(path).resolve()
         elif isinstance(path, Path):
-            self.xtb_path = path
+            self.path = path
         else:
             raise TypeError("xtb_path should be a string or a Path object.")
-        self.verbosity = verbosity
 
     def optimize(self, molecule: Molecule, verbosity: int = 1) -> Molecule:
         """
@@ -47,10 +46,10 @@ class XTB(QMMethod):
                 "--chrg",
                 str(molecule.charge),
             ]
-            if self.verbosity > 2:
+            if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
-            xtb_log_out, xtb_log_err, return_code = self.run(
+            xtb_log_out, xtb_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
             if return_code != 0:
@@ -66,7 +65,7 @@ class XTB(QMMethod):
 
             return optimized_molecule
 
-    def singlepoint(self, molecule: Molecule) -> str:
+    def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
         Optimize a molecule using xtb.
         """
@@ -85,20 +84,24 @@ class XTB(QMMethod):
                 "--chrg",
                 str(molecule.charge),
             ]
-            if self.verbosity > 1:
+            if verbosity > 1:
                 print(f"Running command: {' '.join(arguments)}")
 
-            xtb_log_out, xtb_log_err, return_code = self.run(
+            xtb_log_out, xtb_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
             if return_code != 0:
+                if verbosity > 2:
+                    print(xtb_log_out)
                 raise RuntimeError(
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
 
             return xtb_log_out
 
-    def check_gap(self, molecule: Molecule, threshold: float = 0.5) -> bool:
+    def check_gap(
+        self, molecule: Molecule, threshold: float = 0.5, verbosity: int = 1
+    ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.
 
@@ -125,7 +128,7 @@ class XTB(QMMethod):
 
         if hlgap is None:
             raise ValueError("HOMO-LUMO gap not determined.")
-        if self.verbosity > 1:
+        if verbosity > 1:
             print(f"HOMO-LUMO gap: {hlgap:5f}")
 
         if hlgap > threshold:
@@ -133,7 +136,7 @@ class XTB(QMMethod):
         else:
             return False
 
-    def run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
+    def _run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
         """
         Run xtb with the given arguments.
 
@@ -148,7 +151,7 @@ class XTB(QMMethod):
         arguments += non_parallel
         try:
             xtb_out = sp.run(
-                [str(self.xtb_path)] + arguments,
+                [str(self.path)] + arguments,
                 cwd=temp_path,
                 capture_output=True,
                 check=True,

@@ -415,6 +415,7 @@ class ORCAConfig(BaseConfig):
 
     def __init__(self):
         self._orca_option: str = "dummy"
+        self._orca_path: str | Path = "orca"
 
     def get_identifier(self) -> str:
         return "orca"
@@ -432,8 +433,24 @@ class ORCAConfig(BaseConfig):
         Set the orca option.
         """
         if not isinstance(orca_option, str):
-            raise TypeError("orca_option should be a string.")
+            raise TypeError("orca_option should be a string or Path.")
         self._orca_option = orca_option
+
+    @property
+    def orca_path(self):
+        """
+        Get the orca path.
+        """
+        return self._orca_path
+
+    @orca_path.setter
+    def orca_path(self, orca_path: str | Path):
+        """
+        Set the orca path.
+        """
+        if not isinstance(orca_path, str | Path):
+            raise TypeError("orca_path should be a string or Path.")
+        self._orca_path = orca_path
 
 
 class ConfigManager:
