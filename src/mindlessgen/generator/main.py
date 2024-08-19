@@ -9,7 +9,7 @@ import warnings
 
 from ..molecules import generate_random_molecule, Molecule
 from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path
-from ..molecules import iterative_optimization
+from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
 
 from .. import __version__
@@ -42,9 +42,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     )
 
     if config.general.postprocess:
-        postprocess_engine: QMMethod = setup_engines(  # noqa: F841
+        postprocess_engine: QMMethod | None = setup_engines(
             config.postprocess.engine, config, get_xtb_path, get_orca_path
         )
+    else:
+        postprocess_engine = None
 
     if config.general.verbosity > 0:
         print(config)
@@ -84,7 +86,10 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         with mp.Pool(processes=num_cores) as pool:
             results = pool.starmap(
                 single_molecule_generator,
-                [(config, refine_engine, cycle, stop_event) for cycle in cycles],
+                [
+                    (config, refine_engine, postprocess_engine, cycle, stop_event)
+                    for cycle in cycles
+                ],
             )
         if config.general.verbosity == 0:
             print("")
@@ -99,10 +104,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             if result is not None:
                 cycles_needed = i + 1
                 optimized_molecule = result
+                break
 
         if optimized_molecule is None:
             raise RuntimeError(
-                f"Postprocessing failed for all cycles for molecule {molcount + 1}."
+                f"Molecule generation including optimization (and postprocessing) failed for all cycles for molecule {molcount + 1}."
             )
         if config.general.verbosity > 0:
             print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
@@ -113,7 +119,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
 
 def single_molecule_generator(
-    config: ConfigManager, engine: QMMethod, cycle: int, stop_event
+    config: ConfigManager,
+    refine_engine: QMMethod,
+    postprocess_engine: QMMethod | None,
+    cycle: int,
+    stop_event,
 ):
     """
     Generate a single molecule.
@@ -146,22 +156,39 @@ def single_molecule_generator(
         #         |_|
         optimized_molecule = iterative_optimization(
             mol=mol,
-            engine=engine,
+            engine=refine_engine,
             config_generate=config.generate,
             config_refine=config.refine,
             verbosity=config.general.verbosity,
         )
-        if not stop_event.is_set():
-            stop_event.set()  # Signal other processes to stop
-            if config.general.verbosity > 1:
-                print("Postprocessing successful. Optimized molecule:")
-                print(optimized_molecule)
-            return optimized_molecule
     except RuntimeError as e:
         if config.general.verbosity > 0:
-            print(f"Postprocessing failed for cycle {cycle + 1}.")
+            print(f"Refinement failed for cycle {cycle + 1}.")
             if config.general.verbosity > 1:
                 print(e)
+        return None
+
+    if config.general.postprocess:
+        try:
+            optimized_molecule = postprocess_mol(
+                optimized_molecule,
+                postprocess_engine,  # type: ignore
+                config.postprocess,
+                config.general.verbosity,
+            )
+        except RuntimeError as e:
+            if config.general.verbosity > 0:
+                print(f"Postprocessing failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1:
+                    print(e)
+            return None
+
+    if not stop_event.is_set():
+        stop_event.set()  # Signal other processes to stop
+        if config.general.verbosity > 1:
+            print("Postprocessing successful. Optimized molecule:")
+        return optimized_molecule
+    else:
         return None
 
 

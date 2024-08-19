@@ -64,7 +64,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     parser.add_argument(
         "--postprocess",
         action="store_true",
-        default=False,
+        default=None,
         required=False,
         help="Postprocess the output.",
     )

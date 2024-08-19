@@ -139,6 +139,14 @@ class ORCA(QMMethod):
             # get the output of the ORCA calculation (of both stdout and stderr)
             orca_log_out = orca_out.stdout.decode("utf8", errors="replace")
             orca_log_err = orca_out.stderr.decode("utf8", errors="replace")
+            # check if the output contains "ORCA TERMINATED NORMALLY"
+            if "ORCA TERMINATED NORMALLY" not in orca_log_out:
+                raise sp.CalledProcessError(
+                    1,
+                    str(self.path),
+                    orca_log_out.encode("utf8"),
+                    orca_log_err.encode("utf8"),
+                )
             return orca_log_out, orca_log_err, 0
         except sp.CalledProcessError as e:
             orca_log_out = e.stdout.decode("utf8", errors="replace")
@@ -151,10 +159,11 @@ class ORCA(QMMethod):
         """
         Generate a default input file for ORCA.
         """
-        orca_input = "! r2SCAN-3c NoTRAH\n"
+        orca_input = "! r2SCAN-3c NoTRAH NoSOSCF\n"
+        orca_input += "! SlowConv\n"
         if optimization:
             orca_input += "! OPT\n"
-        orca_input += "%scf MaxIter 250 end\n"
+        orca_input += "%scf MaxIter 200 end\n"
         orca_input += "%pal nprocs 1 end\n\n"
         orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
         return orca_input

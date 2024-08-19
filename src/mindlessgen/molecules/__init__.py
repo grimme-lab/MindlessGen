@@ -16,6 +16,7 @@ from .generate_molecule import (
     check_distances,
 )
 from .refinement import iterative_optimization, detect_fragments
+from .postprocess import postprocess_mol
 from .miscellaneous import set_random_charge
 
 __all__ = [
@@ -35,4 +36,5 @@ __all__ = [
     "get_alkaline_earth_metals",
     "PSE_NUMBERS",
     "PSE_SYMBOLS",
+    "postprocess_mol",
 ]

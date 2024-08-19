@@ -9,6 +9,7 @@ from .config import (
     ORCAConfig,
     GenerateConfig,
     RefineConfig,
+    PostProcessConfig,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "ORCAConfig",
     "GenerateConfig",
     "RefineConfig",
+    "PostProcessConfig",
 ]
