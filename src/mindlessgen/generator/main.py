@@ -41,7 +41,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         config.refine.engine, config, get_xtb_path, get_orca_path
     )
 
-    if config.general.postprocess:  # ruff ignore F841
+    if config.general.postprocess:
         postprocess_engine: QMMethod = setup_engines(  # noqa: F841
             config.postprocess.engine, config, get_xtb_path, get_orca_path
         )

@@ -14,8 +14,6 @@ from mindlessgen.prog import (  # type: ignore
         ("verbosity", 2, 4, ValueError),
         ("max_cycles", 50, -1, ValueError),
         ("max_cycles", 50, "100", TypeError),
-        ("engine", "orca", "mopac", ValueError),
-        ("engine", "orca", 123, TypeError),
         ("print_config", True, "yes", TypeError),
         ("parallel", 4, 0, ValueError),
         ("parallel", 4, "four", TypeError),
@@ -92,7 +90,6 @@ def test_refine_config_property_setters(
     [
         ("verbosity", 1),
         ("max_cycles", 100),
-        ("engine", "xtb"),
         ("print_config", False),
         ("parallel", 1),
     ],

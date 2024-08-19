@@ -77,7 +77,7 @@ def test_iterative_optimization(
     # initialize a configuration object
     config = ConfigManager()
     config.refine.max_frag_cycles = 1
-    if config.general.engine == "xtb":
+    if config.refine.engine == "xtb":
         try:
             xtb_path = get_xtb_path()
             if not xtb_path:
