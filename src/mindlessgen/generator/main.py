@@ -1,5 +1,5 @@
 """
-Mathematical functions.
+Main driver of MindlessGen.
 """
 
 from __future__ import annotations
@@ -36,25 +36,15 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         print(config)
         return None, 0
 
-    engine: QMMethod
-    if config.general.engine == "xtb":
-        try:
-            xtb_path = get_xtb_path(config.xtb.xtb_path)
-            if not xtb_path:
-                raise ImportError("xtb not found.")
-        except ImportError as e:
-            raise ImportError("xtb not found.") from e
-        engine = XTB(xtb_path)
-    elif config.general.engine == "orca":
-        try:
-            orca_path = get_orca_path(config.orca.orca_path)
-            if not orca_path:
-                raise ImportError("orca not found.")
-        except ImportError as e:
-            raise ImportError("orca not found.") from e
-        engine = ORCA(orca_path)
-    else:
-        raise NotImplementedError("Engine not implemented.")
+    # Import and set up required engines
+    refine_engine: QMMethod = setup_engines(
+        config.refine.engine, config, get_xtb_path, get_orca_path
+    )
+
+    if config.general.postprocess:  # ruff ignore F841
+        postprocess_engine: QMMethod = setup_engines(  # noqa: F841
+            config.postprocess.engine, config, get_xtb_path, get_orca_path
+        )
 
     if config.general.verbosity > 0:
         print(config)
@@ -94,7 +84,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         with mp.Pool(processes=num_cores) as pool:
             results = pool.starmap(
                 single_molecule_generator,
-                [(config, engine, cycle, stop_event) for cycle in cycles],
+                [(config, refine_engine, cycle, stop_event) for cycle in cycles],
             )
         if config.general.verbosity == 0:
             print("")
@@ -198,3 +188,33 @@ def header(version: str) -> str:
         "╚══════════════════════════════════════════════════════════════════════════════════════════════════╝"
     )
     return headerstr
+
+
+# Define a utility function to set up the required engine
+def setup_engines(
+    engine_type: str,
+    engine_config: ConfigManager,
+    xtb_path_func,
+    orca_path_func,
+):
+    """
+    Set up the required engine.
+    """
+    if engine_type == "xtb":
+        try:
+            path = xtb_path_func(engine_config.xtb.xtb_path)
+            if not path:
+                raise ImportError("xtb not found.")
+        except ImportError as e:
+            raise ImportError("xtb not found.") from e
+        return XTB(path)
+    elif engine_type == "orca":
+        try:
+            path = orca_path_func(engine_config.orca.orca_path)
+            if not path:
+                raise ImportError("orca not found.")
+        except ImportError as e:
+            raise ImportError("orca not found.") from e
+        return ORCA(path)
+    else:
+        raise NotImplementedError("Engine not implemented.")

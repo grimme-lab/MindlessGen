@@ -49,14 +49,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Number of parallel processes to run.",
     )
     parser.add_argument(
-        "-e",
-        "--engine",
-        type=str,
-        required=False,
-        choices=["xtb", "orca"],
-        help="QM engine to use.",
-    )
-    parser.add_argument(
         "-mc",
         "--max-cycles",
         type=int,
@@ -68,6 +60,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         type=int,
         required=False,
         help="Number of molecules to generate.",
+    )
+    parser.add_argument(
+        "--postprocess",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Postprocess the output.",
     )
     parser.add_argument(
         "--min-num-atoms",
@@ -113,10 +112,25 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="List of forbidden elements.",
     )
     parser.add_argument(
+        "--refine-engine",
+        type=str,
+        required=False,
+        choices=["xtb", "orca"],
+        help="QM engine to use for refinement.",
+    )
+    parser.add_argument(
         "--max-frag-cycles",
         type=int,
         required=False,
         help="Maximum number of fragment optimization cycles.",
+    )
+    # Postprocessing arguments
+    parser.add_argument(
+        "--postprocess-engine",
+        type=str,
+        required=False,
+        choices=["xtb", "orca"],
+        help="QM engine to use for postprocessing.",
     )
     # xTB specific arguments
     parser.add_argument(
@@ -132,7 +146,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Path to the ORCA binary.",
     )
-    # TODO: Add ORCA specific arguments
     args = parser.parse_args(argv)
     args_dict = vars(args)
 
@@ -142,12 +155,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "config": args_dict["config"],
         "verbosity": args_dict["verbosity"],
         "parallel": args_dict["parallel"],
-        "engine": args_dict["engine"],
         "max_cycles": args_dict["max_cycles"],
         "print_config": args_dict["print_config"],
         "num_molecules": args_dict["num_molecules"],
+        "postprocess": args_dict["postprocess"],
     }
     rev_args_dict["refine"] = {
+        "engine": args_dict["refine_engine"],
         "max_frag_cycles": args_dict["max_frag_cycles"],
     }
     rev_args_dict["generate"] = {
@@ -163,5 +177,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
     # ORCA specific arguments
     rev_args_dict["orca"] = {"orca_path": args_dict["orca_path"]}
+    rev_args_dict["postprocess"] = {"engine": args_dict["postprocess_engine"]}
 
     return rev_args_dict

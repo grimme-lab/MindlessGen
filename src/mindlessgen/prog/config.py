@@ -36,10 +36,10 @@ class GeneralConfig(BaseConfig):
     def __init__(self):
         self._verbosity: int = 1
         self._max_cycles: int = 100
-        self._engine: str = "xtb"
         self._print_config: bool = False
         self._parallel: int = 1
         self._num_molecules: int = 1
+        self._postprocess: bool = False
 
     def get_identifier(self) -> str:
         return "general"
@@ -79,24 +79,6 @@ class GeneralConfig(BaseConfig):
         if max_cycles < 1:
             raise ValueError("Max cycles should be greater than 0.")
         self._max_cycles = max_cycles
-
-    @property
-    def engine(self):
-        """
-        Get the engine.
-        """
-        return self._engine
-
-    @engine.setter
-    def engine(self, engine: str):
-        """
-        Set the engine.
-        """
-        if not isinstance(engine, str):
-            raise TypeError("Engine should be a string.")
-        if engine not in ["xtb", "orca"]:
-            raise ValueError("Engine can only be xtb or orca.")
-        self._engine = engine
 
     @property
     def print_config(self):
@@ -149,6 +131,22 @@ class GeneralConfig(BaseConfig):
         if num_molecules < 1:
             raise ValueError("Number of molecules should be greater than 0.")
         self._num_molecules = num_molecules
+
+    @property
+    def postprocess(self):
+        """
+        Get the postprocess flag.
+        """
+        return self._postprocess
+
+    @postprocess.setter
+    def postprocess(self, postprocess: bool):
+        """
+        Set the postprocess flag.
+        """
+        if not isinstance(postprocess, bool):
+            raise TypeError("Postprocess should be a boolean.")
+        self._postprocess = postprocess
 
 
 class GenerateConfig(BaseConfig):
@@ -340,6 +338,7 @@ class RefineConfig(BaseConfig):
 
     def __init__(self):
         self._max_frag_cycles: int = 100
+        self._engine: str = "xtb"
 
     def get_identifier(self) -> str:
         return "refine"
@@ -362,6 +361,54 @@ class RefineConfig(BaseConfig):
             raise ValueError("Max fragment cycles should be greater than 0.")
         self._max_frag_cycles = max_frag_cycles
 
+    @property
+    def engine(self):
+        """
+        Get the engine.
+        """
+        return self._engine
+
+    @engine.setter
+    def engine(self, engine: str):
+        """
+        Set the engine.
+        """
+        if not isinstance(engine, str):
+            raise TypeError("Refinement engine should be a string.")
+        if engine not in ["xtb", "orca"]:
+            raise ValueError("Refinement engine can only be xtb or orca.")
+        self._engine = engine
+
+
+class PostProcessConfig(BaseConfig):
+    """
+    Configuration class for post-processing settings.
+    """
+
+    def __init__(self):
+        self._engine: str = "orca"
+
+    def get_identifier(self) -> str:
+        return "postprocess"
+
+    @property
+    def engine(self):
+        """
+        Get the postprocess engine.
+        """
+        return self._engine
+
+    @engine.setter
+    def engine(self, engine: str):
+        """
+        Set the postprocess engine.
+        """
+        if not isinstance(engine, str):
+            raise TypeError("Postprocess engine should be a string.")
+        if engine not in ["xtb", "orca"]:
+            raise ValueError("Postprocess engine can only be xtb or orca.")
+        self._engine = engine
+
 
 class XTBConfig(BaseConfig):
     """
@@ -369,27 +416,10 @@ class XTBConfig(BaseConfig):
     """
 
     def __init__(self):
-        self._xtb_option: str = "dummy"
         self._xtb_path: str | Path = "xtb"
 
     def get_identifier(self) -> str:
         return "xtb"
-
-    @property
-    def xtb_option(self):
-        """
-        Get the xtb option.
-        """
-        return self._xtb_option
-
-    @xtb_option.setter
-    def xtb_option(self, xtb_option: str):
-        """
-        Set the xtb option.
-        """
-        if not isinstance(xtb_option, str):
-            raise TypeError("xtb_option should be a string.")
-        self._xtb_option = xtb_option
 
     @property
     def xtb_path(self):
@@ -414,27 +444,10 @@ class ORCAConfig(BaseConfig):
     """
 
     def __init__(self):
-        self._orca_option: str = "dummy"
         self._orca_path: str | Path = "orca"
 
     def get_identifier(self) -> str:
         return "orca"
-
-    @property
-    def orca_option(self):
-        """
-        Get the orca option.
-        """
-        return self._orca_option
-
-    @orca_option.setter
-    def orca_option(self, orca_option: str):
-        """
-        Set the orca option.
-        """
-        if not isinstance(orca_option, str):
-            raise TypeError("orca_option should be a string or Path.")
-        self._orca_option = orca_option
 
     @property
     def orca_path(self):
@@ -466,6 +479,7 @@ class ConfigManager:
         self.xtb = XTBConfig()
         self.orca = ORCAConfig()
         self.refine = RefineConfig()
+        self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
 
         if config_file:
@@ -523,11 +537,12 @@ class ConfigManager:
             config_dict (dict): Dictionary containing the configuration
         """
         # Check for unknown keys
+        all_identifiers = self.get_all_identifiers()
         for key in config_dict:
-            if key not in self.get_all_identifiers():
+            if key not in all_identifiers:
                 raise KeyError(f"Unknown key in configuration file: {key}")
 
-        for sub_config in self.get_all_identifiers():
+        for sub_config in all_identifiers:
             if sub_config not in config_dict:
                 continue
             for config_key, config_value in config_dict[sub_config].items():

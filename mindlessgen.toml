@@ -9,12 +9,12 @@
 verbosity = 1
 # > Number of parallel processes to use. Options: <int>
 parallel = 1
-# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
-engine = "xtb"
 # > Maximum number of generation/optimization try-and-error cycles per molecule. Options: <int>
 max_cycles = 100
 # > Number of molecules to generate. Options: <int>
 num_molecules = 1
+# > Do post-processing (checking for HL gap, etc.) after the optimization. Options: <bool>
+postprocess = false
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>
@@ -40,6 +40,12 @@ forbidden_elements = "57-71"
 [refine]
 # > Maximum number of fragment optimization cycles. Options: <int>
 max_frag_cycles = 100
+# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
+engine = "xtb"
+
+[postprocess]
+# > Engine for the post-processing part. Options: 'xtb', 'orca'
+engine = "xtb"
 
 [xtb]
 # > Path to the xtb executable. Options: <str | Path>
