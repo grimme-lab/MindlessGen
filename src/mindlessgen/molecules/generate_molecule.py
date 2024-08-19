@@ -30,6 +30,7 @@ def generate_random_molecule(
         verbosity=verbosity,
     )
     mol.charge = set_random_charge(mol.ati, verbosity)
+    mol.uhf = 0
     mol.set_name_from_formula()
 
     if verbosity > 1:
