@@ -1,3 +1,5 @@
+*This `CONTRIBUTING` guideline was thankfully taken over from the [BayBE](https://github.com/emdgroup/baybe) code base.*
+
 # Contributing to MindlessGen
 
 **All contributions to MindlessGen are welcome!**
@@ -82,6 +84,3 @@ If you have questions or problems, simply ask for advice.
 | [pytest](https://docs.pytest.org/)                                                              | testing                                   |
 | [tox](https://tox.wiki/)                                                                        | orchestrating all the above               |
 | [coverage](https://pypi.org/project/coverage/)                                                  | coverage check and reports                |
-
-
-*This code was thankfully taken over from the [BayBE](https://github.com/emdgroup/baybe) code base.

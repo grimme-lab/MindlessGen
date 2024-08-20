@@ -47,7 +47,7 @@ Before pushing a commit to the repository, please run also the optional tests, w
 ```
 pytest -vv --optional
 ```
-For further information how to contribute to this project, please see also the [contribution guidelines](https://github.com/grimme-lab/MindlessGen/blob/main/CONTRIBUTING.md).
+Further information on how to contribute to this project can also be found in the [contribution guidelines](https://github.com/grimme-lab/MindlessGen/blob/main/CONTRIBUTING.md).
 
 ## Usage
 
