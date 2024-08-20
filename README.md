@@ -15,7 +15,7 @@ The rule-based algorithm places atoms randomly within the coordinate space and a
 ## Installation
 
 > [!IMPORTANT]
-> `xtb` has to be available on your machine, either via a `conda-forge` installation, a release binary, or compiled from source. Further information is available [here](https://github.com/grimme-lab/xtb).
+> `xtb` (see [here](https://github.com/grimme-lab/xtb)) has to be available on your machine, either via a `conda-forge` installation, a release binary, or compiled from source. If post-processing with DFT is desired, also `orca` (see [here](https://www.faccts.de/docs/orca/6.0/manual/index.html)) has to be available.
 
 ### Non-development purposes
 
@@ -51,13 +51,13 @@ pytest -vv --optional
 ## Usage
 
 > [!WARNING]
-> `mindlessgen` is still subject of drastic API changes and in the early development phase.
+> `mindlessgen` may still be subject to API changes.
 
 `mindlessgen` can be executed after installation in the desired environment via:
 ```
 mindlessgen -h
 ```
-All relevent command-line options are displayed in the terminal.
+All relevent command-line options are displayed in the terminal with this command. Also, all commands are accessible via the [TOML](https://github.com/marcelmbn/MindlessGen/blob/main/mindlessgen.toml) configuration file.
 
 When using the program for academic purposes, please cite:
 
