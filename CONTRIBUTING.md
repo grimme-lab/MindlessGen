@@ -1,3 +1,5 @@
+*This `CONTRIBUTING` guideline was thankfully taken over from the [BayBE](https://github.com/emdgroup/baybe) code base.*
+
 # Contributing to MindlessGen
 
 **All contributions to MindlessGen are welcome!**
@@ -61,7 +63,7 @@ we recommend the following workflow:
 
 1. Push the updated branch back to your fork:
    ```console
-   git push origin
+   git push -u origin <your_branch_name>
    ```
 
 1. Open a pull request via Github's web page.
@@ -82,6 +84,3 @@ If you have questions or problems, simply ask for advice.
 | [pytest](https://docs.pytest.org/)                                                              | testing                                   |
 | [tox](https://tox.wiki/)                                                                        | orchestrating all the above               |
 | [coverage](https://pypi.org/project/coverage/)                                                  | coverage check and reports                |
-
-
-*This code was thankfully taken over from the [BayBE](https://github.com/emdgroup/baybe) code base.
