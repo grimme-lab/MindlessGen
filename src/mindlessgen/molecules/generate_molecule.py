@@ -56,6 +56,57 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         102, dtype=int
     )  # 102 is the number of accessible elements in the periodic table
 
+    # Some sanity checks:
+    # - Check if the summed number of minimally required atoms from cfg.element_composition
+    #   is larger than the maximum number of atoms
+    if cfg.max_num_atoms is not None:
+        if (
+            np.sum(
+                [
+                    cfg.element_composition.get(i, (0, 0))[0]
+                    for i in cfg.element_composition
+                ]
+            )
+            > cfg.max_num_atoms
+        ):
+            raise ValueError(
+                "The summed number of minimally required atoms "
+                + "from the fixed composition is larger than the maximum number of atoms."
+            )
+    fixed_elem = False
+    # - Check if all defintions in cfg.element_composition
+    #   are completely fixed (min and max are equal)
+    for elem, count_range in cfg.element_composition.items():
+        # check if for all entries: min and max are both not None, and if min and max are equal.
+        # If both is true, set a boolean to True
+        if (
+            count_range[0] is not None
+            and count_range[1] is not None
+            and count_range[0] == count_range[1]
+        ):
+            fixed_elem = True
+        else:
+            fixed_elem = False
+            break
+    # If the boolean is True, check if the summed number of fixed atoms
+    # is within the defined overall limits
+    if fixed_elem:
+        sum_fixed_atoms = np.sum(
+            [cfg.element_composition.get(i, (0, 0))[0] for i in cfg.element_composition]
+        )
+        if cfg.min_num_atoms < sum_fixed_atoms < cfg.max_num_atoms:
+            # If the fixed composition is within the defined limits,
+            # set the number of atoms for the fixed composition
+            for elem, count_range in cfg.element_composition.items():
+                natoms[elem] = count_range[0]
+            if verbosity > 1:
+                print(
+                    "Fixed composition is within the defined limits. "
+                    + "Setting the number of atoms for the fixed composition. "
+                    + f"Returning: \n{natoms}\n"
+                )
+            return natoms
+
     # Reasoning for the parameters in the following sections:
     # - The number of the atoms added by default (DefaultRandom + AddOrganicAtoms)
     #   should match the minimum number of atoms in the molecule (if defined).
@@ -169,7 +220,8 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         while np.sum(natoms) < cfg.min_num_atoms:
             if verbosity > 1:
                 print(
-                    f"Minimal number of atoms: {cfg.min_num_atoms}; Actual number of atoms: {np.sum(natoms)}.\nAdding atoms..."
+                    f"Minimal number of atoms: {cfg.min_num_atoms}; "
+                    + f"Actual number of atoms: {np.sum(natoms)}.\nAdding atoms..."
                 )
             ati = np.random.choice(list(valid_elems))
             max_limit = cfg.element_composition.get(ati, (None, None))[1]
@@ -186,15 +238,18 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                 )
             if verbosity > 1:
                 print(
-                    f"Max number of atoms: {cfg.max_num_atoms}; Actual number of atoms: {np.sum(natoms)}.\nRemoving atoms..."
+                    f"Max number of atoms: {cfg.max_num_atoms}; "
+                    + f"Actual number of atoms: {np.sum(natoms)}.\nRemoving atoms..."
                 )
-            # generate a list of all atom types that are included in the molecule with at least one atom
+            # generate a list of all atom types that are included in the molecule
+            # with at least one atom
             # if the occurrence is > 1, add it multiple times to the list
             atom_list = []
             for i, count in enumerate(natoms):
                 if count > 0:
                     atom_list.extend([i] * count)
-            # randomly select an atom type from the list, thereby weighting the selection for reduction by the current occurrence
+            # randomly select an atom type from the list, thereby weighting the selection
+            # for reduction by the current occurrence
             # generate a random number between 0 and the number of atoms in the list
             random_index = np.random.randint(len(atom_list))
             i = atom_list[int(random_index)]

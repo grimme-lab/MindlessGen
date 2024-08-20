@@ -20,11 +20,6 @@ from mindlessgen.molecules import Molecule  # type: ignore
 def default_generate_config():
     """Fixture to provide a default GenerateConfig object."""
     config = GenerateConfig()
-    config.min_num_atoms = 5
-    config.max_num_atoms = 15
-    config.init_coord_scaling = 1.0
-    config.dist_threshold = 0.8
-    config.increase_scaling_factor = 1.2
     return config
 
 
@@ -84,6 +79,58 @@ def test_generate_config_forbidden_elements(default_generate_config):
     # Check that the atom list does not contain any forbidden elements
     assert np.sum([atom_list[z] for z in range(6, 9)]) == 0
     assert np.sum([atom_list[z] for z in range(18, 102)]) == 0
+
+
+@pytest.mark.parametrize(
+    "min_num_atoms, max_num_atoms, element_composition, expected_error, expected_atom_counts",
+    [
+        # Case 1: Summed min atoms larger than max atoms
+        (10, 10, "C:5-10, H:6-10", ValueError, None),
+        # Case 2: Fixed composition outside of defined limits
+        (5, 10, "C:3-3, H:3-3, O:5-5", ValueError, None),
+        # Case 3: Fixed composition within defined limits
+        (
+            5,
+            10,
+            "C:3-3, H:2-2",
+            None,
+            {5: 3, 0: 2},  # Carbon (C) and Hydrogen (H)
+        ),
+        # Case 4: Not all elements in composition are fixed
+        (
+            5,
+            10,
+            "C:2-4, H:2-2",
+            None,
+            {5: (2, 4), 0: 2},  # Carbon (C) in range, Hydrogen (H) fixed
+        ),
+    ],
+)
+def test_generate_atom_list_with_composition(
+    min_num_atoms,
+    max_num_atoms,
+    element_composition,
+    expected_error,
+    expected_atom_counts,
+):
+    """
+    Parametrized test for checking element composition conditions.
+    """
+    config = GenerateConfig()
+    config.min_num_atoms = min_num_atoms
+    config.max_num_atoms = max_num_atoms
+    config.element_composition = element_composition
+
+    if expected_error:
+        with pytest.raises(expected_error):
+            generate_atom_list(config, verbosity=1)
+    else:
+        atom_list = generate_atom_list(config, verbosity=1)
+        for elem, count in expected_atom_counts.items():
+            if isinstance(count, tuple):
+                assert count[0] <= atom_list[elem] <= count[1]
+            else:
+                assert atom_list[elem] == count
 
 
 def test_get_alkali_metals():
