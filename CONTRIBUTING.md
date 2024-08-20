@@ -63,7 +63,7 @@ we recommend the following workflow:
 
 1. Push the updated branch back to your fork:
    ```console
-   git push origin
+   git push -u origin <your_branch_name>
    ```
 
 1. Open a pull request via Github's web page.
