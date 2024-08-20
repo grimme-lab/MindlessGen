@@ -1,6 +1,6 @@
 # Mindless Molecule Generator
 
-![CI](https://github.com/marcelmbn/MindlessGen/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/grimme-lab/MindlessGen/actions/workflows/ci.yml/badge.svg)
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="Apache-2.0"/>
 </a>
@@ -10,7 +10,7 @@
 <img align="right" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" height="150" />
 
 `mindlessgen` is a Python-based program for semi-automated generation of "mindless" small molecules, as described [here](https://pubs.acs.org/doi/full/10.1021/ct800511q).
-The rule-based algorithm places atoms randomly within the coordinate space and applies several optimization, fragment detection, and sanity check steps. The program is mainly controlled via a [TOML](https://github.com/marcelmbn/MindlessGen/blob/main/mindlessgen.toml) configuration file, see below for details.
+The rule-based algorithm places atoms randomly within the coordinate space and applies several optimization, fragment detection, and sanity check steps. The program is mainly controlled via a [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file, see below for details.
 
 ## Installation
 
@@ -47,6 +47,7 @@ Before pushing a commit to the repository, please run also the optional tests, w
 ```
 pytest -vv --optional
 ```
+For further information how to contribute to this project, please see also the [contribution guidelines](https://github.com/grimme-lab/MindlessGen/blob/main/CONTRIBUTING.md).
 
 ## Usage
 
@@ -57,7 +58,7 @@ pytest -vv --optional
 ```
 mindlessgen -h
 ```
-This command displays all relevant command line options in the terminal. In addition, all commands are accessible via the [TOML](https://github.com/marcelmbn/MindlessGen/blob/main/mindlessgen.toml) configuration file.
+This command displays all relevant command line options in the terminal. In addition, all commands are accessible via the [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file.
 
 When using the program for academic purposes, please cite:
 
