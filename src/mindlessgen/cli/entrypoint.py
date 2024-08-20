@@ -40,14 +40,36 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
     except RuntimeError as e:
         print(f"\nGeneration failed: {e}")
         raise RuntimeError("Generation failed.") from e
-    if molecules and exitcode == 0:
+
+    molecules_written: list[str] = []
+    if molecules:
         for molecule in molecules:
-            molecule.write_xyz_to_file()
+            try:
+                molecule.write_xyz_to_file()
+                if config.general.verbosity > 0:
+                    print(f"Written molecule file '{molecule.name}.xyz'.")
+                molecules_written.append(molecule.name)
+            except Exception as e:
+                warnings.warn(f"Failed to write molecule file: {e}")
+        if exitcode != 0:
+            warnings.warn(
+                "Generation completed with errors. "
+                + "Still writing the successful molecules to files."
+            )
+            raise SystemExit(1)
+        try:
+            with open("mindless.molecules", "w", encoding="utf8") as f:
+                f.write("\n".join(molecules_written))
             if config.general.verbosity > 0:
-                print(f"Written molecule file '{molecule.name}.xyz'.")
+                print(
+                    f"Written molecule list file 'mindless.molecules' with {len(molecules_written)} molecules."
+                )
+        except Exception as e:
+            warnings.warn(f"Failed to write molecule list file: {e}")
         raise SystemExit(0)
-    elif exitcode == 0:
+    if exitcode == 0:
         raise SystemExit(0)
+    print("CAUTION: Generation failed for all molecules. No files written.")
     raise SystemExit(1)
 
 

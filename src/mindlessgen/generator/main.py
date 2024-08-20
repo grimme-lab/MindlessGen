@@ -69,6 +69,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
         )
 
+    exitcode = 0
     optimized_molecules: list[Molecule] = []
     for molcount in range(config.general.num_molecules):
         manager = mp.Manager()
@@ -107,15 +108,17 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
                 break
 
         if optimized_molecule is None:
-            raise RuntimeError(
+            warnings.warn(
                 f"Molecule generation including optimization (and postprocessing) failed for all cycles for molecule {molcount + 1}."
             )
+            exitcode = 1
+            continue
         if config.general.verbosity > 0:
             print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
             print(optimized_molecule)
         optimized_molecules.append(optimized_molecule)
 
-    return optimized_molecules, 0
+    return optimized_molecules, exitcode
 
 
 def single_molecule_generator(
