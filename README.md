@@ -57,7 +57,7 @@ pytest -vv --optional
 ```
 mindlessgen -h
 ```
-All relevent command-line options are displayed in the terminal with this command. Also, all commands are accessible via the [TOML](https://github.com/marcelmbn/MindlessGen/blob/main/mindlessgen.toml) configuration file.
+This command displays all relevant command line options in the terminal. In addition, all commands are accessible via the [TOML](https://github.com/marcelmbn/MindlessGen/blob/main/mindlessgen.toml) configuration file.
 
 When using the program for academic purposes, please cite:
 
