@@ -8,6 +8,7 @@ on:
       - "assets/**"
       - "*.md"
       - "*.rst"
+      - "mindlessgen.toml"
   pull_request:
     branches:
       - main
