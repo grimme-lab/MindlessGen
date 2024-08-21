@@ -185,11 +185,11 @@ def single_molecule_generator(
                 if config.general.verbosity > 1:
                     print(e)
             return None
+        if config.general.verbosity > 1:
+            print("Postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
-        if config.general.verbosity > 1:
-            print("Postprocessing successful. Optimized molecule:")
         return optimized_molecule
     else:
         return None
@@ -223,7 +223,7 @@ def header(version: str) -> str:
 # Define a utility function to set up the required engine
 def setup_engines(
     engine_type: str,
-    engine_config: ConfigManager,
+    cfg: ConfigManager,
     xtb_path_func,
     orca_path_func,
 ):
@@ -232,19 +232,19 @@ def setup_engines(
     """
     if engine_type == "xtb":
         try:
-            path = xtb_path_func(engine_config.xtb.xtb_path)
+            path = xtb_path_func(cfg.xtb.xtb_path)
             if not path:
                 raise ImportError("xtb not found.")
         except ImportError as e:
             raise ImportError("xtb not found.") from e
-        return XTB(path)
+        return XTB(path, cfg.xtb)
     elif engine_type == "orca":
         try:
-            path = orca_path_func(engine_config.orca.orca_path)
+            path = orca_path_func(cfg.orca.orca_path)
             if not path:
                 raise ImportError("orca not found.")
         except ImportError as e:
             raise ImportError("orca not found.") from e
-        return ORCA(path)
+        return ORCA(path, cfg.orca)
     else:
         raise NotImplementedError("Engine not implemented.")

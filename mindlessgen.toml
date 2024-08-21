@@ -45,7 +45,11 @@ engine = "xtb"
 
 [postprocess]
 # > Engine for the post-processing part. Options: 'xtb', 'orca'
-engine = "xtb"
+engine = "orca"
+# > Optimize geometry in the post-processing part. Options: <bool>
+optimize = true
+# > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
+opt_cycles = 5
 
 [xtb]
 # > Path to the xtb executable. Options: <str | Path>
@@ -54,3 +58,11 @@ xtb_path = "/path/to/xtb"
 [orca]
 # > Path to the orca executable. Options: <str | Path>
 orca_path = "/path/to/orca"
+# > Functional/Method: Options: <str>
+functional = "PBE"
+# > Basis set: Options: <str>
+basis = "SV(P)"
+# > Gridsize for the numerical integration: Options: <int => 1> = coarse, <int = 2> => medium, <int = 3> => fine
+gridsize = 1
+# > Maximum number of SCF cycles: Options: <int>
+scf_cycles = 100
