@@ -47,8 +47,8 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
             try:
                 molecule.write_xyz_to_file()
                 if config.general.verbosity > 0:
-                    print(f"Written molecule file '{molecule.name}.xyz'.")
-                molecules_written.append(molecule.name)
+                    print(f"Written molecule file 'mlm_{molecule.name}.xyz'.")
+                molecules_written.append("mlm_" + molecule.name)
             except Exception as e:
                 warnings.warn(f"Failed to write molecule file: {e}")
         if exitcode != 0:
