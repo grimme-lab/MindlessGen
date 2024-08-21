@@ -61,7 +61,7 @@ orca_path = "/path/to/orca"
 # > Functional/Method: Options: <str>
 functional = "PBE"
 # > Basis set: Options: <str>
-basis = "SV(P)"
+basis = "def2-SVP"
 # > Gridsize for the numerical integration: Options: <int => 1> = coarse, <int = 2> => medium, <int = 3> => fine
 gridsize = 1
 # > Maximum number of SCF cycles: Options: <int>
