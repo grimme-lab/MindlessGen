@@ -8,6 +8,7 @@ import shutil
 from tempfile import TemporaryDirectory
 from ..molecules import Molecule
 from .base import QMMethod
+from ..prog import XTBConfig
 
 
 class XTB(QMMethod):
@@ -15,7 +16,7 @@ class XTB(QMMethod):
     This class handles all xtb-related functionality.
     """
 
-    def __init__(self, path: str | Path = "xtb"):
+    def __init__(self, path: str | Path, xtb_config: XTBConfig) -> None:
         """
         Initialize the XTB class.
         """
@@ -25,8 +26,11 @@ class XTB(QMMethod):
             self.path = path
         else:
             raise TypeError("xtb_path should be a string or a Path object.")
+        self.cfg = xtb_config
 
-    def optimize(self, molecule: Molecule, verbosity: int = 1) -> Molecule:
+    def optimize(
+        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+    ) -> Molecule:
         """
         Optimize a molecule using xtb.
         """
@@ -46,6 +50,8 @@ class XTB(QMMethod):
                 "--chrg",
                 str(molecule.charge),
             ]
+            if max_cycles is not None:
+                arguments += ["--cycles", str(max_cycles)]
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 

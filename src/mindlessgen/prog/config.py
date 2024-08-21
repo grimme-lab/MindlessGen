@@ -387,6 +387,8 @@ class PostProcessConfig(BaseConfig):
 
     def __init__(self):
         self._engine: str = "orca"
+        self._opt_cycles: int | None = None
+        self._optimize: bool = False
 
     def get_identifier(self) -> str:
         return "postprocess"
@@ -408,6 +410,40 @@ class PostProcessConfig(BaseConfig):
         if engine not in ["xtb", "orca"]:
             raise ValueError("Postprocess engine can only be xtb or orca.")
         self._engine = engine
+
+    @property
+    def optimize(self):
+        """
+        Get the optimization flag for post-processing.
+        """
+        return self._optimize
+
+    @optimize.setter
+    def optimize(self, optimize: bool):
+        """
+        Set the optimization flag for post-processing.
+        """
+        if not isinstance(optimize, bool):
+            raise TypeError("Optimize should be a boolean.")
+        self._optimize = optimize
+
+    @property
+    def opt_cycles(self):
+        """
+        Get the optimization cycles for post-processing.
+        """
+        return self._opt_cycles
+
+    @opt_cycles.setter
+    def opt_cycles(self, opt_cycles: int):
+        """
+        Set the optimization cycles for post-processing.
+        """
+        if not isinstance(opt_cycles, int):
+            raise TypeError("Optimization cycles should be an integer.")
+        if opt_cycles < 0:
+            raise ValueError("Optimization cycles should be 0 or greater.")
+        self._opt_cycles = opt_cycles
 
 
 class XTBConfig(BaseConfig):
@@ -445,6 +481,10 @@ class ORCAConfig(BaseConfig):
 
     def __init__(self):
         self._orca_path: str | Path = "orca"
+        self._functional: str = "PBE"
+        self._basis: str = ""
+        self._gridsize: int = 1
+        self._scf_cycles: int = 100
 
     def get_identifier(self) -> str:
         return "orca"
@@ -464,6 +504,76 @@ class ORCAConfig(BaseConfig):
         if not isinstance(orca_path, str | Path):
             raise TypeError("orca_path should be a string or Path.")
         self._orca_path = orca_path
+
+    @property
+    def functional(self):
+        """
+        Get the ORCA functional/method.
+        """
+        return self._functional
+
+    @functional.setter
+    def functional(self, functional: str):
+        """
+        Set the ORCA functional/method.
+        """
+        if not isinstance(functional, str):
+            raise TypeError("Functional should be a string.")
+        self._functional = functional
+
+    @property
+    def basis(self):
+        """
+        Get the ORCA basis set.
+        """
+        return self._basis
+
+    @basis.setter
+    def basis(self, basis: str):
+        """
+        Set the ORCA basis set.
+        """
+        if not isinstance(basis, str):
+            raise TypeError("Basis should be a string.")
+        self._basis = basis
+
+    @property
+    def gridsize(self):
+        """
+        Get the ORCA gridsize for numerical integration.
+        """
+        return self._gridsize
+
+    @gridsize.setter
+    def gridsize(self, gridsize: int):
+        """
+        Set the ORCA gridsize for numerical integration.
+        """
+        if not isinstance(gridsize, int):
+            raise TypeError("Gridsize should be an integer.")
+        if gridsize not in [1, 2, 3]:
+            raise ValueError(
+                "Gridsize should be 1, 2, or 3. (-> DEFGRID1, DEFGRID2, DEFGRID3)"
+            )
+        self._gridsize = gridsize
+
+    @property
+    def scf_cycles(self):
+        """
+        Get the maximum number of SCF cycles.
+        """
+        return self._scf_cycles
+
+    @scf_cycles.setter
+    def scf_cycles(self, max_scf_cycles: int):
+        """
+        Set the maximum number of SCF cycles.
+        """
+        if not isinstance(max_scf_cycles, int):
+            raise TypeError("Max SCF cycles should be an integer.")
+        if max_scf_cycles < 1:
+            raise ValueError("Max SCF cycles should be greater than 0.")
+        self._scf_cycles = max_scf_cycles
 
 
 class ConfigManager:

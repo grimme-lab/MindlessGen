@@ -132,6 +132,19 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         choices=["xtb", "orca"],
         help="QM engine to use for postprocessing.",
     )
+    parser.add_argument(
+        "--postprocess-optimize",
+        action="store_true",
+        default=None,
+        required=False,
+        help="Optimize the molecule during post-processing.",
+    )
+    parser.add_argument(
+        "--postprocess-opt-cycles",
+        type=int,
+        required=False,
+        help="Number of optimization cycles in postprocessing.",
+    )
     # xTB specific arguments
     parser.add_argument(
         "--xtb-path",
@@ -145,6 +158,30 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         type=str,
         required=False,
         help="Path to the ORCA binary.",
+    )
+    parser.add_argument(
+        "--orca-functional",
+        type=str,
+        required=False,
+        help="Functional to use in ORCA.",
+    )
+    parser.add_argument(
+        "--orca-basis",
+        type=str,
+        required=False,
+        help="Basis set to use in ORCA.",
+    )
+    parser.add_argument(
+        "--orca-gridsize",
+        type=int,
+        required=False,
+        help="Solvent to use in ORCA.",
+    )
+    parser.add_argument(
+        "--orca-scf-cycles",
+        type=int,
+        required=False,
+        help="Maximum number of SCF cycles in ORCA.",
     )
     args = parser.parse_args(argv)
     args_dict = vars(args)
@@ -176,7 +213,17 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
     # ORCA specific arguments
-    rev_args_dict["orca"] = {"orca_path": args_dict["orca_path"]}
-    rev_args_dict["postprocess"] = {"engine": args_dict["postprocess_engine"]}
+    rev_args_dict["orca"] = {
+        "orca_path": args_dict["orca_path"],
+        "functional": args_dict["orca_functional"],
+        "basis": args_dict["orca_basis"],
+        "gridsize": args_dict["orca_gridsize"],
+        "scf_cycles": args_dict["orca_scf_cycles"],
+    }
+    rev_args_dict["postprocess"] = {
+        "engine": args_dict["postprocess_engine"],
+        "optimize": args_dict["postprocess_optimize"],
+        "opt_cycles": args_dict["postprocess_opt_cycles"],
+    }
 
     return rev_args_dict

@@ -84,7 +84,7 @@ def test_iterative_optimization(
                 raise ImportError("xtb not found.")
         except ImportError as e:
             raise ImportError("xtb not found.") from e
-        engine = XTB(xtb_path)
+        engine = XTB(xtb_path, config.xtb)
     else:
         raise NotImplementedError("Engine not implemented.")
     mol = mol_H6O2B2Ne2I1Os1Tl1

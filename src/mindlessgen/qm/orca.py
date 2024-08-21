@@ -8,12 +8,12 @@ import subprocess as sp
 from tempfile import TemporaryDirectory
 
 from ..molecules import Molecule
-
+from ..prog import ORCAConfig
 from .base import QMMethod
 
 
 class ORCA(QMMethod):
-    def __init__(self, path: str | Path = "orca", inputfile: str | None = None):
+    def __init__(self, path: str | Path, orcacfg: ORCAConfig) -> None:
         """
         Initialize the ORCA class.
         """
@@ -23,11 +23,11 @@ class ORCA(QMMethod):
             self.path = path
         else:
             raise TypeError("orca_path should be a string or a Path object.")
-        self.inputfile = inputfile
-        if self.inputfile is not None:
-            raise NotImplementedError("Support of input file not implemented for ORCA.")
+        self.cfg = orcacfg
 
-    def optimize(self, molecule: Molecule, verbosity: int = 1) -> Molecule:
+    def optimize(
+        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+    ) -> Molecule:
         """
         Optimize a molecule using ORCA.
         """
@@ -38,18 +38,14 @@ class ORCA(QMMethod):
             # write the molecule to a temporary file
             molecule.write_xyz_to_file(temp_path / "molecule.xyz")
 
-            # write the input file
-            if self.inputfile is None:
-                inputname = "default_opt.inp"
-                orca_input = self._default_input(
-                    molecule, "molecule.xyz", optimization=True
-                )
-                if verbosity > 1:
-                    print("ORCA input file:\n##################")
-                    print(orca_input)
-                    print("##################")
-                with open(temp_path / inputname, "w", encoding="utf8") as f:
-                    f.write(orca_input)
+            inputname = "orca_opt.inp"
+            orca_input = self._gen_input(molecule, "molecule.xyz", True, max_cycles)
+            if verbosity > 1:
+                print("ORCA input file:\n##################")
+                print(orca_input)
+                print("##################")
+            with open(temp_path / inputname, "w", encoding="utf8") as f:
+                f.write(orca_input)
 
             # run orca
             arguments = [
@@ -84,15 +80,14 @@ class ORCA(QMMethod):
             molecule.write_xyz_to_file(temp_path / molfile)
 
             # write the input file
-            if self.inputfile is None:
-                inputname = "default.inp"
-                orca_input = self._default_input(molecule, molfile)
-                if verbosity > 1:
-                    print("ORCA input file:\n##################")
-                    print(self._default_input(molecule, molfile))
-                    print("##################")
-                with open(temp_path / inputname, "w", encoding="utf8") as f:
-                    f.write(orca_input)
+            inputname = "orca.inp"
+            orca_input = self._gen_input(molecule, molfile)
+            if verbosity > 1:
+                print("ORCA input file:\n##################")
+                print(self._gen_input(molecule, molfile))
+                print("##################")
+            with open(temp_path / inputname, "w", encoding="utf8") as f:
+                f.write(orca_input)
 
             # run orca
             arguments = [
@@ -153,17 +148,26 @@ class ORCA(QMMethod):
             orca_log_err = e.stderr.decode("utf8", errors="replace")
             return orca_log_out, orca_log_err, e.returncode
 
-    def _default_input(
-        self, molecule: Molecule, xyzfile: str, optimization: bool = False
+    def _gen_input(
+        self,
+        molecule: Molecule,
+        xyzfile: str,
+        optimization: bool = False,
+        opt_cycles: int | None = None,
     ) -> str:
         """
         Generate a default input file for ORCA.
         """
-        orca_input = "! r2SCAN-3c NoTRAH NoSOSCF\n"
-        orca_input += "! SlowConv\n"
+        orca_input = f"! {self.cfg.functional} {self.cfg.basis}\n"
+        orca_input += f"! DEFGRID{self.cfg.gridsize}\n"
+        orca_input += "! NoTRAH NoSOSCF SlowConv\n"
         if optimization:
             orca_input += "! OPT\n"
-        orca_input += "%scf MaxIter 200 end\n"
+            if opt_cycles is not None:
+                orca_input += f"%geom MaxIter {opt_cycles} end\n"
+        orca_input += (
+            f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n\tConvergence Medium\nend\n"
+        )
         orca_input += "%pal nprocs 1 end\n\n"
         orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
         return orca_input

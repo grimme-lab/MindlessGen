@@ -22,11 +22,15 @@ def iterative_optimization(
     for cycle in range(config_refine.max_frag_cycles):
         # Optimize the current molecule
         try:
-            rev_mol = engine.optimize(rev_mol, verbosity)
+            rev_mol = engine.optimize(rev_mol, None, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
                 f"Optimization failed at fragmentation cycle {cycle}: {e}"
             ) from e
+
+        if verbosity > 2:
+            # Print coordinates of optimized molecule
+            print(f"Optimized molecule in cycle {cycle + 1}:\n{rev_mol.xyz}")
 
         # Detect fragments from the optimized molecule
         fragmols = detect_fragments(rev_mol, verbosity)
