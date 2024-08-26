@@ -22,6 +22,8 @@ def postprocess_mol(
     """
 
     # Run a singlepoint calculation with the postprocess engine to see if it is stable
+    if config.debug:
+        verbosity = 3
     if verbosity > 2:
         print("Postprocessing molecule...")
     if config.optimize:

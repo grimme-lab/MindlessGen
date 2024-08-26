@@ -152,6 +152,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Path to the xTB binary.",
     )
+    parser.add_argument(
+        "--postprocess-debug",
+        action="store_true",
+        default=None,
+        required=False,
+        help="Print debug information during postprocessing.",
+    )
     # ORCA specific arguments
     parser.add_argument(
         "--orca-path",
@@ -224,6 +231,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "engine": args_dict["postprocess_engine"],
         "optimize": args_dict["postprocess_optimize"],
         "opt_cycles": args_dict["postprocess_opt_cycles"],
+        "debug": args_dict["postprocess_debug"],
     }
 
     return rev_args_dict

@@ -68,6 +68,12 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             "Parallelization will disable verbosity during iterative search. "
             + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
         )
+    if num_cores > 1 and config.postprocess.debug:
+        # raise warning that debugging of postprocessing will disable parallelization
+        warnings.warn(
+            "Debug output might seem to be redundant due to the parallel processes with possibly similar errors in parallel mode. "
+            + "Don't be confused!"
+        )
 
     exitcode = 0
     optimized_molecules: list[Molecule] = []
@@ -185,6 +191,9 @@ def single_molecule_generator(
                 if config.general.verbosity > 1:
                     print(e)
             return None
+        finally:
+            if config.postprocess.debug:
+                stop_event.set()  # Stop further runs if debugging of this step is enabled
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
 

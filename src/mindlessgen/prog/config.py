@@ -389,6 +389,7 @@ class PostProcessConfig(BaseConfig):
         self._engine: str = "orca"
         self._opt_cycles: int | None = None
         self._optimize: bool = False
+        self._debug: bool = False
 
     def get_identifier(self) -> str:
         return "postprocess"
@@ -444,6 +445,22 @@ class PostProcessConfig(BaseConfig):
         if opt_cycles < 0:
             raise ValueError("Optimization cycles should be 0 or greater.")
         self._opt_cycles = opt_cycles
+
+    @property
+    def debug(self):
+        """
+        Get the debug flag for post-processing.
+        """
+        return self._debug
+
+    @debug.setter
+    def debug(self, debug: bool):
+        """
+        Set the debug flag for post-processing.
+        """
+        if not isinstance(debug, bool):
+            raise TypeError("Debug should be a boolean.")
+        self._debug = debug
 
 
 class XTBConfig(BaseConfig):

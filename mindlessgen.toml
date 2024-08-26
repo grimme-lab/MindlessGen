@@ -50,6 +50,10 @@ engine = "orca"
 optimize = true
 # > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
 opt_cycles = 5
+# > Debug this step. Leads to more verbose output as soon as the post-processing part is reached. Options: <bool>
+# > If `debug` is true, the process is terminated after the first (successful or not) post-processing step.
+# > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
+debug = false
 
 [xtb]
 # > Path to the xtb executable. Options: <str | Path>
