@@ -133,7 +133,7 @@ def single_molecule_generator(
     postprocess_engine: QMMethod | None,
     cycle: int,
     stop_event,
-):
+) -> Molecule | None:
     """
     Generate a single molecule.
     """
@@ -173,9 +173,12 @@ def single_molecule_generator(
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
-            if config.general.verbosity > 1:
+            if config.general.verbosity > 1 or config.refine.debug:
                 print(e)
         return None
+    finally:
+        if config.refine.debug:
+            stop_event.set()
 
     if config.general.postprocess:
         try:
@@ -188,7 +191,7 @@ def single_molecule_generator(
         except RuntimeError as e:
             if config.general.verbosity > 0:
                 print(f"Postprocessing failed for cycle {cycle + 1}.")
-                if config.general.verbosity > 1:
+                if config.general.verbosity > 1 or config.postprocess.debug:
                     print(e)
             return None
         finally:
@@ -199,6 +202,8 @@ def single_molecule_generator(
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
+        return optimized_molecule
+    elif config.refine.debug or config.postprocess.debug:
         return optimized_molecule
     else:
         return None

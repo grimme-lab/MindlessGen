@@ -58,9 +58,9 @@ class XTB(QMMethod):
             xtb_log_out, xtb_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
+            if verbosity > 2:
+                print(xtb_log_out)
             if return_code != 0:
-                if verbosity > 2:
-                    print(xtb_log_out)
                 raise RuntimeError(
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
@@ -96,9 +96,9 @@ class XTB(QMMethod):
             xtb_log_out, xtb_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
+            if verbosity > 2:
+                print(xtb_log_out)
             if return_code != 0:
-                if verbosity > 2:
-                    print(xtb_log_out)
                 raise RuntimeError(
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )

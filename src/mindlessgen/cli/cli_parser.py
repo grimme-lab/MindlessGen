@@ -9,9 +9,9 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     """
     Parse command line arguments.
     """
-    # get command line argument
     parser = argparse.ArgumentParser()
-    # General arguments
+
+    ### General arguments ###
     parser.add_argument(
         "-c",
         "--config",
@@ -111,6 +111,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="List of forbidden elements.",
     )
+
+    ### Refinement arguments ###
     parser.add_argument(
         "--refine-engine",
         type=str,
@@ -124,7 +126,15 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Maximum number of fragment optimization cycles.",
     )
-    # Postprocessing arguments
+    parser.add_argument(
+        "--refine-debug",
+        action="store_true",
+        default=None,
+        required=False,
+        help="Print debug information during refinement.",
+    )
+
+    ### Postprocessing arguments ###
     parser.add_argument(
         "--postprocess-engine",
         type=str,
@@ -145,7 +155,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Number of optimization cycles in postprocessing.",
     )
-    # xTB specific arguments
+
+    ### xTB specific arguments ###
     parser.add_argument(
         "--xtb-path",
         type=str,
@@ -159,7 +170,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Print debug information during postprocessing.",
     )
-    # ORCA specific arguments
+
+    ### ORCA specific arguments ###
     parser.add_argument(
         "--orca-path",
         type=str,
@@ -193,6 +205,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     args = parser.parse_args(argv)
     args_dict = vars(args)
 
+    ### TRANSLATE ARGUMENTS TO DICTIONARY ###
     # General arguments
     rev_args_dict: dict[str, dict] = {}
     rev_args_dict["general"] = {
@@ -204,10 +217,13 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "num_molecules": args_dict["num_molecules"],
         "postprocess": args_dict["postprocess"],
     }
+    # Refinement arguments
     rev_args_dict["refine"] = {
         "engine": args_dict["refine_engine"],
         "max_frag_cycles": args_dict["max_frag_cycles"],
+        "debug": args_dict["refine_debug"],
     }
+    # Molecule generation arguments
     rev_args_dict["generate"] = {
         "min_num_atoms": args_dict["min_num_atoms"],
         "max_num_atoms": args_dict["max_num_atoms"],
@@ -227,6 +243,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "gridsize": args_dict["orca_gridsize"],
         "scf_cycles": args_dict["orca_scf_cycles"],
     }
+    # Postprocessing arguments
     rev_args_dict["postprocess"] = {
         "engine": args_dict["postprocess_engine"],
         "optimize": args_dict["postprocess_optimize"],
