@@ -15,8 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimization via DFT in the post-processing step
 - Detailed input of ORCA settings (functional, basis, grid size, SCF cycles, ...) possible
 - Maximum number of optimization cycles are an argument for the `QMMethod.optimize` base function
-- Debug option for the refinement and post-processing step specifically.
+- Debug option for the refinement and post-processing step specifically
 - Return type for `single_molecule_generator`
+- Check for consistency of the `min_num_atoms` and `max_num_atoms` constraint
 
 ## [0.3.0] - 2024-08-20
 ### Breaking Changes
