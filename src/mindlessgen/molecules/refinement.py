@@ -19,6 +19,9 @@ def iterative_optimization(
     rev_mol = mol.copy()
     previous_fragments = None  # To store atom counts from the previous cycle
 
+    if config_refine.debug:
+        verbosity = 3
+
     for cycle in range(config_refine.max_frag_cycles):
         # Optimize the current molecule
         try:
@@ -89,7 +92,7 @@ def iterative_optimization(
             0
         ]  # Set current_mol to the first fragment for the next cycle
 
-    # Final check after all cycles
+    # Check for the final fragment after self-consistent fragmentation
     if (
         rev_mol.num_atoms < config_generate.min_num_atoms
         or rev_mol.num_atoms > config_generate.max_num_atoms

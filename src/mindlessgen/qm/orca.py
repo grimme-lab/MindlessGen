@@ -55,9 +55,9 @@ class ORCA(QMMethod):
             orca_log_out, orca_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
+            if verbosity > 2:
+                print(orca_log_out)
             if return_code != 0:
-                if verbosity > 2:
-                    print(orca_log_out)
                 raise RuntimeError(
                     f"ORCA failed with return code {return_code}:\n{orca_log_err}"
                 )
@@ -96,9 +96,9 @@ class ORCA(QMMethod):
             orca_log_out, orca_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
+            if verbosity > 2:
+                print(orca_log_out)
             if return_code != 0:
-                if verbosity > 2:
-                    print(orca_log_out)
                 raise RuntimeError(
                     f"ORCA failed with return code {return_code}:\n{orca_log_err}"
                 )

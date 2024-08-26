@@ -68,6 +68,12 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             "Parallelization will disable verbosity during iterative search. "
             + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
         )
+    if num_cores > 1 and config.postprocess.debug:
+        # raise warning that debugging of postprocessing will disable parallelization
+        warnings.warn(
+            "Debug output might seem to be redundant due to the parallel processes with possibly similar errors in parallel mode. "
+            + "Don't be confused!"
+        )
 
     exitcode = 0
     optimized_molecules: list[Molecule] = []
@@ -127,7 +133,7 @@ def single_molecule_generator(
     postprocess_engine: QMMethod | None,
     cycle: int,
     stop_event,
-):
+) -> Molecule | None:
     """
     Generate a single molecule.
     """
@@ -167,9 +173,12 @@ def single_molecule_generator(
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
-            if config.general.verbosity > 1:
+            if config.general.verbosity > 1 or config.refine.debug:
                 print(e)
         return None
+    finally:
+        if config.refine.debug:
+            stop_event.set()
 
     if config.general.postprocess:
         try:
@@ -182,14 +191,19 @@ def single_molecule_generator(
         except RuntimeError as e:
             if config.general.verbosity > 0:
                 print(f"Postprocessing failed for cycle {cycle + 1}.")
-                if config.general.verbosity > 1:
+                if config.general.verbosity > 1 or config.postprocess.debug:
                     print(e)
             return None
+        finally:
+            if config.postprocess.debug:
+                stop_event.set()  # Stop further runs if debugging of this step is enabled
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
+        return optimized_molecule
+    elif config.refine.debug or config.postprocess.debug:
         return optimized_molecule
     else:
         return None
