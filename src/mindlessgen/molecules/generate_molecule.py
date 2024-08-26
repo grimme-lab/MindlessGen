@@ -57,6 +57,13 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     )  # 102 is the number of accessible elements in the periodic table
 
     # Some sanity checks:
+    # - Check if the minimum number of atoms is smaller than the maximum number of atoms
+    if cfg.min_num_atoms is not None and cfg.max_num_atoms is not None:
+        if cfg.min_num_atoms > cfg.max_num_atoms:
+            raise ValueError(
+                "The minimum number of atoms is larger than the maximum number of atoms."
+            )
+
     # - Check if the summed number of minimally required atoms from cfg.element_composition
     #   is larger than the maximum number of atoms
     if cfg.max_num_atoms is not None:
