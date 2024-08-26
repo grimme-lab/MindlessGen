@@ -274,3 +274,12 @@ def test_generate_coordinates() -> None:
 )
 def test_check_distances(xyz, threshold, expected, description):
     assert check_distances(xyz, threshold) == expected
+
+
+def test_generate_atom_list_min_larger_than_max(default_generate_config):
+    """Test the generate_atom_list function when the minimum number of atoms is larger than the maximum number of atoms."""
+    default_generate_config.min_num_atoms = 10
+    default_generate_config.max_num_atoms = 5
+
+    with pytest.raises(ValueError):
+        generate_atom_list(default_generate_config, verbosity=1)
