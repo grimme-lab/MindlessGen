@@ -340,6 +340,9 @@ class Molecule:
         except ValueError as e:
             raise TypeError("Integer expected.") from e
 
+        if value < 0:
+            raise ValueError("Number of unpaired electrons cannot be negative.")
+
         self._uhf = value
 
     @property
