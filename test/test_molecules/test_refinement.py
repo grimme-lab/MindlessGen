@@ -24,6 +24,8 @@ def mol_H6O2B2Ne2I1Os1Tl1() -> Molecule:
     testsdir = Path(__file__).resolve().parents[1]
     xyz_file = testsdir / "fixtures/H6O2B2Ne2I1Os1Tl1.xyz"
     mol.read_xyz_from_file(xyz_file)
+    mol.charge = 0
+    mol.uhf = 0
     return mol
 
 
