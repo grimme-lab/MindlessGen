@@ -1,3 +1,8 @@
+"""
+This module handles all optimization and fragment detection steps
+to obtain finally a valid molecule.
+"""
+
 from pathlib import Path
 import networkx as nx  # type: ignore
 import numpy as np
@@ -16,6 +21,9 @@ def iterative_optimization(
     config_refine: RefineConfig,
     verbosity: int = 1,
 ) -> Molecule:
+    """
+    Iterative optimization and fragment detection.
+    """
     rev_mol = mol.copy()
     previous_fragments = None  # To store atom counts from the previous cycle
 
@@ -41,18 +49,21 @@ def iterative_optimization(
         # Extract the number of atoms from each fragment for comparison
         current_atom_counts = [fragmol.num_atoms for fragmol in fragmols]
 
-        # Check if the current atom counts are the same as in the previous cycle or if there is only one fragment
+        # Check if the current atom counts are the same as in the previous cycle
+        # or if there is only one fragment
         if previous_fragments is not None:
             if current_atom_counts == previous_fragments:
                 if verbosity > 0:
                     print(
-                        f"Fragments are identical to the previous cycle by atom count. Stopping at cycle {cycle + 1}."
+                        "Fragments are identical to the previous cycle by atom count. "
+                        + f"Stopping at cycle {cycle + 1}."
                     )
                 break  # Stop if the atom counts are the same as in the previous cycle
         if len(fragmols) == 1:
             if verbosity > 0:
                 print(
-                    f"Only one fragment detected in cycle {cycle + 1}. Stopping at cycle {cycle + 1}."
+                    f"Only one fragment detected in cycle {cycle + 1}. "
+                    + f"Stopping at cycle {cycle + 1}."
                 )
             break
         if verbosity > 1:
@@ -73,26 +84,29 @@ def iterative_optimization(
             raise RuntimeError(
                 f"Largest fragment in cycle {cycle + 1} has fewer atoms than the minimum required."
             )
-        # Check if the composition of the largest fragment is still in line with the cfg.element_composition
+        # Check if the composition of the largest fragment
+        # is still in line with the cfg.element_composition
         for ati, elem_range in config_generate.element_composition.items():
             min_limit, max_limit = elem_range
             count = fragmols[0].atlist[ati]
             if min_limit is not None and count < min_limit:
                 raise RuntimeError(
-                    f"Element {ati} is underrepresented in the largest fragment in cycle {cycle + 1}."
+                    f"Element {ati} is underrepresented "
+                    + f"in the largest fragment in cycle {cycle + 1}."
                 )
-            if (
-                max_limit is not None and count > max_limit
-            ):  # Check is actually nonsense in the current workflow, but we want to have this as agnostic as possible
+            # Check is actually nonsense in the current workflow,
+            # but we want to have this as agnostic as possible
+            if max_limit is not None and count > max_limit:
                 raise RuntimeError(
-                    f"Element {ati} is overrepresented in the largest fragment in cycle {cycle + 1}."
+                    f"Element {ati} is overrepresented "
+                    + f"in the largest fragment in cycle {cycle + 1}."
                 )
 
         rev_mol = fragmols[
             0
         ]  # Set current_mol to the first fragment for the next cycle
 
-    # Check for the final fragment after self-consistent fragmentation
+    # Check the final fragment for staying in the min/max limits after self-consistent fragmentation
     if (
         rev_mol.num_atoms < config_generate.min_num_atoms
         or rev_mol.num_atoms > config_generate.max_num_atoms
@@ -100,6 +114,18 @@ def iterative_optimization(
         raise RuntimeError(
             "Final fragment has an invalid number of atoms (less than min or more than max)."
         )
+
+    # IMPORTANT:
+    # TODO: Reintroduce `check_gap` either at this point or in `postprocess.py`
+    # Sample implementation:
+    # try:
+    #     gap_sufficient = engine.check_gap(
+    #         molecule=rev_mol, threshold=0.5, verbosity=verbosity
+    #     )
+    # except RuntimeError as e:
+    #     raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
+    # if not gap_sufficient:
+    #     raise RuntimeError("HOMO-LUMO gap does not meet the lower threshold.")
 
     return rev_mol
 

@@ -9,6 +9,9 @@ from .molecule import Molecule
 from .miscellaneous import set_random_charge
 
 
+MAX_ELEM = 86
+
+
 def generate_random_molecule(
     config_generate: GenerateConfig, verbosity: int
 ) -> Molecule:
@@ -39,12 +42,15 @@ def generate_random_molecule(
     return mol
 
 
+# Taken from mlmgen Fortran project.
+# TODO: Make this procedure more object-oriented:
+#       Create a generator base class that contains some basic functions.
+#       Employ more specific generator classes that have superseeding functions
+#       whenever needed.
 def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     """
     Generate a random molecule with a random number of atoms.
     """
-
-    MAX_ELEM = 86
     # Define a new set of all elements that can be included
     set_all_elem = set(range(0, MAX_ELEM))
     if cfg.forbidden_elements:

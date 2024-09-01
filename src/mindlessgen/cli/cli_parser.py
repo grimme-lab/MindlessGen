@@ -1,3 +1,7 @@
+"""
+This module contains the Command-Line Interface.
+"""
+
 from __future__ import annotations
 
 import argparse
