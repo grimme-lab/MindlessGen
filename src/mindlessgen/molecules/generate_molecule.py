@@ -101,7 +101,7 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         sum_fixed_atoms = np.sum(
             [cfg.element_composition.get(i, (0, 0))[0] for i in cfg.element_composition]
         )
-        if cfg.min_num_atoms < sum_fixed_atoms < cfg.max_num_atoms:
+        if cfg.min_num_atoms <= sum_fixed_atoms <= cfg.max_num_atoms:
             # If the fixed composition is within the defined limits,
             # set the number of atoms for the fixed composition
             for elem, count_range in cfg.element_composition.items():
