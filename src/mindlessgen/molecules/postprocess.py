@@ -18,10 +18,8 @@ def postprocess_mol(
 
     Returns:
     Molecule: Postprocessed molecule
-    bool: Success status
     """
 
-    # Run a singlepoint calculation with the postprocess engine to see if it is stable
     if config.debug:
         verbosity = 3
     if verbosity > 2:

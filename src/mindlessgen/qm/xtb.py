@@ -178,6 +178,11 @@ class XTB(QMMethod):
             return xtb_log_out, xtb_log_err, e.returncode
 
 
+# TODO: 1. Convert this to a @staticmethod of Class XTB
+#       2. Rename to `get_method` or similar to enable an abstract interface
+#       3. Add the renamed method to the ABC `QMMethod`
+#       4. In `main.py`: Remove the passing of the path finder functions as arguments
+#          and remove the boiler plate code to make it more general.
 def get_xtb_path(binary_name: str | Path | None = None) -> Path:
     """
     Get the path to the xtb binary based on different possible names

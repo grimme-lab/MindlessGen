@@ -71,7 +71,8 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     if num_cores > 1 and config.postprocess.debug:
         # raise warning that debugging of postprocessing will disable parallelization
         warnings.warn(
-            "Debug output might seem to be redundant due to the parallel processes with possibly similar errors in parallel mode. "
+            "Debug output might seem to be redundant due to the parallel processes "
+            + "with possibly similar errors in parallel mode. "
             + "Don't be confused!"
         )
 
@@ -115,7 +116,8 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
         if optimized_molecule is None:
             warnings.warn(
-                f"Molecule generation including optimization (and postprocessing) failed for all cycles for molecule {molcount + 1}."
+                "Molecule generation including optimization (and postprocessing) "
+                + f"failed for all cycles for molecule {molcount + 1}."
             )
             exitcode = 1
             continue
