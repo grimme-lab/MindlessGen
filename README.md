@@ -88,6 +88,9 @@ eprint = {https://doi.org/10.1021/ct800511q}
 }
 ```
 
+## One-page overview
+
+![One-pager overview](assets/MindlessGen_SingleSlide.png)
 
 ## Acknowdledgements
 
