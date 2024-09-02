@@ -62,7 +62,8 @@ def console_entry_point(argv: Sequence[str] | None = None) -> int:
                 f.write("\n".join(molecules_written))
             if config.general.verbosity > 0:
                 print(
-                    f"Written molecule list file 'mindless.molecules' with {len(molecules_written)} molecules."
+                    "Written molecule list file 'mindless.molecules' with "
+                    + f"{len(molecules_written)} molecules."
                 )
         except Exception as e:
             warnings.warn(f"Failed to write molecule list file: {e}")
@@ -87,8 +88,8 @@ def find_config_file(cli_config_path: str | Path | None = None) -> Path | None:
 
     # Search paths
     search_paths = [
-        Path.home() / "mindlessgen.toml",  # $USER/mindlessgen.toml
         Path.cwd() / "mindlessgen.toml",  # Current directory
+        Path.home() / "mindlessgen.toml",  # $USER/mindlessgen.toml
     ]
 
     # Find the config file

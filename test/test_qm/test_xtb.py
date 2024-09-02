@@ -28,6 +28,7 @@ def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:
     mol.xyz = coordinates_ethanol
     mol.ati = np.array([7, 5, 5, 0, 0, 0, 0, 0, 0])
     mol.charge = 0
+    mol.uhf = 0
     mol.num_atoms = 9
 
     optimized_molecule = xtb.optimize(mol)

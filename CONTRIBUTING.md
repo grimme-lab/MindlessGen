@@ -72,7 +72,7 @@ we recommend the following workflow:
 
 In order to maintain a high code quality, we use a variety of code developer tools.
 When following the above described workflow, [pre-commit](https://pre-commit.com/)
-will automatically trigger (most) necessary checks during your development process.
+will automatically trigger some of these checks during your development process.
 In any case, these checks are also conducted in our CI pipeline, which must pass
 before your pull request is considered ready for review.
 If you have questions or problems, simply ask for advice.

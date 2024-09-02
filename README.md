@@ -38,7 +38,7 @@ mamba create -n mindlessgen python=3.12
 mamba activate mindlessgen
 pip install -e '.[dev]'
 ```
-Thereby, all necessary development tools (e.g., `ruff`, `mypy`, and `pre-commit`) are installed.
+Thereby, all necessary development tools (e.g., `ruff`, `mypy`, `tox`, `pytest`, and `pre-commit`) are installed.
 Before start to make changes in the code, activate the `pre-commit` hooks via:
 ```
 pre-commit install
@@ -58,11 +58,20 @@ Further information on how to contribute to this project can also be found in th
 ```
 mindlessgen -h
 ```
-This command displays all relevant command line options in the terminal. In addition, all commands are accessible via the [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file.
+This command displays all command line options in the terminal.
+In addition, all commands are accessible via the [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file.
+The template configuration file in the root directory of the repository contains comprehensive explanations for each of the available configuration keys.
+If its path is not given via `-c/--config`, the configuration file `"mindlessgen.toml"` is searched in the following paths in ascending order:
+1. Current working directory (e.g., `$CWD`)
+2. Home directory (e.g., `$USER/`)
+
+The active configuration can be printed using `--print-config`.
 
 When using the program for academic purposes, please cite:
 
 _J. Chem. Theory Comput._ 2009, **5**, 4, 993–1003
+
+or in `BibTeX` format:
 ```
 @article{doi:10.1021/ct800511q,
 author = {Korth, Martin and Grimme, Stefan},

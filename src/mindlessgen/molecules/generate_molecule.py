@@ -6,7 +6,18 @@ import copy
 import numpy as np
 from ..prog import GenerateConfig
 from .molecule import Molecule
-from .miscellaneous import set_random_charge
+from .miscellaneous import (
+    set_random_charge,
+    get_alkali_metals,
+    get_alkaline_earth_metals,
+    get_three_d_metals,
+    get_four_d_metals,
+    get_five_d_metals,
+    get_lanthanides,
+)
+
+
+MAX_ELEM = 86
 
 
 def generate_random_molecule(
@@ -29,8 +40,7 @@ def generate_random_molecule(
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
     )
-    mol.charge = set_random_charge(mol.ati, verbosity)
-    mol.uhf = 0
+    mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
     if verbosity > 1:
@@ -39,12 +49,15 @@ def generate_random_molecule(
     return mol
 
 
+# Taken from mlmgen Fortran project.
+# TODO: Make this procedure more object-oriented:
+#       Create a generator base class that contains some basic functions.
+#       Employ more specific generator classes that have superseeding functions
+#       whenever needed.
 def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     """
     Generate a random molecule with a random number of atoms.
     """
-
-    MAX_ELEM = 86
     # Define a new set of all elements that can be included
     set_all_elem = set(range(0, MAX_ELEM))
     if cfg.forbidden_elements:
@@ -359,53 +372,3 @@ def check_distances(xyz: np.ndarray, threshold: float) -> bool:
             if r < threshold:
                 return False
     return True
-
-
-def get_alkali_metals() -> list[int]:
-    """
-    Get the atomic numbers of alkali metals.
-    """
-    alkali = [2, 10, 18, 36, 54]
-    return alkali
-
-
-def get_alkaline_earth_metals() -> list[int]:
-    """
-    Get the atomic numbers of alkaline earth metals.
-    """
-    alkaline = [3, 11, 19, 37, 55]
-    return alkaline
-
-
-def get_three_d_metals() -> list[int]:
-    """
-    Get the atomic numbers of three d metals.
-    """
-    threedmetals = list(range(20, 30))
-
-    return threedmetals
-
-
-def get_four_d_metals() -> list[int]:
-    """
-    Get the atomic numbers of four d metals.
-    """
-
-    fourdmetals = list(range(38, 48))
-    return fourdmetals
-
-
-def get_five_d_metals() -> list[int]:
-    """
-    Get the atomic numbers of five d metals.
-    """
-    fivedmetals = list(range(71, 80))
-    return fivedmetals
-
-
-def get_lanthanides() -> list[int]:
-    """
-    Get the atomic numbers of lanthanides.
-    """
-    lanthanides = list(range(56, 71))
-    return lanthanides

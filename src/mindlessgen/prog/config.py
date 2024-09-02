@@ -5,8 +5,8 @@ Contains the configuration Class for the program.
 from __future__ import annotations
 
 from pathlib import Path
-import toml
 from abc import ABC, abstractmethod
+import toml
 
 from ..molecules import PSE_NUMBERS
 
@@ -33,7 +33,7 @@ class GeneralConfig(BaseConfig):
     Configuration class for general settings.
     """
 
-    def __init__(self):
+    def __init__(self: GeneralConfig) -> None:
         self._verbosity: int = 1
         self._max_cycles: int = 100
         self._print_config: bool = False
@@ -150,7 +150,11 @@ class GeneralConfig(BaseConfig):
 
 
 class GenerateConfig(BaseConfig):
-    def __init__(self):
+    """
+    Configuration for the "generate" section responsible for setting up an initial Molecule type.
+    """
+
+    def __init__(self: GenerateConfig) -> None:
         self._min_num_atoms: int = 2
         self._max_num_atoms: int = 100
         self._init_coord_scaling: float = 3.0
@@ -254,6 +258,9 @@ class GenerateConfig(BaseConfig):
 
     @property
     def element_composition(self):
+        """
+        Return the element composition.
+        """
         return self._element_composition
 
     @element_composition.setter
@@ -296,11 +303,13 @@ class GenerateConfig(BaseConfig):
 
     @property
     def forbidden_elements(self):
-        # return sorted list of forbidden elements
+        """
+        Return sorted list of forbidden elements.
+        """
         return self._forbidden_elements
 
     @forbidden_elements.setter
-    def forbidden_elements(self, forbidden_str):
+    def forbidden_elements(self: GenerateConfig, forbidden_str: str) -> None:
         """
         Parses the forbidden_elements string and stores the parsed data
         in the _forbidden_elements set.
@@ -313,6 +322,8 @@ class GenerateConfig(BaseConfig):
 
         for item in elements:
             if "-" in item:
+                start: str | int
+                end: str | int
                 start, end = item.split("-")
                 if end == "*" and start == "*":
                     raise ValueError("Both start and end cannot be wildcard '*'.")
@@ -336,7 +347,7 @@ class RefineConfig(BaseConfig):
     Configuration class for refinement settings.
     """
 
-    def __init__(self):
+    def __init__(self: RefineConfig) -> None:
         self._max_frag_cycles: int = 100
         self._engine: str = "xtb"
         self._debug: bool = False
@@ -402,7 +413,7 @@ class PostProcessConfig(BaseConfig):
     Configuration class for post-processing settings.
     """
 
-    def __init__(self):
+    def __init__(self: PostProcessConfig) -> None:
         self._engine: str = "orca"
         self._opt_cycles: int | None = None
         self._optimize: bool = False
@@ -485,7 +496,7 @@ class XTBConfig(BaseConfig):
     Configuration class for XTB.
     """
 
-    def __init__(self):
+    def __init__(self: XTBConfig) -> None:
         self._xtb_path: str | Path = "xtb"
 
     def get_identifier(self) -> str:
@@ -513,7 +524,7 @@ class ORCAConfig(BaseConfig):
     Configuration class for ORCA.
     """
 
-    def __init__(self):
+    def __init__(self: ORCAConfig) -> None:
         self._orca_path: str | Path = "orca"
         self._functional: str = "PBE"
         self._basis: str = ""
@@ -630,6 +641,9 @@ class ConfigManager:
             self.load_from_toml(config_file)
 
     def get_all_identifiers(self):
+        """
+        Returns the identifiers of all subconfiguration classes, e.g. "orca", "refinement", ...
+        """
         identifiers = []
         for attr_name in dir(self):
             attr_value = getattr(self, attr_name)

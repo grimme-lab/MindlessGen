@@ -47,11 +47,14 @@ class XTB(QMMethod):
                 "--opt",
                 "--gfn",
                 "2",
-                "--chrg",
-                str(molecule.charge),
             ]
+            if molecule.charge != 0:
+                arguments += ["--chrg", str(molecule.charge)]
+            if molecule.uhf != 0:
+                arguments += ["--uhf", str(molecule.uhf)]
             if max_cycles is not None:
                 arguments += ["--cycles", str(max_cycles)]
+
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
@@ -87,10 +90,13 @@ class XTB(QMMethod):
                 "molecule.xyz",
                 "--gfn",
                 "2",
-                "--chrg",
-                str(molecule.charge),
             ]
-            if verbosity > 1:
+            if molecule.charge != 0:
+                arguments += ["--chrg", str(molecule.charge)]
+            if molecule.uhf != 0:
+                arguments += ["--uhf", str(molecule.uhf)]
+
+            if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
             xtb_log_out, xtb_log_err, return_code = self._run(
@@ -172,6 +178,11 @@ class XTB(QMMethod):
             return xtb_log_out, xtb_log_err, e.returncode
 
 
+# TODO: 1. Convert this to a @staticmethod of Class XTB
+#       2. Rename to `get_method` or similar to enable an abstract interface
+#       3. Add the renamed method to the ABC `QMMethod`
+#       4. In `main.py`: Remove the passing of the path finder functions as arguments
+#          and remove the boiler plate code to make it more general.
 def get_xtb_path(binary_name: str | Path | None = None) -> Path:
     """
     Get the path to the xtb binary based on different possible names

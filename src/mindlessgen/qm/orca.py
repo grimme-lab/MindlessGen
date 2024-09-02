@@ -13,6 +13,10 @@ from .base import QMMethod
 
 
 class ORCA(QMMethod):
+    """
+    This class handles all interaction with the ORCA external dependency.
+    """
+
     def __init__(self, path: str | Path, orcacfg: ORCAConfig) -> None:
         """
         Initialize the ORCA class.
@@ -173,6 +177,11 @@ class ORCA(QMMethod):
         return orca_input
 
 
+# TODO: 1. Convert this to a @staticmethod of Class ORCA
+#       2. Rename to `get_method` or similar to enable an abstract interface
+#       3. Add the renamed method to the ABC `QMMethod`
+#       4. In `main.py`: Remove the passing of the path finder functions as arguments
+#          and remove the boiler plate code to make it more general.
 def get_orca_path(binary_name: str | Path | None = None) -> Path:
     """
     Get the path to the orca binary based on different possible names
