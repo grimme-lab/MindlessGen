@@ -181,6 +181,7 @@ def test_generate_molecule() -> None:
     """
     # create a ConfigManager object with verbosity set to 0
     config = ConfigManager()
+    config.generate.forbidden_elements = "57-71"
     config.general.verbosity = 0
     mol = generate_random_molecule(config.generate, config.general.verbosity)
 

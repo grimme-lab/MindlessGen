@@ -8,10 +8,11 @@ from mindlessgen.molecules import Molecule  # type: ignore
 @pytest.mark.optional
 def test_generator():
     config = ConfigManager()
-    config.general.engine = "xtb"
+    config.refine.engine = "xtb"
     config.general.max_cycles = 10000
-    config.general.parallel = 8
-    config.general.verbosity = 0
+    config.general.parallel = 4
+    config.general.verbosity = -1
+    config.general.postprocess = False
 
     molecules, exitcode = generator(config)
     assert exitcode == 0
