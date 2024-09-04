@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Return type for `single_molecule_generator`
 - Check for consistency of the `min_num_atoms` and `max_num_atoms` constraint
 - Similar to the `<basename>.CHRG` file, also a `<basename>.UHF` is printed
+- HOMO-LUMO gap check within the refinement step
 
 ## [0.3.0] - 2024-08-20
 ### Breaking Changes
