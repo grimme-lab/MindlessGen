@@ -131,6 +131,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Maximum number of fragment optimization cycles.",
     )
     parser.add_argument(
+        "--refine-hlgap",
+        type=float,
+        required=False,
+        help="Minimum HOMO-LUMO gap required in the end of the refinement process",
+    )
+    parser.add_argument(
         "--refine-debug",
         action="store_true",
         default=None,
@@ -225,6 +231,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     rev_args_dict["refine"] = {
         "engine": args_dict["refine_engine"],
         "max_frag_cycles": args_dict["max_frag_cycles"],
+        "hlgap": args_dict["refine_hlgap"],
         "debug": args_dict["refine_debug"],
     }
     # Molecule generation arguments

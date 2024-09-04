@@ -491,7 +491,7 @@ class Molecule:
             with open(filename.with_suffix(".UHF"), "w", encoding="utf8") as f:
                 f.write(f"{self.uhf}\n")
 
-    def read_xyz_from_file(self, filename: str | Path):
+    def read_xyz_from_file(self, filename: str | Path) -> None:
         """
         Read the XYZ coordinates of the molecule from a file.
 

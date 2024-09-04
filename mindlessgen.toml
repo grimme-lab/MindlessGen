@@ -42,6 +42,8 @@ forbidden_elements = "57-71"
 max_frag_cycles = 100
 # > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
 engine = "xtb"
+# > HOMO-LUMO gap threshold applied at the end of the refinement step
+hlgap = 0.5
 # > Debug this step. Leads to more verbose output as soon as the refinement part is reached. Options: <bool>
 # > If `debug` is true, the process is terminated after the first (successful or not) refinement step.
 debug = false

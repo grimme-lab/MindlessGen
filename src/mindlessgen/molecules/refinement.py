@@ -117,7 +117,7 @@ def iterative_optimization(
 
     try:
         gap_sufficient = engine.check_gap(
-            molecule=rev_mol, threshold=0.5, verbosity=verbosity
+            molecule=rev_mol, threshold=config_refine.hlgap, verbosity=verbosity
         )
     except RuntimeError as e:
         raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
