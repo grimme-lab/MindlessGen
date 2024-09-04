@@ -350,6 +350,7 @@ class RefineConfig(BaseConfig):
     def __init__(self: RefineConfig) -> None:
         self._max_frag_cycles: int = 100
         self._engine: str = "xtb"
+        self._hlgap: float = 0.5
         self._debug: bool = False
 
     def get_identifier(self) -> str:
@@ -390,6 +391,24 @@ class RefineConfig(BaseConfig):
         if engine not in ["xtb", "orca"]:
             raise ValueError("Refinement engine can only be xtb or orca.")
         self._engine = engine
+
+    @property
+    def hlgap(self):
+        """
+        Get the minimum HOM
+        """
+        return self._hlgap
+
+    @hlgap.setter
+    def hlgap(self, hlgap: float):
+        """
+        Set the minimum HOM
+        """
+        if not isinstance(hlgap, float):
+            raise TypeError("Minimum HL gap should be a float.")
+        if hlgap < 0:
+            raise ValueError("Minimum HL gap should be greater than 0.")
+        self._hlgap = hlgap
 
     @property
     def debug(self):

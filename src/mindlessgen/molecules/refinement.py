@@ -115,17 +115,14 @@ def iterative_optimization(
             "Final fragment has an invalid number of atoms (less than min or more than max)."
         )
 
-    # IMPORTANT:
-    # TODO: Reintroduce `check_gap` either at this point or in `postprocess.py`
-    # Sample implementation:
-    # try:
-    #     gap_sufficient = engine.check_gap(
-    #         molecule=rev_mol, threshold=0.5, verbosity=verbosity
-    #     )
-    # except RuntimeError as e:
-    #     raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
-    # if not gap_sufficient:
-    #     raise RuntimeError("HOMO-LUMO gap does not meet the lower threshold.")
+    try:
+        gap_sufficient = engine.check_gap(
+            molecule=rev_mol, threshold=config_refine.hlgap, verbosity=verbosity
+        )
+    except RuntimeError as e:
+        raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
+    if not gap_sufficient:
+        raise RuntimeError("HOMO-LUMO gap does not meet the lower threshold.")
 
     return rev_mol
 
