@@ -7,7 +7,7 @@
 [general]
 # > Verbosity level defining the printout: Options: 0 = silent, 1 = default, 2 = verbose, 3 = debug
 verbosity = 1
-# > Number of parallel processes to use. Options: <int>
+# > Number of parallel processes to use. Corresponds to the number of physical CPU cores used. Options: <int>
 parallel = 1
 # > Maximum number of generation/optimization try-and-error cycles per molecule. Options: <int>
 max_cycles = 100
@@ -18,9 +18,9 @@ postprocess = false
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>
-min_num_atoms = 2
+min_num_atoms = 5
 # > Maximum number of atoms in the generated molecule. Options: <int>
-max_num_atoms = 100
+max_num_atoms = 10
 # > Initial coordinate scaling factor. Options: <float>
 init_scaling = 3.0
 # > Increase in the coordinate scaling factor per trial after dist_threshold was not met. Options: <float>
@@ -30,16 +30,16 @@ dist_threshold = 1.2
 # > Atom types and their minimum and maximum occurrences. Format: "<element>:<min_count>-<max_count>"
 # > Elements that are not specified are only added by random selection.
 # > A star sign (*) can be used as a wildcard for integer value.
-element_composition = "C:2-10, H:10-20, O:1-5, N:1-*"
+element_composition = "C:2-3, H:1-2, O:1-2, N:1-*"
 # > Atom types that are not chosen for random selection. Format: "<element1>, <element2>, ..."
 # > CAUTION: This option is overridden by the 'element_composition' option.
 # > I.e., if an element is specified in 'element_composition' with an occurrence > 0, it will be added to the molecule anyway.
 # > Example: forbidden_elements = "18,57-*"
-forbidden_elements = "57-71"
+forbidden_elements = "57-71, 81-*"
 
 [refine]
 # > Maximum number of fragment optimization cycles. Options: <int>
-max_frag_cycles = 100
+max_frag_cycles = 10
 # > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
 engine = "xtb"
 # > HOMO-LUMO gap threshold applied at the end of the refinement step
@@ -51,7 +51,7 @@ debug = false
 [postprocess]
 # > Engine for the post-processing part. Options: 'xtb', 'orca'
 engine = "orca"
-# > Optimize geometry in the post-processing part. Options: <bool>
+# > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
 optimize = true
 # > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
 opt_cycles = 5
@@ -61,17 +61,17 @@ opt_cycles = 5
 debug = false
 
 [xtb]
-# > Path to the xtb executable. Options: <str | Path>
+# > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
 xtb_path = "/path/to/xtb"
 
 [orca]
-# > Path to the orca executable. Options: <str | Path>
+# > Path to the orca executable. The names `orca` and `orca_dev` are automatically searched for. Options: <str | Path>
 orca_path = "/path/to/orca"
 # > Functional/Method: Options: <str>
 functional = "PBE"
 # > Basis set: Options: <str>
 basis = "def2-SVP"
-# > Gridsize for the numerical integration: Options: <int => 1> = coarse, <int = 2> => medium, <int = 3> => fine
+# > Gridsize for the numerical integration (corresponds to `DEFGRID<gridsize>`: Options: <int => 1> = coarse, <int = 2> => medium, <int = 3> => fine
 gridsize = 1
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
