@@ -13,6 +13,7 @@ def test_generator():
     config.general.parallel = 4
     config.general.verbosity = -1
     config.general.postprocess = False
+    config.general.write_xyz = False
 
     molecules, exitcode = generator(config)
     assert exitcode == 0

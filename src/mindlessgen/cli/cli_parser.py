@@ -73,6 +73,22 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Postprocess the output.",
     )
     parser.add_argument(
+        "--write-xyz",
+        action="store_true",
+        default=None,
+        required=False,
+        help="Write the molecules to xyz files.",
+    )
+    parser.add_argument(
+        "--no-write-xyz",
+        action="store_false",
+        dest="write_xyz",
+        required=False,
+        help="Do not write the molecules to xyz files.",
+    )
+
+    ### Molecule generation arguments ###
+    parser.add_argument(
         "--min-num-atoms",
         type=int,
         required=False,
@@ -226,6 +242,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "print_config": args_dict["print_config"],
         "num_molecules": args_dict["num_molecules"],
         "postprocess": args_dict["postprocess"],
+        "write_xyz": args_dict["write_xyz"],
     }
     # Refinement arguments
     rev_args_dict["refine"] = {

@@ -40,6 +40,7 @@ class GeneralConfig(BaseConfig):
         self._parallel: int = 1
         self._num_molecules: int = 1
         self._postprocess: bool = False
+        self._write_xyz: bool = True
 
     def get_identifier(self) -> str:
         return "general"
@@ -147,6 +148,22 @@ class GeneralConfig(BaseConfig):
         if not isinstance(postprocess, bool):
             raise TypeError("Postprocess should be a boolean.")
         self._postprocess = postprocess
+
+    @property
+    def write_xyz(self):
+        """
+        Get the write xyz flag.
+        """
+        return self._write_xyz
+
+    @write_xyz.setter
+    def write_xyz(self, write_xyz: bool):
+        """
+        Set the write xyz flag.
+        """
+        if not isinstance(write_xyz, bool):
+            raise TypeError("Write xyz should be a boolean.")
+        self._write_xyz = write_xyz
 
 
 class GenerateConfig(BaseConfig):
