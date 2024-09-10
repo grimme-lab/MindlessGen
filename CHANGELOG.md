@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `verbosity = 3` always prints full QM output
 - Adapted generation of number of unpaired electrons; thereby, support for Ln's
 - Shifted group / element sorting definitions to miscellaneous
+- `xyz` files are written on the fly, and not post-generation
 
 ### Added
 - Optimization via DFT in the post-processing step
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Check for consistency of the `min_num_atoms` and `max_num_atoms` constraint
 - Similar to the `<basename>.CHRG` file, also a `<basename>.UHF` is printed
 - HOMO-LUMO gap check within the refinement step and corresponding Config option called "refine_hlgap"
+- `GeneralConfig` switch for writing `xyz` files
 
 ## [0.3.0] - 2024-08-20
 ### Breaking Changes
