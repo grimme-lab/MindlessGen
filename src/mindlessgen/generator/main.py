@@ -158,7 +158,19 @@ def single_molecule_generator(
     # | |__| |  __/ | | |  __/ | | (_| | || (_) | |
     #  \_____|\___|_| |_|\___|_|  \__,_|\__\___/|_|
 
-    mol = generate_random_molecule(config.generate, config.general.verbosity)
+    try:
+        mol = generate_random_molecule(config.generate, config.general.verbosity)
+    # RuntimeError is not caught here, as in this part, runtime errors are not expected to occur
+    # and shall therefore be raised to the main function
+    except (
+        SystemExit
+    ) as e:  # debug functionality: raise SystemExit to stop the whole execution
+        if config.general.verbosity > 0:
+            print(f"Generation aborted for cycle {cycle + 1}.")
+            if config.general.verbosity > 1:
+                print(e)
+        stop_event.set()
+        return None
 
     try:
         #    ____        _   _           _
