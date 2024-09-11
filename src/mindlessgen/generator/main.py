@@ -124,6 +124,10 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         if config.general.verbosity > 0:
             print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
             print(optimized_molecule)
+        if config.general.write_xyz:
+            optimized_molecule.write_xyz_to_file()
+            if config.general.verbosity > 0:
+                print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.")
         optimized_molecules.append(optimized_molecule)
 
     return optimized_molecules, exitcode
