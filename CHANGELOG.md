@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adapted generation of number of unpaired electrons; thereby, support for Ln's
 - Shifted group / element sorting definitions to miscellaneous
 - `xyz` files are written on the fly, and not post-generation
+- `forbidden_elements` and `element_composition` influences hydrogen and organic element addition
 
 ### Added
 - Optimization via DFT in the post-processing step
