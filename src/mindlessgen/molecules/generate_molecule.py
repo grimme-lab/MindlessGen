@@ -173,13 +173,20 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
             )  # with range(0, 3) -> mean value: 1
             # max value of this section with commented settings: 12
 
-    def add_organic(num_adds: int, min_nat: int, max_nat: int):
+    def add_organic(num_adds: int, min_nat: int, max_nat: int) -> None:
         """
         Add organic elements.
         """
         # Add Elements between B and F (5-9)
+        valid_organic: list[int] = []
+        for organic_index in range(4, 10):
+            if organic_index in valid_elems:
+                valid_organic.append(organic_index)
+        if not valid_organic:
+            return
         for _ in range(num_adds):  # with range(5) -> mean value 1.5
-            ati = np.random.randint(4, 10)
+            # go through the elements B to F (4-9 in 0-based indexing)
+            ati = np.random.choice(valid_organic)
             if verbosity > 1:
                 print(f"Adding atom type {ati}...")
             natoms[ati] = natoms[ati] + np.random.randint(
@@ -298,9 +305,11 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     # Check for too many transition and lanthanide metals
     remove_metals()
     # Add organic elements (B, C, N, O, F)
-    add_organic(lim_organic, 0, 3)
+    add_organic(num_adds=lim_organic, min_nat=0, max_nat=3)
     # Add hydrogen if not included
-    add_hydrogen()
+    # execute only if hydrogen is included in the valid elements
+    if 0 in valid_elems:
+        add_hydrogen()
     # Check if pre-defined atom type counts are within the defined limits
     check_composition()
     # Check if the number of atoms is within the defined limits

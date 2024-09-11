@@ -284,3 +284,93 @@ def test_generate_atom_list_min_larger_than_max(default_generate_config):
 
     with pytest.raises(ValueError):
         generate_atom_list(default_generate_config, verbosity=1)
+
+
+# Test to ensure non-integer values for min/max atoms raise errors
+@pytest.mark.parametrize(
+    "min_atoms, max_atoms, expected_error",
+    [
+        ("five", 10, TypeError),  # Non-integer min atoms
+        (5, "ten", TypeError),  # Non-integer max atoms
+        (2.5, 15, TypeError),  # Float as min atoms
+        (5, 20.5, TypeError),  # Float as max atoms
+    ],
+)
+def test_invalid_min_max_atoms(
+    min_atoms, max_atoms, expected_error, default_generate_config
+):
+    """Test for non-integer min/max atom values raising TypeErrors."""
+    with pytest.raises(expected_error):
+        default_generate_config.min_num_atoms = min_atoms
+        default_generate_config.max_num_atoms = max_atoms
+
+
+# Edge case where forbidden elements overlap allowed range
+@pytest.mark.parametrize(
+    "forbidden_elements, expected_atoms",
+    [
+        ("1-5", [0, 1, 2, 3, 4]),  # Banned elements within the default organic range
+        ("1, 6, 7", [0, 5, 6]),  # Specific elements banned
+    ],
+)
+def test_generate_atom_list_with_overlapping_forbidden_elements(
+    forbidden_elements, expected_atoms, default_generate_config
+):
+    """Test generate_atom_list when forbidden elements overlap with allowed ranges."""
+    default_generate_config.forbidden_elements = forbidden_elements
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 15
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Ensure forbidden elements are not present in the atom list
+    assert np.sum([atom_list[z] for z in expected_atoms]) == 0
+
+
+# Test behavior when composition is empty but min/max are set
+def test_generate_atom_list_with_empty_composition(default_generate_config):
+    """Ensure empty compositions don't lead to unexpected behaviors."""
+    default_generate_config.element_composition = ""
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 10
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Ensure some atoms are still generated within min and max limits
+    assert np.sum(atom_list) >= default_generate_config.min_num_atoms
+    assert np.sum(atom_list) <= default_generate_config.max_num_atoms
+
+
+# Test for element compositions with zero ranges
+def test_generate_atom_list_zero_composition(default_generate_config):
+    """Test generate_atom_list when compositions have zero counts."""
+    default_generate_config.element_composition = "C:0-0, N:0-0, O:0-0"
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 10
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Ensure atoms in these ranges are indeed zero
+    assert atom_list[5] == 0  # C
+    assert atom_list[6] == 0  # N
+    assert atom_list[7] == 0  # O
+
+
+# Check hydrogen addition when it should/shouldn't occur
+@pytest.mark.parametrize(
+    "forbidden_elements, should_contain_hydrogen",
+    [
+        ("1", False),  # Hydrogen forbidden
+        ("", True),  # No forbidden elements
+    ],
+)
+def test_hydrogen_addition(
+    forbidden_elements, should_contain_hydrogen, default_generate_config
+):
+    """Test hydrogen addition based on forbidden elements."""
+    default_generate_config.forbidden_elements = forbidden_elements
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 15
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    if should_contain_hydrogen:
+        assert atom_list[0] > 0
+    else:
+        np.testing.assert_equal(atom_list[0], 0)
