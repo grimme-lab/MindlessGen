@@ -291,6 +291,8 @@ class GenerateConfig(BaseConfig):
 
         if not isinstance(composition_str, str):
             raise TypeError("Element composition should be a string.")
+        if not composition_str:
+            return
 
         element_dict = {}
         elements = composition_str.split(",")
@@ -333,6 +335,10 @@ class GenerateConfig(BaseConfig):
 
         Format: "57-71, 8, 1" or "19-*"
         """
+        # if string is empty or None, set to None
+        if not forbidden_str:
+            self._forbidden_elements = None
+            return
         forbidden_set: set[int] = set()
         elements = forbidden_str.split(",")
         elements = [element.strip() for element in elements]
