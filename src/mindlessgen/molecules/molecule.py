@@ -196,7 +196,7 @@ class Molecule:
         return returnstr
 
     @staticmethod
-    def read_mol_from_file(file_prefix: str) -> Molecule:
+    def read_mol_from_file(file: str | Path) -> Molecule:
         """
         Read the XYZ coordinates and the charge of the molecule from a file.
         Thereby, generate a completely new molecule object from scratch.
@@ -204,8 +204,8 @@ class Molecule:
         Can be called like this:
             from molecule import Molecule
             # Call the static method using the class name
-            file_prefix = "example_molecule"
-            molecule_instance = Molecule.read_mol_from_file(file_prefix)
+            xyz_file = "example_molecule.xyz"
+            molecule_instance = Molecule.read_mol_from_file(xyz_file)
             # Now you can use the molecule_instance as needed
             print(molecule_instance.name)
 
@@ -218,14 +218,24 @@ class Molecule:
         ...
         ```
 
-        :param file_prefix: The prefix of the file to read from.
+        :param file: The XYZ file to read from.
         :return: A new instance of Molecule with the read data.
         """
         molecule = Molecule()
-        molecule.read_xyz_from_file(file_prefix + ".xyz")
-        molecule.read_charge_from_file(file_prefix + ".CHRG")
-        molecule.uhf = 0
-        molecule.name = file_prefix
+        if isinstance(file, str):
+            file_path = Path(file).resolve()
+        if isinstance(file, Path):
+            file_path = file.resolve()
+        molecule.read_xyz_from_file(file_path)
+        if file_path.with_suffix(".CHRG").exists():
+            molecule.read_charge_from_file(file_path.with_suffix(".CHRG"))
+        else:
+            molecule.charge = 0
+        if file_path.with_suffix(".UHF").exists():
+            molecule.read_uhf_from_file(file_path.with_suffix(".UHF"))
+        else:
+            molecule.uhf = 0
+        molecule.name = file_path.stem
         return molecule
 
     @property
@@ -535,6 +545,20 @@ class Molecule:
         """
         with open(filename, encoding="utf8") as f:
             self.charge = int(f.readline())
+
+    def read_uhf_from_file(self, filename: str | Path):
+        """
+        Read the UHF of the molecule from a file.
+
+        The layout of the file is as follows:
+        ```
+        uhf
+        ```
+
+        :param filename: The name of the file to read from.
+        """
+        with open(filename, encoding="utf8") as f:
+            self.uhf = int(f.readline())
 
     def sum_formula(self) -> str:
         """

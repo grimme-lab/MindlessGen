@@ -15,6 +15,28 @@ from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 
 
 @pytest.fixture
+def mol_C2H2N2O1Co1Ge2Ta1Hg1() -> Molecule:
+    """
+    Load the molecule C2H2N2O1Co1Ge2Ta1Hg1 from 'fixtures/C2H2N2O1Co1Ge2Ta1Hg1.xyz'.
+    """
+    testsdir = Path(__file__).resolve().parents[1]
+    molfile = testsdir / "fixtures/C2H2N2O1Co1Ge2Ta1Hg1.xyz"
+    mol = Molecule.read_mol_from_file(molfile)
+    return mol
+
+
+@pytest.fixture
+def mol_C2H1N2O1Co1Ge2Ta1Hg1_frag() -> Molecule:
+    """
+    Load the optimized molecule C2H1N2O1Co1Ge2Ta1Hg1 from 'fixtures/C2H1N2O1Co1Ge2Ta1Hg1_frag.xyz'.
+    """
+    testsdir = Path(__file__).resolve().parents[1]
+    molfile = testsdir / "fixtures/C2H1N2O1Co1Ge2Ta1Hg1_frag.xyz"
+    mol = Molecule.read_mol_from_file(molfile)
+    return mol
+
+
+@pytest.fixture
 def mol_H6O2B2Ne2I1Os1Tl1() -> Molecule:
     """
     Load the molecule H6O2B2Ne2I1Os1Tl1 from 'fixtures/H6O2B2Ne2I1Os1Tl1.xyz'.
@@ -71,13 +93,14 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
 
 @pytest.mark.optional
 def test_iterative_optimization(
-    mol_H6O2B2Ne2I1Os1Tl1: Molecule, mol_H2O2B2I1Os1_opt: Molecule
+    mol_C2H2N2O1Co1Ge2Ta1Hg1: Molecule, mol_C2H1N2O1Co1Ge2Ta1Hg1_frag: Molecule
 ) -> None:
     """
     Test the iterative optimization of the molecule H6O2B2Ne2I1Os1Tl1.
     """
     # initialize a configuration object
     config = ConfigManager()
+    config.refine.hlgap = 0.1
     config.refine.max_frag_cycles = 1
     if config.refine.engine == "xtb":
         try:
@@ -89,8 +112,7 @@ def test_iterative_optimization(
         engine = XTB(xtb_path, config.xtb)
     else:
         raise NotImplementedError("Engine not implemented.")
-    mol = mol_H6O2B2Ne2I1Os1Tl1
-    mol.charge = 0
+    mol = mol_C2H2N2O1Co1Ge2Ta1Hg1
     mol_opt = iterative_optimization(
         mol,
         engine=engine,
@@ -98,7 +120,7 @@ def test_iterative_optimization(
         config_refine=config.refine,
         verbosity=0,
     )
-    mol_ref = mol_H2O2B2I1Os1_opt
+    mol_ref = mol_C2H1N2O1Co1Ge2Ta1Hg1_frag
 
     # assert number of atoms in mol_opt is equal to number of atoms in mol_ref
     assert mol_opt.num_atoms == mol_ref.num_atoms
