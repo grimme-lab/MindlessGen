@@ -204,8 +204,8 @@ class Molecule:
         Can be called like this:
             from molecule import Molecule
             # Call the static method using the class name
-            file_prefix = "example_molecule"
-            molecule_instance = Molecule.read_mol_from_file(file_prefix)
+            xyz_file = "example_molecule.xyz"
+            molecule_instance = Molecule.read_mol_from_file(xyz_file)
             # Now you can use the molecule_instance as needed
             print(molecule_instance.name)
 
