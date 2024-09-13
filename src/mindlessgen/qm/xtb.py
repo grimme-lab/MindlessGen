@@ -46,7 +46,7 @@ class XTB(QMMethod):
                 "molecule.xyz",
                 "--opt",
                 "--gfn",
-                "2",
+                "2",  # self.cfg.gfn_level,
             ]
             if molecule.charge != 0:
                 arguments += ["--chrg", str(molecule.charge)]

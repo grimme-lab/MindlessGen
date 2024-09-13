@@ -189,6 +189,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Path to the xTB binary.",
     )
+    # TODO: add gfn level here
     parser.add_argument(
         "--postprocess-debug",
         action="store_true",
@@ -263,6 +264,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
+    # TODO: add GFN level here
     # ORCA specific arguments
     rev_args_dict["orca"] = {
         "orca_path": args_dict["orca_path"],

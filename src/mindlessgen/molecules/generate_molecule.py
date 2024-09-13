@@ -40,6 +40,14 @@ def generate_random_molecule(
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
     )
+    mol_contr = contract_coordinates_once(mol, threshold=config_generate.dist_threshold)
+    mol_contr = contract_coordinates(
+        mol,
+        threshold=config_generate.dist_threshold,
+        min_atoms=config_generate.min_num_atoms,
+    )
+    mol_contr.write_xyz_to_file("test.xyz")
+    # raise SystemExit(0)
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
@@ -368,6 +376,46 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     ati = np.array(atilist, dtype=int)
 
     return xyz, ati
+
+
+def contract_coordinates_once(mol_inp: Molecule, threshold: float) -> Molecule:
+    """
+    Pull the atoms together once.
+    """
+    stop_all_loops = False  # Flag to stop all loops
+    for i in range(0, len(mol_inp.xyz)):
+        if check_distances(mol_inp.xyz[i:], threshold) is False:
+            pass
+        for j in range(1, 10):
+            mol_inp.xyz[i:] *= 0.9
+            mol_inp.write_xyz_to_file("output.xyz")
+            if not check_distances(mol_inp.xyz, threshold):
+                stop_all_loops = True  # Set flag to stop all loops
+                break
+            j += 1
+        if stop_all_loops:
+            break  # Break the outer loop
+    return mol_inp
+
+
+def contract_coordinates(
+    mol_inp: Molecule, threshold: float, min_atoms: int
+) -> Molecule:
+    """
+    Pull the atoms together.
+    """
+    threshold_mol = 1.2 * threshold
+    # Calculate the distance of each atom from the origin
+    distances_from_origin = np.linalg.norm(mol_inp.xyz, axis=1)
+
+    # Count how many atoms are within the threshold distance from the origin
+    atoms_within_threshold = np.sum(distances_from_origin < threshold_mol)
+
+    # Check if the number of atoms within the threshold is less than min_atoms
+    if atoms_within_threshold < min_atoms:
+        mol_inp = contract_coordinates_once(mol_inp, threshold)
+
+    return mol_inp
 
 
 def check_distances(xyz: np.ndarray, threshold: float) -> bool:
