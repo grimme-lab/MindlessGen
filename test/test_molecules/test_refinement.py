@@ -15,6 +15,7 @@ from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 
 TESTSDIR = Path(__file__).resolve().parents[1]
 
+
 @pytest.fixture
 def mol_C13H14() -> Molecule:
     """
@@ -24,6 +25,7 @@ def mol_C13H14() -> Molecule:
     mol = Molecule.read_mol_from_file(molfile)
     return mol
 
+
 @pytest.fixture
 def mol_C7H8() -> Molecule:
     """
@@ -32,6 +34,7 @@ def mol_C7H8() -> Molecule:
     molfile = TESTSDIR / "fixtures/C7H8.xyz"
     mol = Molecule.read_mol_from_file(molfile)
     return mol
+
 
 @pytest.fixture
 def mol_C2H2N2O1Co1Ge2Ta1Hg1() -> Molecule:
@@ -111,15 +114,13 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
 
 
 @pytest.mark.optional
-def test_iterative_optimization(
-    mol_C13H14: Molecule, mol_C7H8: Molecule
-) -> None:
+def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> None:
     """
     Test the iterative optimization of the molecule H6O2B2Ne2I1Os1Tl1.
     """
     # initialize a configuration object
     config = ConfigManager()
-    config.refine.hlgap = 0.001 # TODO: Change charge assignment such that 
+    config.refine.hlgap = 0.001  # TODO: Change charge assignment such that
     # fragment charge is not completely random anymore. Currently, that's the
     # reason for a virtually switched off HL gap check (fragment can be -2, 0, 2)
     config.refine.max_frag_cycles = 1
