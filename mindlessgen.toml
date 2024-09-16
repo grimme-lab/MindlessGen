@@ -65,6 +65,8 @@ debug = false
 [xtb]
 # > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
 xtb_path = "/path/to/xtb"
+# > The GFN<n>-xTB method that should be used:Options: <int = 0> = GFN-0, <int = 1> = GFN-1, <int = 2> = GFN-2
+level = 2
 
 [orca]
 # > Path to the orca executable. The names `orca` and `orca_dev` are automatically searched for. Options: <str | Path>
