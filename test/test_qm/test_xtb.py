@@ -52,7 +52,7 @@ def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:
                 [-1.17300591097528, 0.85675047762011, 0.75712732702203],
             ]
         ),
-        rtol=1e-3,
+        atol=1e-4,
     )
 
 
