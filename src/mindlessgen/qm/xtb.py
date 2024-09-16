@@ -42,13 +42,11 @@ class XTB(QMMethod):
             molecule.write_xyz_to_file(str(temp_path / "molecule.xyz"))
 
             # run xtb
-            gfn_level = self.cfg.level
-
             arguments = [
                 "molecule.xyz",
                 "--opt",
                 "--gfn",
-                f"{gfn_level}",
+                f"{self.cfg.level}",
             ]
             if molecule.charge != 0:
                 arguments += ["--chrg", str(molecule.charge)]
@@ -88,12 +86,10 @@ class XTB(QMMethod):
             molecule.write_xyz_to_file(str(temp_path / "molecule.xyz"))
 
             # run xtb
-            gfn_level = self.cfg.level
-
             arguments = [
                 "molecule.xyz",
                 "--gfn",
-                f"{gfn_level}",
+                f"{self.cfg.level}",
             ]
             if molecule.charge != 0:
                 arguments += ["--chrg", str(molecule.charge)]
