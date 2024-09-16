@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shifted group / element sorting definitions to miscellaneous
 - `xyz` files are written on the fly, and not post-generation
 - `forbidden_elements` and `element_composition` influences hydrogen and organic element addition
-- GFN level now possible to set
+- GFN<n>-xTB level can now be set
 
 ### Added
 - Optimization via DFT in the post-processing step
