@@ -571,7 +571,7 @@ class XTBConfig(BaseConfig):
     @level.setter
     def level(self, level: int):
         """
-        Set the refinement level.
+        Set the GFN<n>-xTB level.
         """
         if not isinstance(level, int):
             raise TypeError("Refinement level should be a string.")
