@@ -564,7 +564,7 @@ class XTBConfig(BaseConfig):
     @property
     def level(self):
         """
-        Get the refinement level.
+        Get the GFN<n>-xTB level.
         """
         return self._level
 
