@@ -197,6 +197,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Print debug information during postprocessing.",
     )
+    parser.add_argument(
+        "--xtb-level",
+        type=int,
+        required=False,
+        help="Level of theory to use in xTB.",
+    )
 
     ### ORCA specific arguments ###
     parser.add_argument(
@@ -264,7 +270,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
-    # TODO: add GFN level here
+    rev_args_dict["xtb"]["level"] = args_dict["xtb_level"]
     # ORCA specific arguments
     rev_args_dict["orca"] = {
         "orca_path": args_dict["orca_path"],

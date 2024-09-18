@@ -176,11 +176,17 @@ def test_read_mol_from_file(tmp_path, filename, num_atoms, charge, expected_exce
         xyz_file.write_text(xyz_content)
         chrg_file.write_text(chrg_content)
 
-    if expected_exception:
+    if filename == "corrupted_molecule":
+        print(f"expected_exception: {expected_exception}")
         with pytest.raises(expected_exception):
+            Molecule.read_mol_from_file(str(tmp_path / xyz_file))
+    elif filename == "invalid_molecule":
+        print(f"expected_exception: {expected_exception}")
+        with pytest.raises(expected_exception):
+            # load from "filename", which does not exist -> FileNotFoundError
             Molecule.read_mol_from_file(str(tmp_path / filename))
     else:
-        mol = Molecule.read_mol_from_file(str(tmp_path / filename))
+        mol = Molecule.read_mol_from_file(str(tmp_path / xyz_file))
         assert mol.num_atoms == num_atoms
         assert mol.charge == charge
         assert mol.uhf == 0

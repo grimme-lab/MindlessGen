@@ -540,6 +540,7 @@ class XTBConfig(BaseConfig):
 
     def __init__(self: XTBConfig) -> None:
         self._xtb_path: str | Path = "xtb"
+        self._level: int = 2
 
     def get_identifier(self) -> str:
         return "xtb"
@@ -559,6 +560,22 @@ class XTBConfig(BaseConfig):
         if not isinstance(xtb_path, str | Path):
             raise TypeError("xtb_path should be a string.")
         self._xtb_path = xtb_path
+
+    @property
+    def level(self):
+        """
+        Get the GFN<n>-xTB level.
+        """
+        return self._level
+
+    @level.setter
+    def level(self, level: int):
+        """
+        Set the GFN<n>-xTB level.
+        """
+        if not isinstance(level, int):
+            raise TypeError("xtb level should be an integer.")
+        self._level = level
 
 
 class ORCAConfig(BaseConfig):

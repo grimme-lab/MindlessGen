@@ -13,6 +13,50 @@ from mindlessgen.molecules import Molecule  # type: ignore
 from mindlessgen.molecules import iterative_optimization  # type: ignore
 from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 
+TESTSDIR = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture
+def mol_C13H14() -> Molecule:
+    """
+    Load the molecule C13H14 from 'fixtures/C13H14.xyz'.
+    """
+    molfile = TESTSDIR / "fixtures/C13H14.xyz"
+    mol = Molecule.read_mol_from_file(molfile)
+    return mol
+
+
+@pytest.fixture
+def mol_C7H8() -> Molecule:
+    """
+    Load the molecule C7H8 from 'fixtures/C7H8.xyz'.
+    """
+    molfile = TESTSDIR / "fixtures/C7H8.xyz"
+    mol = Molecule.read_mol_from_file(molfile)
+    return mol
+
+
+@pytest.fixture
+def mol_C2H2N2O1Co1Ge2Ta1Hg1() -> Molecule:
+    """
+    Load the molecule C2H2N2O1Co1Ge2Ta1Hg1 from 'fixtures/C2H2N2O1Co1Ge2Ta1Hg1.xyz'.
+    """
+    testsdir = Path(__file__).resolve().parents[1]
+    molfile = testsdir / "fixtures/C2H2N2O1Co1Ge2Ta1Hg1.xyz"
+    mol = Molecule.read_mol_from_file(molfile)
+    return mol
+
+
+@pytest.fixture
+def mol_C2H1N2O1Co1Ge2Ta1Hg1_frag() -> Molecule:
+    """
+    Load the optimized molecule C2H1N2O1Co1Ge2Ta1Hg1 from 'fixtures/C2H1N2O1Co1Ge2Ta1Hg1_frag.xyz'.
+    """
+    testsdir = Path(__file__).resolve().parents[1]
+    molfile = testsdir / "fixtures/C2H1N2O1Co1Ge2Ta1Hg1_frag.xyz"
+    mol = Molecule.read_mol_from_file(molfile)
+    return mol
+
 
 @pytest.fixture
 def mol_H6O2B2Ne2I1Os1Tl1() -> Molecule:
@@ -70,14 +114,15 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
 
 
 @pytest.mark.optional
-def test_iterative_optimization(
-    mol_H6O2B2Ne2I1Os1Tl1: Molecule, mol_H2O2B2I1Os1_opt: Molecule
-) -> None:
+def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> None:
     """
     Test the iterative optimization of the molecule H6O2B2Ne2I1Os1Tl1.
     """
     # initialize a configuration object
     config = ConfigManager()
+    config.refine.hlgap = 0.001  # TODO: Change charge assignment such that
+    # fragment charge is not completely random anymore. Currently, that's the
+    # reason for a virtually switched off HL gap check (fragment can be -2, 0, 2)
     config.refine.max_frag_cycles = 1
     if config.refine.engine == "xtb":
         try:
@@ -89,16 +134,15 @@ def test_iterative_optimization(
         engine = XTB(xtb_path, config.xtb)
     else:
         raise NotImplementedError("Engine not implemented.")
-    mol = mol_H6O2B2Ne2I1Os1Tl1
-    mol.charge = 0
+    mol = mol_C13H14
     mol_opt = iterative_optimization(
         mol,
         engine=engine,
         config_generate=config.generate,
         config_refine=config.refine,
-        verbosity=0,
+        verbosity=2,
     )
-    mol_ref = mol_H2O2B2I1Os1_opt
+    mol_ref = mol_C7H8
 
     # assert number of atoms in mol_opt is equal to number of atoms in mol_ref
     assert mol_opt.num_atoms == mol_ref.num_atoms
