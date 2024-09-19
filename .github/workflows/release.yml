@@ -10,6 +10,7 @@ on:
 concurrency:
   group: ${{ github.event_name }}_${{  github.ref_name }}
 permissions:
+  contents: write  # IMPORTANT: mandatory for making GitHub Releases
   id-token: write
 jobs:
   # Build and verify wheels
@@ -57,6 +58,7 @@ jobs:
       - name: Upload package to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          verbose: true
           repository-url: https://test.pypi.org/legacy/
   # Upload to real PyPI on GitHub Releases.
   release-pypi:
