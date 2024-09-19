@@ -23,6 +23,11 @@ classifiers = [
 dependencies = ["numpy", "networkx", "toml"]
 dynamic = ["version"]
 
+[project.urls]
+GitHub = "https://github.com/grimme-lab/MindlessGen"
+Changelog = "https://github.com/grimme-lab/MindlessGen/blob/main/CHANGELOG.md"
+Issues = "https://github.com/grimme-lab/MindlessGen/issues"
+
 [project.optional-dependencies]
 dev = [
     "ruff==0.5.7",
