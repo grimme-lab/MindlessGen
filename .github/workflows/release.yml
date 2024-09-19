@@ -10,8 +10,8 @@ on:
 concurrency:
   group: ${{ github.event_name }}_${{  github.ref_name }}
 permissions:
-  contents: write  # IMPORTANT: mandatory for making GitHub Releases
-  id-token: write
+  contents: write # IMPORTANT: mandatory for making GitHub Releases
+  id-token: write # IMPORTANT: mandatory for OICD token
 jobs:
   # Build and verify wheels
   build:
@@ -46,8 +46,9 @@ jobs:
   # Upload to Test PyPI on every tag
   release-test-pypi:
     needs: build
-    name: Publish PyPI TEST
+    name: Publish to test.pypi.org
     environment: release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
     steps:
       - name: Download packages built
@@ -63,7 +64,7 @@ jobs:
   # Upload to real PyPI on GitHub Releases.
   release-pypi:
     needs: build
-    name: Publish PyPI PROD
+    name: Publish to pypi.org
     environment: release
     if: github.event.action == 'published'
     runs-on: ubuntu-latest
@@ -82,3 +83,5 @@ jobs:
           path: dist
       - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
