@@ -40,13 +40,12 @@ def generate_random_molecule(
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
     )
-    mol_contr = contract_coordinates_once(mol, threshold=config_generate.dist_threshold)
-    mol_contr = contract_coordinates(
-        mol,
-        threshold=config_generate.dist_threshold,
-        min_atoms=config_generate.min_num_atoms,
+    mol.xyz = contract_coordinates_once(
+        mol, mol.xyz, threshold=config_generate.dist_threshold
+    )  # mol just for developement in this function
+    mol.xyz = contract_coordinates(
+        mol, mol.xyz, threshold=config_generate.dist_threshold, num_atoms=mol.num_atoms
     )
-    mol_contr.write_xyz_to_file("test.xyz")
     # raise SystemExit(0)
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
@@ -378,44 +377,46 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     return xyz, ati
 
 
-def contract_coordinates_once(mol_inp: Molecule, threshold: float) -> Molecule:
+"TODO: clean up the code and commit it to origin/dev/contract_coordinates. Then try the ternär stuktures with the method"
+
+
+def contract_coordinates_once(
+    inp_xyz: Molecule, xyz: np.ndarray, threshold: float
+) -> np.ndarray:
     """
     Pull the atoms together once.
     """
-    stop_all_loops = False  # Flag to stop all loops
-    for i in range(0, len(mol_inp.xyz)):
-        if check_distances(mol_inp.xyz[i:], threshold) is False:
-            pass
-        for j in range(1, 10):
-            mol_inp.xyz[i:] *= 0.9
-            mol_inp.write_xyz_to_file("output.xyz")
-            if not check_distances(mol_inp.xyz, threshold):
-                stop_all_loops = True  # Set flag to stop all loops
-                break
-            j += 1
-        if stop_all_loops:
-            break  # Break the outer loop
-    return mol_inp
+    for i, atom_xyz in enumerate(xyz):
+        distances = np.linalg.norm(xyz - atom_xyz, axis=1)
+        distances[i] = np.inf
+        atoms_within_threshold = np.sum(distances < 5 * threshold)
+        if atoms_within_threshold <= 0.1 * inp_xyz.num_atoms:
+            xyz[i] *= 0.9
+            inp_xyz.write_xyz_to_file("contracted.xyz")
+    return xyz
 
 
 def contract_coordinates(
-    mol_inp: Molecule, threshold: float, min_atoms: int
-) -> Molecule:
+    inp_xyz: Molecule, xyz: np.ndarray, threshold: float, num_atoms: int
+) -> np.ndarray:
     """
     Pull the atoms together.
     """
-    threshold_mol = 1.2 * threshold
     # Calculate the distance of each atom from the origin
-    distances_from_origin = np.linalg.norm(mol_inp.xyz, axis=1)
+    distances_from_origin = np.linalg.norm(xyz)
 
     # Count how many atoms are within the threshold distance from the origin
-    atoms_within_threshold = np.sum(distances_from_origin < threshold_mol)
+    atoms_within_threshold = np.sum(distances_from_origin < 5 * threshold)
 
     # Check if the number of atoms within the threshold is less than min_atoms
-    if atoms_within_threshold < min_atoms:
-        mol_inp = contract_coordinates_once(mol_inp, threshold)
-
-    return mol_inp
+    cycle = 0
+    while cycle < 200:
+        if atoms_within_threshold < num_atoms:
+            xyz = contract_coordinates_once(inp_xyz, xyz, threshold)
+            distances_from_origin = np.linalg.norm(xyz, axis=1)
+            atoms_within_threshold = np.sum(distances_from_origin < 5 * threshold)
+        cycle += 1
+    return xyz
 
 
 def check_distances(xyz: np.ndarray, threshold: float) -> bool:
