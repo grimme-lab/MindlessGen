@@ -10,25 +10,41 @@
 <img align="right" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" height="150" />
 
 `mindlessgen` is a Python-based program for semi-automated generation of "mindless" small molecules, as described [here](https://pubs.acs.org/doi/full/10.1021/ct800511q).
-The rule-based algorithm places atoms randomly within the coordinate space and applies several optimization, fragment detection, and sanity check steps. The program is mainly controlled via a [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file, see below for details.
+The rule-based algorithm places atoms randomly in coordinate space and applies several optimization, fragment detection, and sanity check steps.
+The program is mainly controlled via a [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file, see below for details.
+
+## One-page overview
+
+![One-pager overview](assets/MindlessGen_SingleSlide.png)
 
 ## Installation
 
 > [!IMPORTANT]
-> `xtb` (see [here](https://github.com/grimme-lab/xtb)) has to be available on your machine, either via a `conda-forge` installation, a release binary, or compiled from source. If post-processing with DFT is desired, also `orca` (see [here](https://www.faccts.de/docs/orca/6.0/manual/index.html)) has to be available.
+> `xtb` (see [here](https://github.com/grimme-lab/xtb)) has to be installed on your system, either via `conda-forge`, as a release binary, or compiled from source.
+If post-processing with DFT is desired, also `orca` (see [here](https://www.faccts.de/docs/orca/6.0/manual/index.html)) has to be available.
 
 ### Non-development purposes
 
-The project can be simply installed in an existing virtual environment (by, e.g., `conda` or `mamba` (see also [here](https://github.com/conda-forge/miniforge) and [here](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html))) with
-```
-pip install .
-```
-
-A matching Python environment can be set up and activated via the following command using the tools above:
+You can install the project in an existing virtual environment (provided for example by the package managers `conda` or `mamba` (see also [here](https://github.com/conda-forge/miniforge) and [here](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html))).
+With `mamba`, a matching Python environment can be set up and activated as follows:
 ```
 mamba create -n mindlessgen python=3.12
 mamba activate mindlessgen
 ```
+
+Afterwards, the package can be installed by downloading the package from `PyPi`:
+```bash
+pip install mindlessgen
+```
+This command installs the latest release version of `mindlessgen`.
+
+Alternatively, it can be installed from the latest source code via cloning the repository:
+```bash
+git clone https://github.com/grimme-lab/MindlessGen.git # or the analogous SSH link
+pip install .
+```
+
+Both installation methods work in principle also without a virtual environment, but it is strongly recommended to use one to avoid conflicts with other packages.
 
 ### Development purposes
 
@@ -36,14 +52,15 @@ For working on the code of `mindlessgen`, the following setup is recommended:
 ```
 mamba create -n mindlessgen python=3.12
 mamba activate mindlessgen
+git clone {link to the MindlessGen repository}
 pip install -e '.[dev]'
 ```
 Thereby, all necessary development tools (e.g., `ruff`, `mypy`, `tox`, `pytest`, and `pre-commit`) are installed.
-Before start to make changes in the code, activate the `pre-commit` hooks via:
+Before making changes to the code, activate the `pre-commit` hooks via:
 ```
 pre-commit install
 ```
-Before pushing a commit to the repository, please run also the optional tests, which depend on external dependencies like `xtb`, via
+Before pushing a commit, run the optional tests, which depend on external dependencies like `xtb`, via
 ```
 pytest -vv --optional
 ```
@@ -61,11 +78,13 @@ mindlessgen -h
 This command displays all command line options in the terminal.
 In addition, all commands are accessible via the [TOML](https://github.com/grimme-lab/MindlessGen/blob/main/mindlessgen.toml) configuration file.
 The template configuration file in the root directory of the repository contains comprehensive explanations for each of the available configuration keys.
-If its path is not given via `-c/--config`, the configuration file `"mindlessgen.toml"` is searched in the following paths in ascending order:
-1. Current working directory (e.g., `$CWD`)
-2. Home directory (e.g., `$USER/`)
+If the path is not specified with `-c/--config`, `mindlessgen.toml` will be searched in the following locations, in order:
+1. Current working directory (`$CWD`)
+2. Home directory (`$USER/`)
 
 The active configuration can be printed using `--print-config`.
+
+## Citation
 
 When using the program for academic purposes, please cite:
 
@@ -88,11 +107,7 @@ eprint = {https://doi.org/10.1021/ct800511q}
 }
 ```
 
-## One-page overview
-
-![One-pager overview](assets/MindlessGen_SingleSlide.png)
-
 ## Acknowdledgements
 
-[T. Gasevic](https://github.com/gasevic) for creating an initial `GitHub` [migration](https://github.com/gasevic/mlmgen) of the code and providing important adjustments to the workflow.
+[T. Gasevic](https://github.com/gasevic) for creating an initial `GitHub` [migration](https://github.com/gasevic/mlmgen) of the code and making important adjustments to the workflow.
 [S. Grimme](https://www.chemie.uni-bonn.de/grimme/de/grimme) and M. Korth for the original code written in Fortran associated to the publication in [J. Chem. Theory Comput.](https://pubs.acs.org/doi/full/10.1021/ct800511q).

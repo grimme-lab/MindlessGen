@@ -1,0 +1,87 @@
+name: Build & Publish Package
+on:
+  push:
+    tags:
+      - '*'
+  release:
+    types:
+      - published
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.event_name }}_${{  github.ref_name }}
+permissions:
+  contents: write # IMPORTANT: mandatory for making GitHub Releases
+  id-token: write # IMPORTANT: mandatory for OICD token
+jobs:
+  # Build and verify wheels
+  build:
+    name: Build & Verify Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Clean
+        run: |
+          python -c 'import shutil; [shutil.rmtree(p, True) for p in ("build", "dist")]'
+          python -c 'import pathlib, shutil; [shutil.rmtree(p, True) for p in pathlib.Path(".").glob("*.egg-info")]'
+      - name: Create Wheel and Dist
+        run: |
+          pip install build
+          python -m build --sdist --wheel --outdir dist/ .
+          ls -lat dist
+      - name: Check Wheel
+        shell: bash
+        run: |
+          pip install check-wheel-contents
+          check-wheel-contents dist/*.whl
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dist_${{  github.ref_name }}
+          path: dist
+  # Upload to Test PyPI on every tag
+  release-test-pypi:
+    needs: build
+    name: Publish to test.pypi.org
+    environment: release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packages built
+        uses: actions/download-artifact@v4
+        with:
+          name: Dist_${{  github.ref_name }}
+          path: dist
+      - name: Upload package to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          repository-url: https://test.pypi.org/legacy/
+  # Upload to real PyPI on GitHub Releases.
+  release-pypi:
+    needs: build
+    name: Publish to pypi.org
+    environment: release
+    if: github.event.action == 'published'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        id: setup-python
+        with:
+          python-version: '3.12'
+      - name: Install test-package
+        run: |
+          pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mindlessgen==${{  github.ref_name }}
+      - name: Download packages built
+        uses: actions/download-artifact@v4
+        with:
+          name: Dist_${{  github.ref_name }}
+          path: dist
+      - name: Upload package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true

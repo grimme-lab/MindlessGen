@@ -4,6 +4,7 @@ Main driver of MindlessGen.
 
 from __future__ import annotations
 
+from pathlib import Path
 import multiprocessing as mp
 import warnings
 
@@ -13,6 +14,8 @@ from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
 
 from .. import __version__
+
+MINDLESS_MOLECULES_FILE = "mindless.molecules"
 
 
 def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
@@ -76,9 +79,21 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             + "Don't be confused!"
         )
 
+    # Check if the file "mindless.molecules" exists. If yes, append to it.
+    if Path(MINDLESS_MOLECULES_FILE).is_file():
+        if config.general.verbosity > 0:
+            print(f"\n--- Appending to existing file '{MINDLESS_MOLECULES_FILE}'. ---")
     exitcode = 0
     optimized_molecules: list[Molecule] = []
     for molcount in range(config.general.num_molecules):
+        # print a decent header for each molecule iteration
+        if config.general.verbosity > 0:
+            print(f"\n{'='*80}")
+            print(
+                f"{'='*22} Generating molecule {molcount + 1:<4} of "
+                + f"{config.general.num_molecules:<4} {'='*24}"
+            )
+            print(f"{'='*80}")
         manager = mp.Manager()
         stop_event = manager.Event()
         cycles = range(config.general.max_cycles)
@@ -122,12 +137,14 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             exitcode = 1
             continue
         if config.general.verbosity > 0:
-            print(f"\nOptimized mindless molecule found in {cycles_needed} cycles.")
+            print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
             print(optimized_molecule)
         if config.general.write_xyz:
             optimized_molecule.write_xyz_to_file()
             if config.general.verbosity > 0:
-                print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.")
+                print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
+            with open("mindless.molecules", "a", encoding="utf8") as f:
+                f.write(f"mlm_{optimized_molecule.name}\n")
         optimized_molecules.append(optimized_molecule)
 
     return optimized_molecules, exitcode

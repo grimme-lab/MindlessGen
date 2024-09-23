@@ -161,21 +161,43 @@ class Molecule:
         Return a user-friendly string representation of the molecule.
         """
         returnstr: str = ""
+        first_line = True
         if self._name:
-            returnstr += f"Molecule: {self.name}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"Molecule: {self.name}"
+            first_line = False
         if self._num_atoms is not None:
-            returnstr += f"# atoms: {self.num_atoms}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"# atoms: {self.num_atoms}"
+            first_line = False
         if self._charge is not None:
-            returnstr += f"total charge: {self.charge}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"total charge: {self.charge}"
+            first_line = False
         if self._uhf is not None:
-            returnstr += f"# unpaired electrons: {self.uhf}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"# unpaired electrons: {self.uhf}"
+            first_line = False
         if self._atlist.size:
-            returnstr += f"atomic numbers: {self.atlist}\n"
-            returnstr += f"sum formula: {self.sum_formula()}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"atomic numbers: {self.atlist}"
+            returnstr += f"sum formula: {self.sum_formula()}"
+            first_line = False
         if self._xyz.size:
-            returnstr += f"atomic coordinates:\n{self.xyz}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"atomic coordinates:\n{self.xyz}"
+            first_line = False
         if self._ati.size:
-            returnstr += f"atomic number per index: {self._ati}\n"
+            if not first_line:
+                returnstr += "\n"
+            returnstr += f"atomic number per index: {self._ati}"
+            first_line = False
         return returnstr
 
     def __repr__(self) -> str:
