@@ -40,13 +40,7 @@ def generate_random_molecule(
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
     )
-    mol.xyz = contract_coordinates_once(
-        mol, mol.xyz, threshold=config_generate.dist_threshold
-    )  # mol just for developement in this function
-    mol.xyz = contract_coordinates(
-        mol, mol.xyz, threshold=config_generate.dist_threshold, num_atoms=mol.num_atoms
-    )
-    # raise SystemExit(0)
+    mol.xyz = contract_coordinates(mol.xyz, threshold=config_generate.dist_threshold)
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
@@ -380,42 +374,31 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
 "TODO: clean up the code and commit it to origin/dev/contract_coordinates. Then try the ternär stuktures with the method"
 
 
-def contract_coordinates_once(
-    inp_xyz: Molecule, xyz: np.ndarray, threshold: float
-) -> np.ndarray:
-    """
-    Pull the atoms together once.
-    """
-    for i, atom_xyz in enumerate(xyz):
-        distances = np.linalg.norm(xyz - atom_xyz, axis=1)
-        distances[i] = np.inf
-        atoms_within_threshold = np.sum(distances < 5 * threshold)
-        if atoms_within_threshold <= 0.1 * inp_xyz.num_atoms:
-            xyz[i] *= 0.9
-            inp_xyz.write_xyz_to_file("contracted.xyz")
-    return xyz
-
-
-def contract_coordinates(
-    inp_xyz: Molecule, xyz: np.ndarray, threshold: float, num_atoms: int
-) -> np.ndarray:
+def contract_coordinates(xyz: np.ndarray, threshold: float) -> np.ndarray:
     """
     Pull the atoms together.
     """
-    # Calculate the distance of each atom from the origin
-    distances_from_origin = np.linalg.norm(xyz)
-
-    # Count how many atoms are within the threshold distance from the origin
-    atoms_within_threshold = np.sum(distances_from_origin < 5 * threshold)
-
-    # Check if the number of atoms within the threshold is less than min_atoms
     cycle = 0
-    while cycle < 200:
-        if atoms_within_threshold < num_atoms:
-            xyz = contract_coordinates_once(inp_xyz, xyz, threshold)
-            distances_from_origin = np.linalg.norm(xyz, axis=1)
-            atoms_within_threshold = np.sum(distances_from_origin < 5 * threshold)
+    while cycle < 1000:
         cycle += 1
+        # > Copy the xyz array
+        xyz_test = xyz.copy()
+        xyz_change = xyz.copy()
+        # > Go through the atoms dimension of the xyz array in a reversed order
+        for i in range(len(xyz) - 1, -1, -1):
+            atom_xyz = xyz_change[i]
+            distance_from_origin = np.linalg.norm(atom_xyz)
+            if distance_from_origin > threshold:
+                # > Pull the atom towards the origin
+                xyz_change[i] += xyz[i] * -0.25 * threshold
+                # > Check if the distances between the atoms are larger than a threshold if not revert the change
+                if not check_distances(xyz_change, 1.3 * threshold):
+                    xyz_change[i] += xyz[i] * 0.25 * threshold
+        # > Set the xyz array to the new xyz array
+        xyz = xyz_change
+        # > break if the coordinates do not change
+        if np.array_equal(xyz_test, xyz):
+            break
     return xyz
 
 
