@@ -86,6 +86,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Do not write the molecules to xyz files.",
     )
+    parser.add_argument(
+        "--scale-vdw-radii",
+        type=float,
+        required=False,
+        help="Scaling factor for van der Waals radii.",
+    )
 
     ### Molecule generation arguments ###
     parser.add_argument(
@@ -266,6 +272,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "dist_threshold": args_dict["dist_threshold"],
         "element_composition": args_dict["element_composition"],
         "forbidden_elements": args_dict["forbidden_elements"],
+        "scale_vdw_radii": args_dict["scale_vdw_radii"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
