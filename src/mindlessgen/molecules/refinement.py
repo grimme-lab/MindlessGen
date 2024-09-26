@@ -60,7 +60,7 @@ def iterative_optimization(
                     )
                 break  # Stop if the atom counts are the same as in the previous cycle
         if len(fragmols) == 1:
-            if verbosity > 0:
+            if verbosity > 1:
                 print(
                     f"Only one fragment detected in cycle {cycle + 1}. "
                     + f"Stopping at cycle {cycle + 1}."

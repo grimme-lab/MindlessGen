@@ -76,7 +76,7 @@ class XTB(QMMethod):
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
-        Optimize a molecule using xtb.
+        Perform a single-point calculation using xtb.
         """
 
         # Create a unique temporary directory using TemporaryDirectory context manager
@@ -97,7 +97,7 @@ class XTB(QMMethod):
                 arguments += ["--uhf", str(molecule.uhf)]
 
             if verbosity > 2:
-                print(f"Running command: {' '.join(arguments)}")
+                print(f"Running command: xtb {' '.join(arguments)}")
 
             xtb_log_out, xtb_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
