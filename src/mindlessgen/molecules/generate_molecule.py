@@ -371,29 +371,26 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     return xyz, ati
 
 
-"TODO: clean up the code and commit it to origin/dev/contract_coordinates. Then try the ternär stuktures with the method"
-
-
 def contract_coordinates(xyz: np.ndarray, threshold: float) -> np.ndarray:
     """
-    Pull the atoms together.
+    Pull the atoms towards the origin.
     """
     cycle = 0
-    while cycle < 1000:
+    while cycle < 100000:
         cycle += 1
-        # > Copy the xyz array
         xyz_test = xyz.copy()
         xyz_change = xyz.copy()
         # > Go through the atoms dimension of the xyz array in a reversed order
         for i in range(len(xyz) - 1, -1, -1):
             atom_xyz = xyz_change[i]
-            distance_from_origin = np.linalg.norm(atom_xyz)
-            if distance_from_origin > threshold:
+            xyz_norm = np.linalg.norm(atom_xyz)
+            normalized_xyz = atom_xyz / xyz_norm
+            if xyz_norm > 0.5 * threshold:
                 # > Pull the atom towards the origin
-                xyz_change[i] += xyz[i] * -0.25 * threshold
-                # > Check if the distances between the atoms are larger than a threshold if not revert the change
-                if not check_distances(xyz_change, 1.3 * threshold):
-                    xyz_change[i] += xyz[i] * 0.25 * threshold
+                xyz_change[i] += normalized_xyz * -0.2
+                # > When the check_distances function returns False, reset the atom coordinates
+                if not check_distances(xyz_change, threshold):
+                    xyz_change[i] = xyz[i]
         # > Set the xyz array to the new xyz array
         xyz = xyz_change
         # > break if the coordinates do not change
