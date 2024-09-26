@@ -179,6 +179,7 @@ class GenerateConfig(BaseConfig):
         self._increase_scaling_factor: float = 1.3
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
+        self._scale_vdw_radii: float = 4.0 / 3.0
 
     def get_identifier(self) -> str:
         return "generate"
@@ -363,6 +364,24 @@ class GenerateConfig(BaseConfig):
                 )  # Subtract 1 to convert to 0-based indexing
 
         self._forbidden_elements = sorted(list(forbidden_set))
+
+    @property
+    def scale_vdw_radii(self):
+        """
+        Get the scaling factor for van der Waals radii.
+        """
+        return self._scale_vdw_radii
+
+    @scale_vdw_radii.setter
+    def scale_vdw_radii(self, scale_vdw_radii: float):
+        """
+        Set the scaling factor for van der Waals radii.
+        """
+        if not isinstance(scale_vdw_radii, float):
+            raise TypeError("Scale van der Waals radii should be a float.")
+        if scale_vdw_radii <= 0:
+            raise ValueError("Scale van der Waals radii should be greater than 0.")
+        self._scale_vdw_radii = scale_vdw_radii
 
 
 class RefineConfig(BaseConfig):

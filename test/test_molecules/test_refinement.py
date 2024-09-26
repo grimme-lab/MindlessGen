@@ -106,7 +106,9 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
     """
     Test the detection of fragments in the molecule H2O2B2I1Os1.
     """
-    fragmols = detect_fragments(mol_H6O2B2Ne2I1Os1Tl1, verbosity=0)
+    fragmols = detect_fragments(
+        mol=mol_H6O2B2Ne2I1Os1Tl1, vdw_scaling=1.3333, verbosity=0
+    )
     assert len(fragmols) == 7
 
     # check that the first fragment is equal to the molecule H2O2B2I1Os1

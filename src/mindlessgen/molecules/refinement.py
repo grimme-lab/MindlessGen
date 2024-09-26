@@ -12,6 +12,10 @@ from .molecule import Molecule
 from .miscellaneous import set_random_charge
 
 COV_RADII = "pyykko"
+BOHR2AA = (
+    0.529177210544  # taken from https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
+)
+AA2BOHR = 1 / BOHR2AA
 
 
 def iterative_optimization(
@@ -44,7 +48,11 @@ def iterative_optimization(
             print(f"Optimized molecule in cycle {cycle + 1}:\n{rev_mol.xyz}")
 
         # Detect fragments from the optimized molecule
-        fragmols = detect_fragments(rev_mol, verbosity)
+        fragmols = detect_fragments(
+            mol=rev_mol,
+            vdw_scaling=config_generate.scale_vdw_radii,
+            verbosity=verbosity,
+        )
 
         # Extract the number of atoms from each fragment for comparison
         current_atom_counts = [fragmol.num_atoms for fragmol in fragmols]
@@ -127,7 +135,9 @@ def iterative_optimization(
     return rev_mol
 
 
-def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
+def detect_fragments(
+    mol: Molecule, vdw_scaling: float, verbosity: int = 1
+) -> list[Molecule]:
     """
     Detects fragments in a molecular system based on atom positions and covalent radii.
 
@@ -152,7 +162,16 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
             sum_radii = get_cov_radii(mol.ati[i], COV_RADII) + get_cov_radii(
                 mol.ati[j], COV_RADII
             )
-            if distance <= sum_radii * 1:
+            if verbosity > 2:
+                print(f"Distance between atom {i} and {j}: {distance:6.3f}")
+                print(
+                    f"Covalent radii of atom {i} and {j}, "
+                    + "and the effective threshold: "
+                    + f"{get_cov_radii(mol.ati[i], COV_RADII):6.3f}, "
+                    + f"{get_cov_radii(mol.ati[j], COV_RADII):6.3f}, "
+                    + f"{(sum_radii * vdw_scaling):6.3f}"
+                )
+            if distance <= sum_radii * vdw_scaling:
                 graph.add_edge(i, j)
 
     # Detect connected components (fragments)
@@ -196,10 +215,10 @@ def detect_fragments(mol: Molecule, verbosity: int = 1) -> list[Molecule]:
 
 def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
     """
-    D3 covalent radii.
+    Get the covalent radius of an atom in Angstrom, and scale it by a factor.
     """
     if vdw_radii == "mlmgen":
-        rcov = [
+        rcov = [  # CAUTION: array is given in units of Bohr!
             0.80628308,
             1.15903197,
             3.02356173,
@@ -295,11 +314,13 @@ def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
             3.88023730,
             3.90543362,
         ]
-        return rcov[at]
+        # multiply the whole array with the BOHR2AA factor to get the radii in Angstrom
+        rcov = [rad * BOHR2AA for rad in rcov]
     elif vdw_radii == "pyykko":
         # Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197)
         # Values for metals decreased by 10%
-        covalent_rad_2009 = [
+        # D3 covalent radii used to construct the coordination number
+        rcov = [
             0.32,
             0.46,  # H, He
             1.20,
@@ -419,8 +440,6 @@ def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
             1.48,
             1.57,  # Nh-Og
         ]
-        # D3 covalent radii used to construct the coordination number
-        covalent_rad_d3 = [4.0 / 3.0 * rad for rad in covalent_rad_2009]
-        return covalent_rad_d3[at]
     else:
         raise ValueError("Invalid vdw_radii argument.")
+    return rcov[at]

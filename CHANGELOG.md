@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
+
+### Fixed
+- Unit conversion for (currenly unused) vdW radii from the original Fortran project
+- minor print output issues (no new line breaks...)
+
 ## [0.4.0] - 2024-09-19
 ### Changed
 - Default file name of `.xyz` file contains prefix `mlm_`
