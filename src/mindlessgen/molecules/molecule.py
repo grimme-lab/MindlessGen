@@ -185,7 +185,7 @@ class Molecule:
         if self._atlist.size:
             if not first_line:
                 returnstr += "\n"
-            returnstr += f"atomic numbers: {self.atlist}"
+            returnstr += f"atomic numbers: {self.atlist}\n"
             returnstr += f"sum formula: {self.sum_formula()}"
             first_line = False
         if self._xyz.size:
