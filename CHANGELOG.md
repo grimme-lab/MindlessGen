@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
+- better type hints for `Callables`
 
 ### Fixed
 - Unit conversion for (currenly unused) vdW radii from the original Fortran project
-- minor print output issues (no new line breaks...)
+- minor print output issues (no new line breaks, more consistent verbosity differentiation, ...)
+- bug in `postprocess_mol` which led to an unassigned return variable in the single-point case
+
+### Added
+- Support for the novel "g-xTB" method (working title: GP3-xTB)
 
 ## [0.4.0] - 2024-09-19
 ### Changed
