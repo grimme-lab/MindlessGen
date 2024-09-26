@@ -90,7 +90,7 @@ class GP3(QMMethod):
         # Parse the output to get the gap
         hlgap = None
         for line in gp3_out.split("\n"):
-            if "gap (eV)" in line:
+            if "gap (eV)" in line and "dE" not in line:
                 # check if "alpha->alpha" is present in the same line
                 # then, the line looks as follows:
                 # gap (eV)  alpha->alpha  :        7.02263204
@@ -105,7 +105,7 @@ class GP3(QMMethod):
             raise ValueError("GP3-xTB gap not determined.")
 
         if verbosity > 1:
-            print(f"HOMO-LUMO gap: {hlgap:5f}")
+            print(f"GP3-xTB HOMO-LUMO gap: {hlgap:5f}")
 
         return hlgap > threshold
 

@@ -141,7 +141,7 @@ class XTB(QMMethod):
         if hlgap is None:
             raise ValueError("HOMO-LUMO gap not determined.")
         if verbosity > 1:
-            print(f"HOMO-LUMO gap: {hlgap:5f}")
+            print(f"xTB HOMO-LUMO gap: {hlgap:5f}")
 
         if hlgap > threshold:
             return True
