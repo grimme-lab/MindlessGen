@@ -4,12 +4,13 @@ Main driver of MindlessGen.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 import multiprocessing as mp
 import warnings
 
 from ..molecules import generate_random_molecule, Molecule
-from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path
+from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GP3, get_gp3_path
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
 
@@ -41,12 +42,15 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
     # Import and set up required engines
     refine_engine: QMMethod = setup_engines(
-        config.refine.engine, config, get_xtb_path, get_orca_path
+        config.refine.engine,
+        config,
+        get_xtb_path,
+        get_orca_path,  # GP3 cannot be used anyway
     )
 
     if config.general.postprocess:
         postprocess_engine: QMMethod | None = setup_engines(
-            config.postprocess.engine, config, get_xtb_path, get_orca_path
+            config.postprocess.engine, config, get_xtb_path, get_orca_path, get_gp3_path
         )
     else:
         postprocess_engine = None
@@ -273,8 +277,9 @@ def header(version: str) -> str:
 def setup_engines(
     engine_type: str,
     cfg: ConfigManager,
-    xtb_path_func,
-    orca_path_func,
+    xtb_path_func: Callable,
+    orca_path_func: Callable,
+    gp3_path_func: Callable | None = None,
 ):
     """
     Set up the required engine.
@@ -295,5 +300,12 @@ def setup_engines(
         except ImportError as e:
             raise ImportError("orca not found.") from e
         return ORCA(path, cfg.orca)
+    elif engine_type == "gp3":
+        if gp3_path_func is None:
+            raise ImportError("No callable function for determining the gp3 path.")
+        path = gp3_path_func()
+        if not path:
+            raise ImportError("'gp3' binary could not be found.")
+        return GP3(path)
     else:
         raise NotImplementedError("Engine not implemented.")
