@@ -34,6 +34,7 @@ def postprocess_mol(
     else:
         try:
             engine.singlepoint(mol, verbosity=verbosity)
+            postprocmol = mol
         except RuntimeError as e:
             raise RuntimeError(
                 "Single point calculation in postprocessing failed."
