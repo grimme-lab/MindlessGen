@@ -375,27 +375,30 @@ def contract_coordinates(xyz: np.ndarray, threshold: float) -> np.ndarray:
     """
     Pull the atoms towards the origin.
     """
+    # Initialize the old coordinates as an array of zeros
+    xyz_old: np.ndarray = np.zeros_like(xyz)
     cycle = 0
-    while cycle < 100000:
+    # Break if the coordinates do not change
+    while not np.array_equal(xyz_old, xyz):
         cycle += 1
-        xyz_test = xyz.copy()
-        xyz_change = xyz.copy()
-        # > Go through the atoms dimension of the xyz array in a reversed order
+        if cycle > 100000:
+            raise RuntimeError(
+                "Could not contract the coordinates in a reasonable amount of cycles."
+            )
+        xyz_old = xyz.copy()
+        # Go through the atoms dimension of the xyz array in a reversed order
+        # Justification: First atoms are most likely hydrogen atoms, which should be moved last
         for i in range(len(xyz) - 1, -1, -1):
-            atom_xyz = xyz_change[i]
-            xyz_norm = np.linalg.norm(atom_xyz)
-            normalized_xyz = atom_xyz / xyz_norm
-            if xyz_norm > 0.5 * threshold:
-                # > Pull the atom towards the origin
-                xyz_change[i] += normalized_xyz * -0.2
-                # > When the check_distances function returns False, reset the atom coordinates
-                if not check_distances(xyz_change, threshold):
-                    xyz_change[i] = xyz[i]
-        # > Set the xyz array to the new xyz array
-        xyz = xyz_change
-        # > break if the coordinates do not change
-        if np.array_equal(xyz_test, xyz):
-            break
+            atom_xyz = xyz[i]
+            atom_xyz_norm = np.linalg.norm(atom_xyz)
+            normalized_atom_xyz = atom_xyz / atom_xyz_norm
+            # Shift the atom only if it is closer to the origin after the shift
+            if atom_xyz_norm > 0.1:
+                # Pull the atom towards the origin
+                xyz[i] -= normalized_atom_xyz * 0.2
+                # When the check_distances function returns False, reset the atom coordinates
+                if not check_distances(xyz, threshold):
+                    xyz[i] = xyz_old[i]
     return xyz
 
 
