@@ -31,7 +31,7 @@ increase_scaling_factor = 1.3
 dist_threshold = 1.2
 # > Scaling factor for the employed van der Waals radii. Options: <float>
 scale_vdw_radii = 1.3333
-# > Scaling factor for the minimal bondlength based on the sum of the can der Waals radii. Options: <float>
+# > Scaling factor for the minimal bondlength based on the sum of the van der Waals radii. Options: <float>
 scale_minimal_bondlength = 0.75
 # > Atom types and their minimum and maximum occurrences. Format: "<element>:<min_count>-<max_count>"
 # > Elements that are not specified are only added by random selection.
