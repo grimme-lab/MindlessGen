@@ -180,6 +180,7 @@ class GenerateConfig(BaseConfig):
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
         self._scale_vdw_radii: float = 4.0 / 3.0
+        self._scale_minimal_bondlength: float = 0.75
 
     def get_identifier(self) -> str:
         return "generate"
@@ -382,6 +383,24 @@ class GenerateConfig(BaseConfig):
         if scale_vdw_radii <= 0:
             raise ValueError("Scale van der Waals radii should be greater than 0.")
         self._scale_vdw_radii = scale_vdw_radii
+
+    @property
+    def scale_minimal_bondlength(self):
+        """
+        Get the scaling factor for minimal bond length.
+        """
+        return self._scale_minimal_bondlength
+
+    @scale_minimal_bondlength.setter
+    def scale_minimal_bondlength(self, scale_minimal_bondlength: float):
+        """
+        Set the scaling factor for minimal bond length.
+        """
+        if not isinstance(scale_minimal_bondlength, float):
+            raise TypeError("Scale minimal bond length should be a float.")
+        if scale_minimal_bondlength <= 0:
+            raise ValueError("Scale minimal bond length should be greater than 0.")
+        self._scale_minimal_bondlength = scale_minimal_bondlength
 
 
 class RefineConfig(BaseConfig):

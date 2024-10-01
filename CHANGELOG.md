@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
+- The check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
 
 ### Fixed
 - Unit conversion for (currenly unused) vdW radii from the original Fortran project

@@ -218,49 +218,56 @@ def test_generate_coordinates() -> None:
 
 
 @pytest.mark.parametrize(
-    "xyz, threshold, expected, description",
+    "xyz, ati, scale_minimal_bondlength, expected, description",
     [
         (
             np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+            np.array([0, 0]),
             0.5,
             True,
             "Two atoms with distance greater than threshold (1.0 > 0.5)",
         ),
         (
             np.array([[0.0, 0.0, 0.0], [0.4, 0.0, 0.0]]),
-            0.5,
+            np.array([0, 0]),
+            0.75,
             False,
             "Two atoms with distance less than threshold (0.4 < 0.5)",
         ),
         (
             np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]]),
-            0.5,
+            np.array([0, 0, 0]),
+            1.0,
             True,
             "Three atoms in a line with distances greater than threshold",
         ),
         (
             np.array([[0.0, 0.0, 0.0], [0.4, 0.0, 0.0], [1.0, 0.0, 0.0]]),
-            0.5,
+            np.array([0, 0, 0]),
+            0.75,
             False,
             "Three atoms with one pair close together: distance between first two is less than threshold",
         ),
         (
             np.array([[0.0, 0.0, 0.0]]),
+            np.array([0]),
             0.5,
             True,
             "Single atom, no distances to compare",
         ),
         (
             np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
-            0.5,
+            np.array([0, 0]),
+            0.75,
             False,
             "Two atoms at identical positions: distance is zero, less than threshold",
         ),
         (
             np.array([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]),
-            1.7320,
+            np.array([0, 0]),
+            2.70625,
             True,
-            "Two atoms with diagonal distance just above threshold (sqrt(3) ≈ 1.732)",
+            "Two atoms with diagonal distance just above threshold (sqrt(3) ≈ 1.732, 1.7323/0.64 = 2.70625)(0.64 = sum of covalent radii for H)",
         ),
     ],
     ids=[
@@ -273,8 +280,8 @@ def test_generate_coordinates() -> None:
         "diagonal_distance",
     ],
 )
-def test_check_distances(xyz, threshold, expected, description):
-    assert check_distances(xyz, threshold) == expected
+def test_check_distances(xyz, ati, scale_minimal_bondlength, expected, description):
+    assert check_distances(xyz, ati, scale_minimal_bondlength) == expected
 
 
 def test_generate_atom_list_min_larger_than_max(default_generate_config):
