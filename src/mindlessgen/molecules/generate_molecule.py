@@ -382,9 +382,6 @@ def check_distances(xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float) -
             sum_radii = get_cov_radii(ati[i], COV_RADII) + get_cov_radii(
                 ati[j], COV_RADII
             )
-            print(
-                f"scaled bondlength: {scale_bondlength}, sum_radii: {sum_radii}, scaled sum_radii: {scale_bondlength * sum_radii}"
-            )
             if r < scale_bondlength * sum_radii:
                 return False
     return True

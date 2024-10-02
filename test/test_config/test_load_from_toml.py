@@ -36,7 +36,6 @@ def test_load_generate_config(config_manager):
     assert config_manager.generate.max_num_atoms == 100
     assert config_manager.generate.init_coord_scaling == 3.0
     assert config_manager.generate.increase_scaling_factor == 1.3
-    assert config_manager.generate.dist_threshold == 1.2
     assert config_manager.generate.element_composition == {
         5: (2, 10),  # Carbon (C)
         0: (10, 20),  # Hydrogen (H)

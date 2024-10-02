@@ -126,12 +126,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         + "after a failed attempt.",
     )
     parser.add_argument(
-        "--dist-threshold",
-        type=float,
-        required=False,
-        help="Distance threshold for generating coordinates.",
-    )
-    parser.add_argument(
         "--element-composition",
         type=str,
         required=False,
@@ -275,7 +269,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "max_num_atoms": args_dict["max_num_atoms"],
         "init_coord_scaling": args_dict["init_coord_scaling"],
         "increase_scaling_factor": args_dict["increase_scaling_factor"],
-        "dist_threshold": args_dict["dist_threshold"],
         "element_composition": args_dict["element_composition"],
         "forbidden_elements": args_dict["forbidden_elements"],
         "scale_vdw_radii": args_dict["scale_vdw_radii"],

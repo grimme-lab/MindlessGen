@@ -175,7 +175,6 @@ class GenerateConfig(BaseConfig):
         self._min_num_atoms: int = 2
         self._max_num_atoms: int = 100
         self._init_coord_scaling: float = 3.0
-        self._dist_threshold: float = 1.2
         self._increase_scaling_factor: float = 1.3
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
@@ -238,24 +237,6 @@ class GenerateConfig(BaseConfig):
         if init_coord_scaling <= 0:
             raise ValueError("Initial coordinate scaling should be greater than 0.")
         self._init_coord_scaling = init_coord_scaling
-
-    @property
-    def dist_threshold(self):
-        """
-        Get the distance threshold.
-        """
-        return self._dist_threshold
-
-    @dist_threshold.setter
-    def dist_threshold(self, dist_threshold: float):
-        """
-        Set the distance threshold.
-        """
-        if not isinstance(dist_threshold, float):
-            raise TypeError("Distance threshold should be a float.")
-        if dist_threshold <= 0:
-            raise ValueError("Distance threshold should be greater than 0.")
-        self._dist_threshold = dist_threshold
 
     @property
     def increase_scaling_factor(self):
