@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for the novel "g-xTB" method (working title: GP3-xTB)
 
+### Breaking Changes
+- Removal of the `dist_threshold` flag and in the `-toml` file.
+
 ## [0.4.0] - 2024-09-19
 ### Changed
 - Default file name of `.xyz` file contains prefix `mlm_`
