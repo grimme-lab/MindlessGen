@@ -92,6 +92,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Scaling factor for van der Waals radii.",
     )
+    parser.add_argument(
+        "--scale-minimal-bondlength",
+        type=float,
+        required=False,
+        help="Minimum bond length scaling factor.",
+    )
 
     ### Molecule generation arguments ###
     parser.add_argument(
@@ -118,12 +124,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Factor with which the coordinate scaling factor is increased "
         + "after a failed attempt.",
-    )
-    parser.add_argument(
-        "--dist-threshold",
-        type=float,
-        required=False,
-        help="Distance threshold for generating coordinates.",
     )
     parser.add_argument(
         "--element-composition",
@@ -269,10 +269,10 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "max_num_atoms": args_dict["max_num_atoms"],
         "init_coord_scaling": args_dict["init_coord_scaling"],
         "increase_scaling_factor": args_dict["increase_scaling_factor"],
-        "dist_threshold": args_dict["dist_threshold"],
         "element_composition": args_dict["element_composition"],
         "forbidden_elements": args_dict["forbidden_elements"],
         "scale_vdw_radii": args_dict["scale_vdw_radii"],
+        "scale_minimal_bondlength": args_dict["scale_minimal_bondlength"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

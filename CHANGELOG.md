@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
+- The check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
 - better type hints for `Callables`
 
 ### Fixed
@@ -16,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for the novel "g-xTB" method (working title: GP3-xTB)
+
+### Breaking Changes
+- Removal of the `dist_threshold` flag and in the `-toml` file.
 
 ## [0.4.0] - 2024-09-19
 ### Changed
