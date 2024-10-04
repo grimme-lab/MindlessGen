@@ -6,6 +6,7 @@ import copy
 import numpy as np
 from ..prog import GenerateConfig
 from .molecule import Molecule
+from .refinement import get_cov_radii, COV_RADII
 from .miscellaneous import (
     set_random_charge,
     get_alkali_metals,
@@ -36,11 +37,16 @@ def generate_random_molecule(
     mol.xyz, mol.ati = generate_coordinates(
         at=mol.atlist,
         scaling=config_generate.init_coord_scaling,
-        dist_threshold=config_generate.dist_threshold,
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
+        scale_bondlength=config_generate.scale_minimal_bondlength,
     )
-    mol.xyz = contract_coordinates(mol.xyz, threshold=config_generate.dist_threshold)
+    if config_generate.contract_coords:
+        mol.xyz = contract_coordinates(
+            mol.xyz,
+            ati=mol.ati,
+            scale_bondlength=config_generate.scale_minimal_bondlength,
+        )
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
@@ -323,9 +329,9 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
 def generate_coordinates(
     at: np.ndarray,
     scaling: float,
-    dist_threshold: float,
     inc_scaling_factor: float = 1.3,
     verbosity: int = 1,
+    scale_bondlength: float = 0.75,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
@@ -336,7 +342,7 @@ def generate_coordinates(
     xyz, ati = generate_random_coordinates(at)
     xyz = xyz * eff_scaling
     # do while check_distances is False
-    while not check_distances(xyz, dist_threshold):
+    while not check_distances(xyz, ati, scale_bondlength=scale_bondlength):
         if verbosity > 1:
             print(
                 f"Distance check failed. Increasing expansion factor by {inc_scaling_factor}..."
@@ -371,7 +377,9 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     return xyz, ati
 
 
-def contract_coordinates(xyz: np.ndarray, threshold: float) -> np.ndarray:
+def contract_coordinates(
+    xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float
+) -> np.ndarray:
     """
     Pull the atoms towards the origin.
     """
@@ -397,12 +405,12 @@ def contract_coordinates(xyz: np.ndarray, threshold: float) -> np.ndarray:
                 # Pull the atom towards the origin
                 xyz[i] -= normalized_atom_xyz * 0.2
                 # When the check_distances function returns False, reset the atom coordinates
-                if not check_distances(xyz, threshold):
+                if not check_distances(xyz, ati, scale_bondlength):
                     xyz[i] = xyz_old[i]
     return xyz
 
 
-def check_distances(xyz: np.ndarray, threshold: float) -> bool:
+def check_distances(xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float) -> bool:
     """
     Check if the distances between atoms are larger than a threshold.
     """
@@ -410,6 +418,9 @@ def check_distances(xyz: np.ndarray, threshold: float) -> bool:
     for i in range(xyz.shape[0] - 1):
         for j in range(i + 1, xyz.shape[0]):
             r = np.linalg.norm(xyz[i, :] - xyz[j, :])
-            if r < threshold:
+            sum_radii = get_cov_radii(ati[i], COV_RADII) + get_cov_radii(
+                ati[j], COV_RADII
+            )
+            if r < scale_bondlength * sum_radii:
                 return False
     return True

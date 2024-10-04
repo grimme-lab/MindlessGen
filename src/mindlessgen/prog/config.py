@@ -175,11 +175,11 @@ class GenerateConfig(BaseConfig):
         self._min_num_atoms: int = 2
         self._max_num_atoms: int = 100
         self._init_coord_scaling: float = 3.0
-        self._dist_threshold: float = 1.2
         self._increase_scaling_factor: float = 1.3
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
         self._scale_vdw_radii: float = 4.0 / 3.0
+        self._scale_minimal_bondlength: float = 0.75
 
     def get_identifier(self) -> str:
         return "generate"
@@ -237,24 +237,6 @@ class GenerateConfig(BaseConfig):
         if init_coord_scaling <= 0:
             raise ValueError("Initial coordinate scaling should be greater than 0.")
         self._init_coord_scaling = init_coord_scaling
-
-    @property
-    def dist_threshold(self):
-        """
-        Get the distance threshold.
-        """
-        return self._dist_threshold
-
-    @dist_threshold.setter
-    def dist_threshold(self, dist_threshold: float):
-        """
-        Set the distance threshold.
-        """
-        if not isinstance(dist_threshold, float):
-            raise TypeError("Distance threshold should be a float.")
-        if dist_threshold <= 0:
-            raise ValueError("Distance threshold should be greater than 0.")
-        self._dist_threshold = dist_threshold
 
     @property
     def increase_scaling_factor(self):
@@ -382,6 +364,40 @@ class GenerateConfig(BaseConfig):
         if scale_vdw_radii <= 0:
             raise ValueError("Scale van der Waals radii should be greater than 0.")
         self._scale_vdw_radii = scale_vdw_radii
+
+    @property
+    def scale_minimal_bondlength(self):
+        """
+        Get the scaling factor for minimal bond length.
+        """
+        return self._scale_minimal_bondlength
+
+    @scale_minimal_bondlength.setter
+    def scale_minimal_bondlength(self, scale_minimal_bondlength: float):
+        """
+        Set the scaling factor for minimal bond length.
+        """
+        if not isinstance(scale_minimal_bondlength, float):
+            raise TypeError("Scale minimal bond length should be a float.")
+        if scale_minimal_bondlength <= 0:
+            raise ValueError("Scale minimal bond length should be greater than 0.")
+        self._scale_minimal_bondlength = scale_minimal_bondlength
+
+    @property
+    def contract_coords(self):
+        """
+        Get the contract_coords flag.
+        """
+        return self._contract_coords
+
+    @contract_coords.setter
+    def contract_coords(self, contract_coords: bool):
+        """
+        Set the contract_coords flag.
+        """
+        if not isinstance(contract_coords, bool):
+            raise TypeError("Contract coords should be a boolean.")
+        self._contract_coords = contract_coords
 
 
 class RefineConfig(BaseConfig):
