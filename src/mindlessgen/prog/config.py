@@ -50,8 +50,8 @@ class GeneralConfig(BaseConfig):
 
         ############################################################
         ## g-xTB-specific settings not intended for general use ####
-        self._gp3_development: bool = False
-        self._gp3_scf_cycles: int = 100
+        self._gxtb_development: bool = False
+        self._gxtb_scf_cycles: int = 100
         ### End of g-xTB-specific settings #########################
         ############################################################
 
@@ -199,38 +199,38 @@ class GeneralConfig(BaseConfig):
     ############################################################
     ### g-xTB-specific settings not intended for general use ###
     @property
-    def gp3_development(self):
+    def gxtb_development(self):
         """
-        Get the gp3_development flag.
+        Get the g-xTB development flag.
         """
-        return self._gp3_development
+        return self._gxtb_development
 
-    @gp3_development.setter
-    def gp3_development(self, gp3_development: bool):
+    @gxtb_development.setter
+    def gxtb_development(self, gxtb_development: bool):
         """
-        Set the gp3_development flag.
+        Set the g-xTB development flag.
         """
-        if not isinstance(gp3_development, bool):
-            raise TypeError("gp3_development should be a boolean.")
-        self._gp3_development = gp3_development
+        if not isinstance(gxtb_development, bool):
+            raise TypeError("gxtb_development should be a boolean.")
+        self._gxtb_development = gxtb_development
 
     @property
-    def gp3_scf_cycles(self):
+    def gxtb_scf_cycles(self):
         """
-        Get the maximum number of SCF cycles for GP3.
+        Get the maximum number of SCF cycles for g-xTB.
         """
-        return self._gp3_scf_cycles
+        return self._gxtb_scf_cycles
 
-    @gp3_scf_cycles.setter
-    def gp3_scf_cycles(self, gp3_scf_cycles: int):
+    @gxtb_scf_cycles.setter
+    def gxtb_scf_cycles(self, gxtb_scf_cycles: int):
         """
-        Set the maximum number of SCF cycles for GP3.
+        Set the maximum number of SCF cycles for g-xTB.
         """
-        if not isinstance(gp3_scf_cycles, int):
-            raise TypeError("Max SCF cycles for GP3 should be an integer.")
-        if gp3_scf_cycles < 1:
-            raise ValueError("Max SCF cycles for GP3 should be greater than 0.")
-        self._gp3_scf_cycles = gp3_scf_cycles
+        if not isinstance(gxtb_scf_cycles, int):
+            raise TypeError("Max SCF cycles for g-xTB should be an integer.")
+        if gxtb_scf_cycles < 1:
+            raise ValueError("Max SCF cycles for g-xTB should be greater than 0.")
+        self._gxtb_scf_cycles = gxtb_scf_cycles
 
     ### End of g-xTB-specific settings #########################
     ############################################################
