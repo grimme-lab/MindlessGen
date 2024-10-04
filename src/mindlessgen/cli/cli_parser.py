@@ -140,7 +140,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     parser.add_argument(
         "--contract_coords",
         type=bool,
-        default=False,
         required=False,
         help="Contract the coordinates of the molecule after the coordinats generation.",
     )

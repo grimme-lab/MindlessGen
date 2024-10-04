@@ -180,6 +180,7 @@ class GenerateConfig(BaseConfig):
         self._forbidden_elements: list[int] | None = None
         self._scale_vdw_radii: float = 4.0 / 3.0
         self._scale_minimal_bondlength: float = 0.75
+        self._contract_coords: bool = False
 
     def get_identifier(self) -> str:
         return "generate"
