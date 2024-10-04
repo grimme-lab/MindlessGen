@@ -239,6 +239,25 @@ def single_molecule_generator(
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
 
+    if config.general.gp3_development:
+        # additional GP3 engine after refinement and before postprocessing
+        gp3 = GP3(get_gp3_path())
+        try:
+            _gp3_dev_check(
+                optimized_molecule,
+                gp3,
+                config.general.gp3_scf_cycles,
+                config.general.verbosity,
+            )
+        except (RuntimeError, ValueError) as e:
+            if config.general.verbosity > 0:
+                print(f"g-xTB postprocessing failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1:
+                    print(e)
+            return None
+        if config.general.verbosity > 1:
+            print("g-xTB postprocessing successful.")
+
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
         return optimized_molecule
@@ -309,3 +328,60 @@ def setup_engines(
         return GP3(path)
     else:
         raise NotImplementedError("Engine not implemented.")
+
+
+def _gp3_dev_check(
+    mol: Molecule, gp3: GP3, scf_iter_limit: int, verbosity: int = 0
+) -> None:
+    """
+    ONLY FOR IN-HOUSE g-xTB DEVELOPMENT PURPOSES: Check the SCF iterations of the cation and anion.
+    """
+    # 1) Single point calculation with GP3 for the cation
+    tmp_mol = mol.copy()
+    tmp_mol.charge += 1
+    tmp_mol.uhf += 1
+    if mol.uhf != 0 and verbosity > 0:
+        print(
+            f"WARNING: UHF value was set to {mol.uhf} and not 0. "
+            + "For the g-xTB cationic calculation, we are increasing it by 1. "
+            + "(Could be ill-defined.)"
+        )
+    gp3_output = gp3.singlepoint(tmp_mol, verbosity=verbosity)
+    # gp3_output looks like this:
+    # [...]
+    #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
+    #           13  scf iterations
+    #           eigenvalues
+    # [...]
+    # Check for the number of scf iterations
+    scf_iterations = 0
+    for line in gp3_output.split("\n"):
+        if "scf iterations" in line:
+            scf_iterations = int(line.split()[0])
+            break
+    if scf_iterations == 0:
+        raise ValueError("SCF iterations not found in GP3 output.")
+    if scf_iterations > scf_iter_limit:
+        raise ValueError(f"SCF iterations exceeded limit of {scf_iter_limit}.")
+
+    # 2) Single point calculation with GP3 for the anion
+    tmp_mol = mol.copy()
+    tmp_mol.charge -= 1
+    tmp_mol.uhf += 1
+    if mol.uhf != 0 and verbosity > 0:
+        print(
+            f"WARNING: UHF value was set to {mol.uhf} and not 0. "
+            + "For the g-xTB anionic calculation, we are increasing it by 1. "
+            + "(Could be ill-defined.)"
+        )
+    gp3_output = gp3.singlepoint(tmp_mol, verbosity=verbosity)
+    # Check for the number of scf iterations
+    scf_iterations = 0
+    for line in gp3_output.split("\n"):
+        if "scf iterations" in line:
+            scf_iterations = int(line.split()[0])
+            break
+    if scf_iterations == 0:
+        raise ValueError("SCF iterations not found in GP3 output.")
+    if scf_iterations > scf_iter_limit:
+        raise ValueError(f"SCF iterations exceeded limit of {scf_iter_limit}.")

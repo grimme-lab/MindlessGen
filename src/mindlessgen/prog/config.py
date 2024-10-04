@@ -42,6 +42,13 @@ class GeneralConfig(BaseConfig):
         self._postprocess: bool = False
         self._write_xyz: bool = True
 
+        ############################################################
+        ## g-xTB-specific settings not intended for general use ####
+        self._gp3_development: bool = False
+        self._gp3_scf_cycles: int = 100
+        ### End of g-xTB-specific settings #########################
+        ############################################################
+
     def get_identifier(self) -> str:
         return "general"
 
@@ -164,6 +171,45 @@ class GeneralConfig(BaseConfig):
         if not isinstance(write_xyz, bool):
             raise TypeError("Write xyz should be a boolean.")
         self._write_xyz = write_xyz
+
+    ############################################################
+    ### g-xTB-specific settings not intended for general use ###
+    @property
+    def gp3_development(self):
+        """
+        Get the gp3_development flag.
+        """
+        return self._gp3_development
+
+    @gp3_development.setter
+    def gp3_development(self, gp3_development: bool):
+        """
+        Set the gp3_development flag.
+        """
+        if not isinstance(gp3_development, bool):
+            raise TypeError("gp3_development should be a boolean.")
+        self._gp3_development = gp3_development
+
+    @property
+    def gp3_scf_cycles(self):
+        """
+        Get the maximum number of SCF cycles for GP3.
+        """
+        return self._gp3_scf_cycles
+
+    @gp3_scf_cycles.setter
+    def gp3_scf_cycles(self, gp3_scf_cycles: int):
+        """
+        Set the maximum number of SCF cycles for GP3.
+        """
+        if not isinstance(gp3_scf_cycles, int):
+            raise TypeError("Max SCF cycles for GP3 should be an integer.")
+        if gp3_scf_cycles < 1:
+            raise ValueError("Max SCF cycles for GP3 should be greater than 0.")
+        self._gp3_scf_cycles = gp3_scf_cycles
+
+    ### End of g-xTB-specific settings #########################
+    ############################################################
 
 
 class GenerateConfig(BaseConfig):
