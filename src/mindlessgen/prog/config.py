@@ -42,6 +42,13 @@ class GeneralConfig(BaseConfig):
         self._postprocess: bool = False
         self._write_xyz: bool = True
 
+        ############################################################
+        ## g-xTB-specific settings not intended for general use ####
+        self._gxtb_development: bool = False
+        self._gxtb_scf_cycles: int = 100
+        ### End of g-xTB-specific settings #########################
+        ############################################################
+
     def get_identifier(self) -> str:
         return "general"
 
@@ -164,6 +171,45 @@ class GeneralConfig(BaseConfig):
         if not isinstance(write_xyz, bool):
             raise TypeError("Write xyz should be a boolean.")
         self._write_xyz = write_xyz
+
+    ############################################################
+    ### g-xTB-specific settings not intended for general use ###
+    @property
+    def gxtb_development(self):
+        """
+        Get the g-xTB development flag.
+        """
+        return self._gxtb_development
+
+    @gxtb_development.setter
+    def gxtb_development(self, gxtb_development: bool):
+        """
+        Set the g-xTB development flag.
+        """
+        if not isinstance(gxtb_development, bool):
+            raise TypeError("gxtb_development should be a boolean.")
+        self._gxtb_development = gxtb_development
+
+    @property
+    def gxtb_scf_cycles(self):
+        """
+        Get the maximum number of SCF cycles for g-xTB.
+        """
+        return self._gxtb_scf_cycles
+
+    @gxtb_scf_cycles.setter
+    def gxtb_scf_cycles(self, gxtb_scf_cycles: int):
+        """
+        Set the maximum number of SCF cycles for g-xTB.
+        """
+        if not isinstance(gxtb_scf_cycles, int):
+            raise TypeError("Max SCF cycles for g-xTB should be an integer.")
+        if gxtb_scf_cycles < 1:
+            raise ValueError("Max SCF cycles for g-xTB should be greater than 0.")
+        self._gxtb_scf_cycles = gxtb_scf_cycles
+
+    ### End of g-xTB-specific settings #########################
+    ############################################################
 
 
 class GenerateConfig(BaseConfig):
