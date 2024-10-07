@@ -26,6 +26,7 @@ max_num_atoms = 10
 # > Initial coordinate scaling factor. Options: <float>
 init_scaling = 3.0
 # > Increase in the coordinate scaling factor per trial after check_distance was not met. Options: <float>
+# > Increase in the coordinate scaling factor per trial after check_distance was not met. Options: <float>
 increase_scaling_factor = 1.3
 # > Scaling factor for the employed van der Waals radii. Options: <float>
 scale_vdw_radii = 1.3333
