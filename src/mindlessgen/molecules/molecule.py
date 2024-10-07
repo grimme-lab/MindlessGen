@@ -512,7 +512,7 @@ class Molecule:
         else:
             filename = Path("mlm_" + self.name + ".xyz").resolve()
 
-        with open(filename, "a", encoding="utf8") as f:  # NOTE: JS: "a" = "w"
+        with open(filename, "w", encoding="utf8") as f:
             f.write(self.get_xyz_str())
         # if the charge is set, write it to a '.CHRG' file
         if self._charge is not None:
