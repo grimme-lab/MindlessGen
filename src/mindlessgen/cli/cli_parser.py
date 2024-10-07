@@ -201,19 +201,18 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Path to the xTB binary.",
     )
-    # TODO: add gfn level here
+    parser.add_argument(
+        "--xtb-level",
+        type=int,
+        required=False,
+        help="Level of theory to use in xTB.",
+    )
     parser.add_argument(
         "--postprocess-debug",
         action="store_true",
         default=None,
         required=False,
         help="Print debug information during postprocessing.",
-    )
-    parser.add_argument(
-        "--xtb-level",
-        type=int,
-        required=False,
-        help="Level of theory to use in xTB.",
     )
 
     ### ORCA specific arguments ###
