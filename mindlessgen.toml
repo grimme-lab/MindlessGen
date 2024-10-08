@@ -27,7 +27,7 @@ max_num_atoms = 10
 init_scaling = 3.0
 # > Increase in the coordinate scaling factor per trial after check_distance was not met. Options: <float>
 increase_scaling_factor = 1.3
-# > Scaling factor for the fragment detection for a molecule based on the sum of van der Waals radii. Options: <float>
+# > Scaling factor for the van der Waals radii employed for the fragment detection. Options: <float>
 scale_fragment_detection = 1.25
 # > Scaling factor for the minimal diatance between two atoms based on the sum of the van der Waals radii. Options: <float>
 scale_minimal_distance = 0.8
