@@ -178,8 +178,8 @@ class GenerateConfig(BaseConfig):
         self._increase_scaling_factor: float = 1.3
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
-        self._scale_vdw_radii: float = 1.25
-        self._scale_minimal_bondlength: float = 0.8
+        self._scale_fragment_detection: float = 1.25
+        self._scale_minimal_distance: float = 0.8
         self._contract_coords: bool = False
 
     def get_identifier(self) -> str:
@@ -349,40 +349,40 @@ class GenerateConfig(BaseConfig):
         self._forbidden_elements = sorted(list(forbidden_set))
 
     @property
-    def scale_vdw_radii(self):
+    def scale_fragment_detection(self):
         """
-        Get the scaling factor for van der Waals radii.
+        Get the scaling factor for the fracment detection based on the van der Waals radii.
         """
-        return self._scale_vdw_radii
+        return self._scale_fragment_detection
 
-    @scale_vdw_radii.setter
-    def scale_vdw_radii(self, scale_vdw_radii: float):
+    @scale_fragment_detection.setter
+    def scale_fragment_detection(self, scale_fragment_detection: float):
         """
         Set the scaling factor for van der Waals radii.
         """
-        if not isinstance(scale_vdw_radii, float):
+        if not isinstance(scale_fragment_detection, float):
             raise TypeError("Scale van der Waals radii should be a float.")
-        if scale_vdw_radii <= 0:
+        if scale_fragment_detection <= 0:
             raise ValueError("Scale van der Waals radii should be greater than 0.")
-        self._scale_vdw_radii = scale_vdw_radii
+        self._scale_fragment_detection = scale_fragment_detection
 
     @property
-    def scale_minimal_bondlength(self):
+    def scale_minimal_distance(self):
         """
-        Get the scaling factor for minimal bond length.
+        Get the scaling factor for minimal distance between two atoms.
         """
-        return self._scale_minimal_bondlength
+        return self._scale_minimal_distance
 
-    @scale_minimal_bondlength.setter
-    def scale_minimal_bondlength(self, scale_minimal_bondlength: float):
+    @scale_minimal_distance.setter
+    def scale_minimal_distance(self, scale_minimal_distance: float):
         """
-        Set the scaling factor for minimal bond length.
+        Set the scaling factor for minimal distance between two atoms.
         """
-        if not isinstance(scale_minimal_bondlength, float):
-            raise TypeError("Scale minimal bond length should be a float.")
-        if scale_minimal_bondlength <= 0:
-            raise ValueError("Scale minimal bond length should be greater than 0.")
-        self._scale_minimal_bondlength = scale_minimal_bondlength
+        if not isinstance(scale_minimal_distance, float):
+            raise TypeError("Scale minimal distance should be a float.")
+        if scale_minimal_distance <= 0:
+            raise ValueError("Scale minimal distance should be greater than 0.")
+        self._scale_minimal_distance = scale_minimal_distance
 
     @property
     def contract_coords(self):

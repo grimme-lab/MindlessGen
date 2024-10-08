@@ -84,6 +84,11 @@ If the path is not specified with `-c/--config`, `mindlessgen.toml` will be sear
 
 The active configuration can be printed using `--print-config`.
 
+### Element composition
+Here is a little explanation for the usage of the `element composition` module. There are two different parameters to set. First which elements should occure within the generated molecule, and second is how much of each specific element should occure within the generated molecule.
+- Example 1: C:1-3, O:1-1, H:1-*. This example would result in a Molecule with 1,2 or 3 carbon atoms, exactly 1 oxygen atom, and between 1 and a random number of hydrogen atoms.
+- Example 2: Na:10-10, In:10-10, O:20-20. This examle would result in a molecule with exactly 10 sodium atoms 10 indium atoms and 20 oxygen atoms. For this case the number of atoms (40) has to be within the min_num_atoms and max_num_atom intervall, but would always return a molecule with 40 atoms.
+
 ## Citation
 
 When using the program for academic purposes, please cite:
