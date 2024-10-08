@@ -137,6 +137,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="List of forbidden elements.",
     )
+    parser.add_argument(
+        "--contract_coords",
+        type=bool,
+        required=False,
+        help="Contract the coordinates of the molecule after the coordinats generation.",
+    )
 
     ### Refinement arguments ###
     parser.add_argument(
@@ -196,17 +202,17 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Path to the xTB binary.",
     )
     parser.add_argument(
+        "--xtb-level",
+        type=int,
+        required=False,
+        help="Level of theory to use in xTB.",
+    )
+    parser.add_argument(
         "--postprocess-debug",
         action="store_true",
         default=None,
         required=False,
         help="Print debug information during postprocessing.",
-    )
-    parser.add_argument(
-        "--xtb-level",
-        type=int,
-        required=False,
-        help="Level of theory to use in xTB.",
     )
 
     ### ORCA specific arguments ###
@@ -273,6 +279,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "forbidden_elements": args_dict["forbidden_elements"],
         "scale_vdw_radii": args_dict["scale_vdw_radii"],
         "scale_minimal_bondlength": args_dict["scale_minimal_bondlength"],
+        "contract_coords": args_dict["contract_coords"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

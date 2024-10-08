@@ -178,8 +178,9 @@ class GenerateConfig(BaseConfig):
         self._increase_scaling_factor: float = 1.3
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
-        self._scale_vdw_radii: float = 4.0 / 3.0
-        self._scale_minimal_bondlength: float = 0.75
+        self._scale_vdw_radii: float = 1.25
+        self._scale_minimal_bondlength: float = 0.8
+        self._contract_coords: bool = False
 
     def get_identifier(self) -> str:
         return "generate"
@@ -382,6 +383,22 @@ class GenerateConfig(BaseConfig):
         if scale_minimal_bondlength <= 0:
             raise ValueError("Scale minimal bond length should be greater than 0.")
         self._scale_minimal_bondlength = scale_minimal_bondlength
+
+    @property
+    def contract_coords(self):
+        """
+        Get the contract_coords flag.
+        """
+        return self._contract_coords
+
+    @contract_coords.setter
+    def contract_coords(self, contract_coords: bool):
+        """
+        Set the contract_coords flag.
+        """
+        if not isinstance(contract_coords, bool):
+            raise TypeError("Contract coords should be a boolean.")
+        self._contract_coords = contract_coords
 
 
 class RefineConfig(BaseConfig):
