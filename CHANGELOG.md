@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
 - The check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
 - better type hints for `Callables`
-- A more clear difference between the different scaling factors for the van der Waals radii.
+- A clearer differentiation between the distinct scaling factors for the van der Waals radii.
 - Update in the `ReadMe.md` which explains more detaild the element composition function.
 
 ### Fixed
