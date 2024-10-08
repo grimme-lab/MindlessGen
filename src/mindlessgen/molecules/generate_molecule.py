@@ -39,13 +39,13 @@ def generate_random_molecule(
         scaling=config_generate.init_coord_scaling,
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
-        scale_bondlength=config_generate.scale_minimal_bondlength,
+        scale_minimal_distance=config_generate.scale_minimal_distance,
     )
     if config_generate.contract_coords:
         mol.xyz = contract_coordinates(
             xyz=mol.xyz,
             ati=mol.ati,
-            scale_minimal_distance=config_generate.scale_minimal_bondlength,
+            scale_minimal_distance=config_generate.scale_minimal_distance,
         )
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
@@ -331,7 +331,7 @@ def generate_coordinates(
     scaling: float,
     inc_scaling_factor: float = 1.3,
     verbosity: int = 1,
-    scale_bondlength: float = 0.75,
+    scale_minimal_distance: float = 0.8,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
@@ -342,7 +342,7 @@ def generate_coordinates(
     xyz, ati = generate_random_coordinates(at)
     xyz = xyz * eff_scaling
     # do while check_distances is False
-    while not check_distances(xyz, ati, scale_bondlength=scale_bondlength):
+    while not check_distances(xyz, ati, scale_minimal_distance=scale_minimal_distance):
         if verbosity > 1:
             print(
                 f"Distance check failed. Increasing expansion factor by {inc_scaling_factor}..."
@@ -410,7 +410,9 @@ def contract_coordinates(
     return xyz
 
 
-def check_distances(xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float) -> bool:
+def check_distances(
+    xyz: np.ndarray, ati: np.ndarray, scale_minimal_distance: float
+) -> bool:
     """
     Check if the distances between atoms are larger than a threshold.
     """
@@ -421,6 +423,6 @@ def check_distances(xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float) -
             sum_radii = get_cov_radii(ati[i], COV_RADII) + get_cov_radii(
                 ati[j], COV_RADII
             )
-            if r < scale_bondlength * sum_radii:
+            if r < scale_minimal_distance * sum_radii:
                 return False
     return True

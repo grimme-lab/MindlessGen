@@ -87,16 +87,16 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Do not write the molecules to xyz files.",
     )
     parser.add_argument(
-        "--scale-vdw-radii",
+        "--scale-fragment-detection",
         type=float,
         required=False,
-        help="Scaling factor for van der Waals radii.",
+        help="Scaling factor for the fragment detection based on the van der Waals radii.",
     )
     parser.add_argument(
-        "--scale-minimal-bondlength",
+        "--scale-minimal-distance",
         type=float,
         required=False,
-        help="Minimum bond length scaling factor.",
+        help="Minimum atom distance scaling factor.",
     )
 
     ### Molecule generation arguments ###
@@ -277,8 +277,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "increase_scaling_factor": args_dict["increase_scaling_factor"],
         "element_composition": args_dict["element_composition"],
         "forbidden_elements": args_dict["forbidden_elements"],
-        "scale_vdw_radii": args_dict["scale_vdw_radii"],
-        "scale_minimal_bondlength": args_dict["scale_minimal_bondlength"],
+        "scale_fragment_detection": args_dict["scale_fragment_detection"],
+        "scale_minimal_distance": args_dict["scale_minimal_distance"],
         "contract_coords": args_dict["contract_coords"],
     }
     # XTB specific arguments
