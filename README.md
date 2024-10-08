@@ -88,8 +88,8 @@ The active configuration can be printed using `--print-config`.
 There are two related aspects of the element composition:
 1. _Which elements_ should occur within the generated molecule?
 2. **How many atoms** of the specified element should occur?
-- Example 1: C:1-3, O:1-1, H:1-*. This example would result in a Molecule with 1,2 or 3 carbon atoms, exactly 1 oxygen atom, and between 1 and a random number of hydrogen atoms.
-- Example 2: Na:10-10, In:10-10, O:20-20. This examle would result in a molecule with exactly 10 sodium atoms 10 indium atoms and 20 oxygen atoms. For this case the number of atoms (40) has to be within the min_num_atoms and max_num_atom intervall, but would always return a molecule with 40 atoms.
+- **Example 1**: `C:1-3, O:1-1, H:1-*` would result in a molecule with 1, 2, or 3 carbon atoms, exactly 1 oxygen atom, and between 1 and an undefined number of hydrogen atoms (i.e., at least 1).
+- **Example 2**: `Na:10-10, In:10-10, O:20-20`. This example would result in a molecule with exactly 10 sodium atoms, 10 indium atoms, and 20 oxygen atoms. For a fixed element composition, the number of atoms (40) has to be within the min_num_atoms and max_num_atom interval. `mindlessgen` will consequently always return a molecule with exactly 40 atoms.
 
 ## Citation
 
