@@ -31,7 +31,7 @@ increase_scaling_factor = 1.3
 scale_vdw_radii = 1.3333
 # > Scaling factor for the minimal bondlength based on the sum of the van der Waals radii. Options: <float>
 scale_minimal_bondlength = 0.75
-# > Contracts the coordinates after the initial generation to enhance the convergence with the qm method. Options:<bool>
+# > Contract the coordinates after the initial generation. Leads to more cluster-like and less extended structures. Options: <bool>
 contract_coords = false
 # > Atom types and their minimum and maximum occurrences. Format: "<element>:<min_count>-<max_count>"
 # > Elements that are not specified are only added by random selection.
