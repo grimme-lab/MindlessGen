@@ -43,9 +43,9 @@ def generate_random_molecule(
     )
     if config_generate.contract_coords:
         mol.xyz = contract_coordinates(
-            mol.xyz,
+            xyz=mol.xyz,
             ati=mol.ati,
-            scale_bondlength=config_generate.scale_minimal_bondlength,
+            scale_minimal_distance=config_generate.scale_minimal_bondlength,
         )
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
@@ -378,7 +378,7 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
 
 
 def contract_coordinates(
-    xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float
+    xyz: np.ndarray, ati: np.ndarray, scale_minimal_distance: float
 ) -> np.ndarray:
     """
     Pull the atoms towards the origin.
@@ -389,7 +389,7 @@ def contract_coordinates(
     # Break if the coordinates do not change
     while not np.array_equal(xyz_old, xyz):
         cycle += 1
-        if cycle > 100000:
+        if cycle > 2500:
             raise RuntimeError(
                 "Could not contract the coordinates in a reasonable amount of cycles."
             )
@@ -405,7 +405,7 @@ def contract_coordinates(
                 # Pull the atom towards the origin
                 xyz[i] -= normalized_atom_xyz * 0.2
                 # When the check_distances function returns False, reset the atom coordinates
-                if not check_distances(xyz, ati, scale_bondlength):
+                if not check_distances(xyz, ati, scale_minimal_distance):
                     xyz[i] = xyz_old[i]
     return xyz
 
