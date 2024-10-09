@@ -37,23 +37,16 @@ class XTB(QMMethod):
         Optimize a molecule using xtb.
         """
         if np.any(np.isin(molecule.ati, get_lanthanides())):
-            nel = 0
-            f_electrons = 0
-            for atom in molecule.ati:
-                nel += atom + 1
-                if atom in get_lanthanides():
-                    f_electrons += atom - 56
-            # Check if the number of the remaning electrons is even
-            test_rhf = nel - f_electrons - molecule.charge
-            if not test_rhf % 2 == 0:
-                raise SystemError(
-                    "Lanthanides detected, remaining number of electrons is not even."
+            if check_ligand_uhf(molecule.ati, molecule.charge):
+                # Store the original UHF value and set uhf to 0
+                # Justification: xTB does not treat f electrons explicitly.
+                # The remaining openshell system has to be removed.
+                uhf_original = molecule.uhf
+                molecule.uhf = 0
+            else:
+                raise ValueError(
+                    "The remaining number of electrons after the f electrons are removed is not even."
                 )
-            # Store the original UHF value and set uhf to 0
-            # Justification: xTB does not treat f electrons explicitly.
-            # The remaining openshell system has to be removed.
-            uhf_original = molecule.uhf
-            molecule.uhf = 0
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
@@ -100,23 +93,16 @@ class XTB(QMMethod):
         Perform a single-point calculation using xtb.
         """
         if np.any(np.isin(molecule.ati, get_lanthanides())):
-            nel = 0
-            f_electrons = 0
-            for atom in molecule.ati:
-                nel += atom + 1
-                if atom in get_lanthanides():
-                    f_electrons += atom - 56
-            # Check if the number of the remaning electrons is even
-            test_rhf = nel - f_electrons - molecule.charge
-            if not test_rhf % 2 == 0:
-                raise SystemError(
-                    "Lanthanides detected, remaining number of electrons is not even."
+            if check_ligand_uhf(molecule.ati, molecule.charge):
+                # Store the original UHF value and set uhf to 0
+                # Justification: xTB does not treat f electrons explicitly.
+                # The remaining openshell system has to be removed.
+                uhf_original = molecule.uhf
+                molecule.uhf = 0
+            else:
+                raise ValueError(
+                    "The remaining number of electrons after the f electrons are removed is not even."
                 )
-            # Store the original UHF value and set uhf to 0
-            # Justification: xTB does not treat f electrons explicitly.
-            # The remaining openshell system has to be removed.
-            uhf_original = molecule.uhf
-            molecule.uhf = 0
 
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
@@ -242,3 +228,20 @@ def get_xtb_path(binary_name: str | Path | None = None) -> Path:
             xtb_path = Path(which_xtb).resolve()
             return xtb_path
     raise ImportError("'xtb' binary could not be found.")
+
+
+def check_ligand_uhf(ati: np.ndarray, charge: int) -> bool:
+    """
+    Check if the remaning number of electrons after the f electrons are removed is even.
+    """
+    nel = 0
+    f_electrons = 0
+    for atom in ati:
+        nel += atom + 1
+        if atom in get_lanthanides():
+            f_electrons += atom - 56
+    # Check if the number of the remaning electrons is even
+    test_rhf = nel - f_electrons - charge
+    if not test_rhf % 2 == 0:
+        return False
+    return True
