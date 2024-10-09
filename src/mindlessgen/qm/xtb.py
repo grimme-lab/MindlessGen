@@ -34,7 +34,20 @@ class XTB(QMMethod):
         """
         Optimize a molecule using xtb.
         """
-
+        nel = 0
+        for atom in molecule.ati:
+            nel += atom + 1
+        # Check if the number of the remaning electrons is even
+        test_rhf = nel - molecule.uhf - molecule.charge
+        if not test_rhf % 2 == 0:
+            raise SystemError(
+                "Lanthanides detected, remaining number of electrons is not even."
+            )
+        # Store the original UHF value and set uhf to 0
+        # Justification: xTB does not calculate with f electrons.
+        # The remaining openshell system has to be removed.
+        uhf_original = molecule.uhf
+        molecule.uhf = 0
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
@@ -71,13 +84,26 @@ class XTB(QMMethod):
             # read the optimized molecule
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_file(temp_path / "xtbopt.xyz")
-
+            # Reset the UHF value to the original value before returning the optimized molecule.
+            optimized_molecule.uhf = uhf_original
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
         Perform a single-point calculation using xtb.
         """
+        nel = 0
+        for atom in molecule.ati:
+            nel += atom + 1
+        # Check if the number of the remaning electrons is even
+        test_rhf = nel - molecule.uhf - molecule.charge
+        if not test_rhf % 2 == 0:
+            raise SystemExit("Number of electrons is not even, hence uhf.")
+        # Store the original UHF value and set uhf to 0
+        # Justification: xTB does not calculate with f electrons.
+        # The remaining openshell system has to be removed.
+        uhf_original = molecule.uhf
+        molecule.uhf = 0
 
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
@@ -109,6 +135,7 @@ class XTB(QMMethod):
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
 
+            molecule.uhf = uhf_original
             return xtb_log_out
 
     def check_gap(
