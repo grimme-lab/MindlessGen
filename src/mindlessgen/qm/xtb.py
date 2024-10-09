@@ -43,10 +43,6 @@ class XTB(QMMethod):
                 # The remaining openshell system has to be removed.
                 uhf_original = molecule.uhf
                 molecule.uhf = 0
-            else:
-                raise ValueError(
-                    "The remaining number of electrons after the f electrons are removed is not even."
-                )
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
@@ -99,10 +95,6 @@ class XTB(QMMethod):
                 # The remaining openshell system has to be removed.
                 uhf_original = molecule.uhf
                 molecule.uhf = 0
-            else:
-                raise ValueError(
-                    "The remaining number of electrons after the f electrons are removed is not even."
-                )
 
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
@@ -243,5 +235,7 @@ def check_ligand_uhf(ati: np.ndarray, charge: int) -> bool:
     # Check if the number of the remaning electrons is even
     test_rhf = nel - f_electrons - charge
     if not test_rhf % 2 == 0:
-        return False
+        raise ValueError(
+            "The remaining number of electrons after the f electrons are removed is not even."
+        )
     return True
