@@ -6,9 +6,11 @@ import subprocess as sp
 from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
+import numpy as np
 from ..molecules import Molecule
 from .base import QMMethod
 from ..prog import XTBConfig
+from ..molecules.miscellaneous import get_lanthanides
 
 
 class XTB(QMMethod):
@@ -34,20 +36,24 @@ class XTB(QMMethod):
         """
         Optimize a molecule using xtb.
         """
-        nel = 0
-        for atom in molecule.ati:
-            nel += atom + 1
-        # Check if the number of the remaning electrons is even
-        test_rhf = nel - molecule.uhf - molecule.charge
-        if not test_rhf % 2 == 0:
-            raise SystemError(
-                "Lanthanides detected, remaining number of electrons is not even."
-            )
-        # Store the original UHF value and set uhf to 0
-        # Justification: xTB does not calculate with f electrons.
-        # The remaining openshell system has to be removed.
-        uhf_original = molecule.uhf
-        molecule.uhf = 0
+        if np.any(np.isin(molecule.ati, get_lanthanides())):
+            nel = 0
+            f_electrons = 0
+            for atom in molecule.ati:
+                nel += atom + 1
+                if atom in get_lanthanides():
+                    f_electrons += atom - 56
+            # Check if the number of the remaning electrons is even
+            test_rhf = nel - f_electrons - molecule.charge
+            if not test_rhf % 2 == 0:
+                raise SystemError(
+                    "Lanthanides detected, remaining number of electrons is not even."
+                )
+            # Store the original UHF value and set uhf to 0
+            # Justification: xTB does not treat f electrons explicitly.
+            # The remaining openshell system has to be removed.
+            uhf_original = molecule.uhf
+            molecule.uhf = 0
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
@@ -84,8 +90,9 @@ class XTB(QMMethod):
             # read the optimized molecule
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_file(temp_path / "xtbopt.xyz")
-            # Reset the UHF value to the original value before returning the optimized molecule.
-            optimized_molecule.uhf = uhf_original
+            if np.any(np.isin(molecule.ati, get_lanthanides())):
+                # Reset the UHF value to the original value before returning the optimized molecule.
+                optimized_molecule.uhf = uhf_original
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
