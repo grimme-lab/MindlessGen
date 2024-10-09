@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
-- The `uhf` is now set to 0 if `xtb` is used and a lanthanide is within the molecule, to match the `f in core` approximation.
+- The number of unpaired electrons (`Molecule.uhf`) is now set to 0 if `xtb` is used as `QMMethod` and a lanthanide is within the molecule to match the `f-in-core` approximation.
 
 ## [0.4.0] - 2024-09-19
 ### Changed
