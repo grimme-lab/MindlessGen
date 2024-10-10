@@ -37,12 +37,12 @@ class XTB(QMMethod):
         Optimize a molecule using xtb.
         """
         if np.any(np.isin(molecule.ati, get_lanthanides())):
-            if check_ligand_uhf(molecule.ati, molecule.charge):
-                # Store the original UHF value and set uhf to 0
-                # Justification: xTB does not treat f electrons explicitly.
-                # The remaining openshell system has to be removed.
-                uhf_original = molecule.uhf
-                molecule.uhf = 0
+            check_ligand_uhf(molecule.ati, molecule.charge)
+            # Store the original UHF value and set uhf to 0
+            # Justification: xTB does not treat f electrons explicitly.
+            # The remaining openshell system has to be removed.
+            uhf_original = molecule.uhf
+            molecule.uhf = 0
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
@@ -89,12 +89,12 @@ class XTB(QMMethod):
         Perform a single-point calculation using xtb.
         """
         if np.any(np.isin(molecule.ati, get_lanthanides())):
-            if check_ligand_uhf(molecule.ati, molecule.charge):
-                # Store the original UHF value and set uhf to 0
-                # Justification: xTB does not treat f electrons explicitly.
-                # The remaining openshell system has to be removed.
-                uhf_original = molecule.uhf
-                molecule.uhf = 0
+            check_ligand_uhf(molecule.ati, molecule.charge)
+            # Store the original UHF value and set uhf to 0
+            # Justification: xTB does not treat f electrons explicitly.
+            # The remaining openshell system has to be removed.
+            uhf_original = molecule.uhf
+            molecule.uhf = 0
 
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="xtb_") as temp_dir:
@@ -222,7 +222,7 @@ def get_xtb_path(binary_name: str | Path | None = None) -> Path:
     raise ImportError("'xtb' binary could not be found.")
 
 
-def check_ligand_uhf(ati: np.ndarray, charge: int) -> bool:
+def check_ligand_uhf(ati: np.ndarray, charge: int) -> None:
     """
     Check if the remaning number of electrons after the f electrons are removed is even.
     """
@@ -238,4 +238,3 @@ def check_ligand_uhf(ati: np.ndarray, charge: int) -> bool:
         raise ValueError(
             "The remaining number of electrons after the f electrons are removed is not even."
         )
-    return True
