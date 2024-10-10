@@ -50,7 +50,7 @@ def iterative_optimization(
         # Detect fragments from the optimized molecule
         fragmols = detect_fragments(
             mol=rev_mol,
-            vdw_scaling=config_generate.scale_vdw_radii,
+            vdw_scaling=config_generate.scale_fragment_detection,
             verbosity=verbosity,
         )
 

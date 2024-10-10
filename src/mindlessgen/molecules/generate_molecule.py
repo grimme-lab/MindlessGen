@@ -39,8 +39,14 @@ def generate_random_molecule(
         scaling=config_generate.init_coord_scaling,
         inc_scaling_factor=config_generate.increase_scaling_factor,
         verbosity=verbosity,
-        scale_bondlength=config_generate.scale_minimal_bondlength,
+        scale_minimal_distance=config_generate.scale_minimal_distance,
     )
+    if config_generate.contract_coords:
+        mol.xyz = contract_coordinates(
+            xyz=mol.xyz,
+            ati=mol.ati,
+            scale_minimal_distance=config_generate.scale_minimal_distance,
+        )
     mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
@@ -325,7 +331,7 @@ def generate_coordinates(
     scaling: float,
     inc_scaling_factor: float = 1.3,
     verbosity: int = 1,
-    scale_bondlength: float = 0.75,
+    scale_minimal_distance: float = 0.8,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate random coordinates for a molecule.
@@ -336,7 +342,7 @@ def generate_coordinates(
     xyz, ati = generate_random_coordinates(at)
     xyz = xyz * eff_scaling
     # do while check_distances is False
-    while not check_distances(xyz, ati, scale_bondlength=scale_bondlength):
+    while not check_distances(xyz, ati, scale_minimal_distance=scale_minimal_distance):
         if verbosity > 1:
             print(
                 f"Distance check failed. Increasing expansion factor by {inc_scaling_factor}..."
@@ -371,7 +377,42 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     return xyz, ati
 
 
-def check_distances(xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float) -> bool:
+def contract_coordinates(
+    xyz: np.ndarray, ati: np.ndarray, scale_minimal_distance: float
+) -> np.ndarray:
+    """
+    Pull the atoms towards the origin.
+    """
+    # Initialize the old coordinates as an array of zeros
+    xyz_old: np.ndarray = np.zeros_like(xyz)
+    cycle = 0
+    # Break if the coordinates do not change
+    while not np.array_equal(xyz_old, xyz):
+        cycle += 1
+        if cycle > 2500:
+            raise RuntimeError(
+                "Could not contract the coordinates in a reasonable amount of cycles."
+            )
+        xyz_old = xyz.copy()
+        # Go through the atoms dimension of the xyz array in a reversed order
+        # Justification: First atoms are most likely hydrogen atoms, which should be moved last
+        for i in range(len(xyz) - 1, -1, -1):
+            atom_xyz = xyz[i]
+            atom_xyz_norm = np.linalg.norm(atom_xyz)
+            normalized_atom_xyz = atom_xyz / atom_xyz_norm
+            # Shift the atom only if it is closer to the origin after the shift
+            if atom_xyz_norm > 0.1:
+                # Pull the atom towards the origin
+                xyz[i] -= normalized_atom_xyz * 0.2
+                # When the check_distances function returns False, reset the atom coordinates
+                if not check_distances(xyz, ati, scale_minimal_distance):
+                    xyz[i] = xyz_old[i]
+    return xyz
+
+
+def check_distances(
+    xyz: np.ndarray, ati: np.ndarray, scale_minimal_distance: float
+) -> bool:
     """
     Check if the distances between atoms are larger than a threshold.
     """
@@ -382,6 +423,6 @@ def check_distances(xyz: np.ndarray, ati: np.ndarray, scale_bondlength: float) -
             sum_radii = get_cov_radii(ati[i], COV_RADII) + get_cov_radii(
                 ati[j], COV_RADII
             )
-            if r < scale_bondlength * sum_radii:
+            if r < scale_minimal_distance * sum_radii:
                 return False
     return True
