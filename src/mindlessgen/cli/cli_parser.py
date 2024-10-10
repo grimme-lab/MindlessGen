@@ -87,16 +87,16 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Do not write the molecules to xyz files.",
     )
     parser.add_argument(
-        "--scale-vdw-radii",
+        "--scale-fragment-detection",
         type=float,
         required=False,
-        help="Scaling factor for van der Waals radii.",
+        help="Scaling factor for the fragment detection based on the van der Waals radii.",
     )
     parser.add_argument(
-        "--scale-minimal-bondlength",
+        "--scale-minimal-distance",
         type=float,
         required=False,
-        help="Minimum bond length scaling factor.",
+        help="Minimum atom distance scaling factor.",
     )
 
     ### Molecule generation arguments ###
@@ -136,6 +136,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         type=str,
         required=False,
         help="List of forbidden elements.",
+    )
+    parser.add_argument(
+        "--contract_coords",
+        type=bool,
+        required=False,
+        help="Contract the coordinates of the molecule after the coordinats generation.",
     )
 
     ### Refinement arguments ###
@@ -196,17 +202,17 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Path to the xTB binary.",
     )
     parser.add_argument(
+        "--xtb-level",
+        type=int,
+        required=False,
+        help="Level of theory to use in xTB.",
+    )
+    parser.add_argument(
         "--postprocess-debug",
         action="store_true",
         default=None,
         required=False,
         help="Print debug information during postprocessing.",
-    )
-    parser.add_argument(
-        "--xtb-level",
-        type=int,
-        required=False,
-        help="Level of theory to use in xTB.",
     )
 
     ### ORCA specific arguments ###
@@ -271,8 +277,9 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "increase_scaling_factor": args_dict["increase_scaling_factor"],
         "element_composition": args_dict["element_composition"],
         "forbidden_elements": args_dict["forbidden_elements"],
-        "scale_vdw_radii": args_dict["scale_vdw_radii"],
-        "scale_minimal_bondlength": args_dict["scale_minimal_bondlength"],
+        "scale_fragment_detection": args_dict["scale_fragment_detection"],
+        "scale_minimal_distance": args_dict["scale_minimal_distance"],
+        "contract_coords": args_dict["contract_coords"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

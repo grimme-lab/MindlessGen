@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
 - The check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
 - better type hints for `Callables`
+- A clearer differentiation between the distinct scaling factors for the van der Waals radii.
+- `README.md` with more detailed explanation of the element composition function.
 
 ### Fixed
 - Unit conversion for (currenly unused) vdW radii from the original Fortran project
@@ -17,9 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for the novel "g-xTB" method (working title: GP3-xTB)
+- A function which contracts the coordinates after the initial generation.
+- A function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout.
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
+- The number of unpaired electrons (`Molecule.uhf`) is now set to 0 if `xtb` is used as `QMMethod` and a lanthanide is within the molecule to match the `f-in-core` approximation.
 
 ## [0.4.0] - 2024-09-19
 ### Changed
