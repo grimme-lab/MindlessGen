@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for the novel "g-xTB" method (working title: GP3-xTB)
 - A function which contracts the coordinates after the initial generation.
 - A function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout.
+- The elements 86 to 103 are now accessible via the element composition.
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.

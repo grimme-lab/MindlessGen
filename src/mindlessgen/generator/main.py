@@ -212,10 +212,6 @@ def single_molecule_generator(
             verbosity=config.general.verbosity,
         )
 
-        # if np.any(np.isin(optimized_molecule.ati, get_lanthanides())):
-        #     print(config.warnings.get_warning()[0])
-        # elif np.any(np.isin(optimized_molecule.ati, get_actinides())):
-        #     print(config.warnings.get_warning()[0])
         if np.any(np.isin(optimized_molecule.ati, get_lanthanides() + get_actinides())):
             print(config.warnings.get_warning()[0])
 
