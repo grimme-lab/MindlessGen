@@ -716,6 +716,36 @@ class ORCAConfig(BaseConfig):
         self._scf_cycles = max_scf_cycles
 
 
+class WarningConfig:
+    """
+    This class handles warnings related to xTB calculations.
+    """
+
+    def __init__(self) -> None:
+        self.warnings = [
+            "WARNING: f-block elements are within the molecule. xTB does not treat f electrons explicitly. UHF is set to 0.",
+            "WARNING: Super heavy elements are within the molecule. xTB does not treat super havy elements. Atomic numbers are reduced by 32. Postproccessing is turned off the structure will not be relaxed.",
+        ]
+
+    def add_warning(self, warning: str) -> None:
+        """
+        Add a warning to the list of warnings.
+        """
+        self.warnings.append(warning)
+
+    def get_warning(self) -> list[str]:
+        """
+        Get the list of warnings.
+        """
+        return self.warnings
+
+    def clear_warning(self) -> None:
+        """
+        Clear all warnings.
+        """
+        self.warnings.clear()
+
+
 class ConfigManager:
     """
     Overall configuration manager for the program.
@@ -731,6 +761,7 @@ class ConfigManager:
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
+        self.warnings = WarningConfig()
 
         if config_file:
             self.load_from_toml(config_file)

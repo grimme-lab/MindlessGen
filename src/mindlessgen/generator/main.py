@@ -8,10 +8,12 @@ from collections.abc import Callable
 from pathlib import Path
 import multiprocessing as mp
 import warnings
+import numpy as np
 
-from ..molecules import generate_random_molecule, Molecule
+from ..molecules import generate_random_molecule, Molecule, get_lanthanides
 from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GP3, get_gp3_path
 from ..molecules import iterative_optimization, postprocess_mol
+from ..molecules.miscellaneous import get_actinides
 from ..prog import ConfigManager
 
 from .. import __version__
@@ -209,6 +211,17 @@ def single_molecule_generator(
             config_refine=config.refine,
             verbosity=config.general.verbosity,
         )
+
+        # if np.any(np.isin(optimized_molecule.ati, get_lanthanides())):
+        #     print(config.warnings.get_warning()[0])
+        # elif np.any(np.isin(optimized_molecule.ati, get_actinides())):
+        #     print(config.warnings.get_warning()[0])
+        if np.any(np.isin(optimized_molecule.ati, get_lanthanides() + get_actinides())):
+            print(config.warnings.get_warning()[0])
+
+        if np.any(optimized_molecule.ati > 85) and postprocess_engine is None:
+            print(config.warnings.get_warning()[1])
+
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
