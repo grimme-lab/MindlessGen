@@ -212,12 +212,6 @@ def single_molecule_generator(
             verbosity=config.general.verbosity,
         )
 
-        if np.any(np.isin(optimized_molecule.ati, get_lanthanides() + get_actinides())):
-            print(config.warnings.get_warning()[0])
-
-        if np.any(optimized_molecule.ati > 85) and postprocess_engine is None:
-            print(config.warnings.get_warning()[1])
-
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
@@ -247,6 +241,16 @@ def single_molecule_generator(
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
+
+    if isinstance(refine_engine, XTB):
+        if np.any(np.isin(optimized_molecule.ati, get_lanthanides() + get_actinides())):
+            print(config.warnings.get_warning()[0])
+
+        if np.any(optimized_molecule.ati > 85):
+            print(config.warnings.get_warning()[1])
+
+        if postprocess_engine is None:
+            print(config.warnings.get_warning()[2])
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop

@@ -41,7 +41,6 @@ class XTB(QMMethod):
         if np.any(molecule.ati > 85):
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-
         if np.any(np.isin(molecule.ati, get_lanthanides())):
             check_ligand_uhf(molecule.ati, molecule.charge)
             # Store the original UHF value and set uhf to 0
@@ -92,6 +91,7 @@ class XTB(QMMethod):
                 # Reset the atomic numbers to the original values before returning the optimized molecule.
                 optimized_molecule.ati = ati_original
                 molecule.ati = ati_original
+                optimized_molecule.atlist = molecule.atlist
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:

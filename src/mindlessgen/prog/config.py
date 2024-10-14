@@ -724,26 +724,15 @@ class WarningConfig:
     def __init__(self) -> None:
         self.warnings = [
             "WARNING: f-block elements are within the molecule. xTB does not treat f electrons explicitly. UHF is set to 0.",
-            "WARNING: Super heavy elements are within the molecule. xTB does not treat super havy elements. Atomic numbers are reduced by 32. Postproccessing is turned off the structure will not be relaxed.",
+            "WARNING: Super heavy elements are within the molecule. xTB does not treat super havy elements. Atomic numbers are reduced by 32.",
+            "WARNING: Postproccessing is turned off the structure will not be relaxed.",
         ]
-
-    def add_warning(self, warning: str) -> None:
-        """
-        Add a warning to the list of warnings.
-        """
-        self.warnings.append(warning)
 
     def get_warning(self) -> list[str]:
         """
         Get the list of warnings.
         """
         return self.warnings
-
-    def clear_warning(self) -> None:
-        """
-        Clear all warnings.
-        """
-        self.warnings.clear()
 
 
 class ConfigManager:
