@@ -34,7 +34,7 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
                 ln_protons += (
                     atom - 3 + 1
                 )  # subtract 3 to get the number of protons in the Ln3+ ion
-            if atom in get_actinides():
+            elif atom in get_actinides():
                 if atom < 96:
                     uhf += atom - 88
                 else:

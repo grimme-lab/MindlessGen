@@ -8,12 +8,10 @@ from collections.abc import Callable
 from pathlib import Path
 import multiprocessing as mp
 import warnings
-import numpy as np
 
-from ..molecules import generate_random_molecule, Molecule, get_lanthanides
+from ..molecules import generate_random_molecule, Molecule
 from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GP3, get_gp3_path
 from ..molecules import iterative_optimization, postprocess_mol
-from ..molecules.miscellaneous import get_actinides
 from ..prog import ConfigManager
 
 from .. import __version__
@@ -59,31 +57,9 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
     if config.general.verbosity > 0:
         print(config)
+        config.check_config()
 
-    # lower number of the available cores and the configured parallelism
     num_cores = min(mp.cpu_count(), config.general.parallel)
-    if config.general.parallel > mp.cpu_count():
-        warnings.warn(
-            f"Number of cores requested ({config.general.parallel}) is greater "
-            + f"than the number of available cores ({mp.cpu_count()})."
-            + f"Using {num_cores} cores instead."
-        )
-    if config.general.verbosity > 0:
-        print(f"Running with {num_cores} cores.")
-
-    if num_cores > 1 and config.general.verbosity > 0:
-        # raise warning that parallelization will disable verbosity
-        warnings.warn(
-            "Parallelization will disable verbosity during iterative search. "
-            + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
-        )
-    if num_cores > 1 and config.postprocess.debug:
-        # raise warning that debugging of postprocessing will disable parallelization
-        warnings.warn(
-            "Debug output might seem to be redundant due to the parallel processes "
-            + "with possibly similar errors in parallel mode. "
-            + "Don't be confused!"
-        )
 
     # Check if the file "mindless.molecules" exists. If yes, append to it.
     if Path(MINDLESS_MOLECULES_FILE).is_file():
@@ -241,16 +217,6 @@ def single_molecule_generator(
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
-
-    if isinstance(refine_engine, XTB):
-        if np.any(np.isin(optimized_molecule.ati, get_lanthanides() + get_actinides())):
-            print(config.warnings.get_warning()[0])
-
-        if np.any(optimized_molecule.ati > 85):
-            print(config.warnings.get_warning()[1])
-
-        if postprocess_engine is None:
-            print(config.warnings.get_warning()[2])
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop

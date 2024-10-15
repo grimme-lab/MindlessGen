@@ -90,7 +90,6 @@ class XTB(QMMethod):
             if super_heavy_elements:
                 # Reset the atomic numbers to the original values before returning the optimized molecule.
                 optimized_molecule.ati = ati_original
-                molecule.ati = ati_original
                 optimized_molecule.atlist = molecule.atlist
             return optimized_molecule
 
