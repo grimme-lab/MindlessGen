@@ -57,9 +57,12 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
     if config.general.verbosity > 0:
         print(config)
-        config.check_config()
+
+    config.check_config(verbosity=config.general.verbosity)
 
     num_cores = min(mp.cpu_count(), config.general.parallel)
+    if config.general.verbosity > 0:
+        print(f"Running with {num_cores} cores.")
 
     # Check if the file "mindless.molecules" exists. If yes, append to it.
     if Path(MINDLESS_MOLECULES_FILE).is_file():

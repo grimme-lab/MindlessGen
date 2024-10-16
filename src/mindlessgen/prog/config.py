@@ -737,10 +737,11 @@ class ConfigManager:
         if config_file:
             self.load_from_toml(config_file)
 
-    def check_config(self):
+    def check_config(self, verbosity: int = 1) -> None:
         """
         Checks ConfigClass for any incompatibilities that are imaginable
         """
+
         # lower number of the available cores and the configured parallelism
         num_cores = min(mp.cpu_count(), self.general.parallel)
         if self.general.parallel > mp.cpu_count():
@@ -749,15 +750,7 @@ class ConfigManager:
                 + f"than the number of available cores ({mp.cpu_count()})."
                 + f"Using {num_cores} cores instead."
             )
-        if self.general.verbosity > 0:
-            print(f"Running with {num_cores} cores.")
 
-        if num_cores > 1 and self.general.verbosity > 0:
-            # raise warning that parallelization will disable verbosity
-            warnings.warn(
-                "Parallelization will disable verbosity during iterative search. "
-                + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
-            )
         if num_cores > 1 and self.postprocess.debug:
             # raise warning that debugging of postprocessing will disable parallelization
             warnings.warn(
@@ -766,31 +759,43 @@ class ConfigManager:
                 + "Don't be confused!"
             )
 
-        # Check for f-block elements in forbidden elements
-        if self.generate.forbidden_elements:
-            f_block_elements = set(range(56, 70)) | set(range(88, 102))
-            if any(
-                elem not in f_block_elements
-                for elem in self.generate.forbidden_elements
-            ):
+        if verbosity > 0:
+            if num_cores > 1:
+                # raise warning that parallelization will disable verbosity
                 warnings.warn(
-                    "f-block elements could be within the molecule. xTB does not treat f electrons explicitly. In this case UHF is set to 0."
+                    "Parallelization will disable verbosity during iterative search. "
+                    + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
                 )
 
-        # Check for super heavy elements in forbidden elements
-        super_heavy_elements = set(range(86, 102))
-        if self.generate.element_composition and any(
-            elem in super_heavy_elements for elem in self.generate.element_composition
-        ):
-            warnings.warn(
-                "Super heavy elements are within the molecule. xTB does not treat super heavy elements. Atomic numbers are reduced by 32."
-            )
+            # Check for f-block elements in forbidden elements
+            if self.generate.forbidden_elements:
+                f_block_elements = set(range(56, 70)) | set(range(88, 102))
+                if any(
+                    elem not in f_block_elements
+                    for elem in self.generate.forbidden_elements
+                ):
+                    warnings.warn(
+                        "f-block elements could be within the molecule. xTB does not treat f electrons explicitly. In this case UHF is set to 0."
+                    )
 
-        # Check if postprocessing is turned off
-        if not self.general.postprocess:
-            warnings.warn(
-                "Postprocessing is turned off. The structure will not be relaxed."
-            )
+            # Check for super heavy elements in forbidden elements
+            super_heavy_elements = set(range(86, 102))
+            if self.generate.element_composition and any(
+                elem in super_heavy_elements
+                for elem in self.generate.element_composition
+            ):
+                warnings.warn(
+                    "xTB does not treat super heavy elements. Approximation: atomic numbers are reduced by 32. MindlesGen terminates normally."
+                )
+
+            # Check if postprocessing is turned off
+            if not self.general.postprocess and any(
+                elem in super_heavy_elements
+                for elem in self.generate.element_composition
+            ):
+                warnings.warn(
+                    "Postprocessing is turned off. The structure will not be relaxed."
+                )
 
     def get_all_identifiers(self):
         """
