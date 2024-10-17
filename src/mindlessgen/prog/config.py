@@ -785,7 +785,7 @@ class ConfigManager:
                 for elem in self.generate.element_composition
             ):
                 warnings.warn(
-                    "xTB does not treat super heavy elements. Approximation: atomic numbers are reduced by 32. MindlesGen terminates normally."
+                    "xTB does not treat super heavy elements. Atomic numbers are temporarily reduced by 32 to their lighter homologues and then replaced with the correct atom number."
                 )
 
             # Check if postprocessing is turned off
