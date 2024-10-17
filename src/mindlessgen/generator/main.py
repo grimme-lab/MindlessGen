@@ -58,30 +58,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     if config.general.verbosity > 0:
         print(config)
 
-    # lower number of the available cores and the configured parallelism
+    config.check_config(verbosity=config.general.verbosity)
+
     num_cores = min(mp.cpu_count(), config.general.parallel)
-    if config.general.parallel > mp.cpu_count():
-        warnings.warn(
-            f"Number of cores requested ({config.general.parallel}) is greater "
-            + f"than the number of available cores ({mp.cpu_count()})."
-            + f"Using {num_cores} cores instead."
-        )
     if config.general.verbosity > 0:
         print(f"Running with {num_cores} cores.")
-
-    if num_cores > 1 and config.general.verbosity > 0:
-        # raise warning that parallelization will disable verbosity
-        warnings.warn(
-            "Parallelization will disable verbosity during iterative search. "
-            + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
-        )
-    if num_cores > 1 and config.postprocess.debug:
-        # raise warning that debugging of postprocessing will disable parallelization
-        warnings.warn(
-            "Debug output might seem to be redundant due to the parallel processes "
-            + "with possibly similar errors in parallel mode. "
-            + "Don't be confused!"
-        )
 
     # Check if the file "mindless.molecules" exists. If yes, append to it.
     if Path(MINDLESS_MOLECULES_FILE).is_file():

@@ -36,6 +36,11 @@ class XTB(QMMethod):
         """
         Optimize a molecule using xtb.
         """
+        super_heavy_elements = False
+        ati_original = molecule.ati.copy()
+        if np.any(molecule.ati > 85):
+            super_heavy_elements = True
+            molecule.ati[molecule.ati > 85] -= 32
         if np.any(np.isin(molecule.ati, get_lanthanides())):
             check_ligand_uhf(molecule.ati, molecule.charge)
             # Store the original UHF value and set uhf to 0
@@ -82,12 +87,21 @@ class XTB(QMMethod):
             if np.any(np.isin(molecule.ati, get_lanthanides())):
                 # Reset the UHF value to the original value before returning the optimized molecule.
                 optimized_molecule.uhf = uhf_original
+            if super_heavy_elements:
+                # Reset the atomic numbers to the original values before returning the optimized molecule.
+                optimized_molecule.ati = ati_original
+                optimized_molecule.atlist = molecule.atlist
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
         Perform a single-point calculation using xtb.
         """
+        super_heavy_elements = False
+        ati_original = molecule.ati.copy()
+        if np.any(molecule.ati > 85):
+            super_heavy_elements = True
+            molecule.ati[molecule.ati > 85] -= 32
         if np.any(np.isin(molecule.ati, get_lanthanides())):
             check_ligand_uhf(molecule.ati, molecule.charge)
             # Store the original UHF value and set uhf to 0
@@ -128,6 +142,9 @@ class XTB(QMMethod):
 
             if np.any(np.isin(molecule.ati, get_lanthanides())):
                 molecule.uhf = uhf_original
+            if super_heavy_elements:
+                # Reset the atomic numbers to the original values before returning the optimized molecule.
+                molecule.ati = ati_original
             return xtb_log_out
 
     def check_gap(
