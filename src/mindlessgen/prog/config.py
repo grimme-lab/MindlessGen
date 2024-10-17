@@ -744,14 +744,14 @@ class ConfigManager:
 
         # lower number of the available cores and the configured parallelism
         num_cores = min(mp.cpu_count(), self.general.parallel)
-        if self.general.parallel > mp.cpu_count():
+        if self.general.parallel > mp.cpu_count() and verbosity > -1:
             warnings.warn(
                 f"Number of cores requested ({self.general.parallel}) is greater "
                 + f"than the number of available cores ({mp.cpu_count()})."
                 + f"Using {num_cores} cores instead."
             )
 
-        if num_cores > 1 and self.postprocess.debug:
+        if num_cores > 1 and self.postprocess.debug and verbosity > -1:
             # raise warning that debugging of postprocessing will disable parallelization
             warnings.warn(
                 "Debug output might seem to be redundant due to the parallel processes "
@@ -766,39 +766,38 @@ class ConfigManager:
                 + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
             )
 
-        # Check for f-block elements in forbidden elements
-        if self.generate.forbidden_elements:
-            if verbosity > 0:
-                f_block_elements = set(range(56, 71)) | set(range(88, 103))
-                if not all(
-                    elem in self.generate.forbidden_elements
-                    for elem in f_block_elements
-                ) or any(
-                    elem in f_block_elements
-                    for elem in self.generate.element_composition
-                ):
+        if self.refine.engine == "xtb":
+            # Check for f-block elements in forbidden elements
+            if self.generate.forbidden_elements:
+                if verbosity > 0:
+                    f_block_elements = set(range(56, 71)) | set(range(88, 103))
+                    lanthanides = set(range(56, 71))
+                    if not all(
+                        elem in self.generate.forbidden_elements for elem in lanthanides
+                    ) or any(
+                        elem in f_block_elements
+                        for elem in self.generate.element_composition
+                    ):
+                        warnings.warn(
+                            "f-block elements could be within the molecule. xTB does not treat f electrons explicitly. In this case UHF is set to 0."
+                        )
+
+            # Check for super heavy elements in forbidden elements
+            super_heavy_elements = set(range(86, 102))
+            if self.generate.element_composition and any(
+                elem in super_heavy_elements
+                for elem in self.generate.element_composition
+            ):
+                if verbosity > 0:
                     warnings.warn(
-                        "f-block elements could be within the molecule. xTB does not treat f electrons explicitly. In this case UHF is set to 0."
+                        "xTB does not treat super heavy elements. Atomic numbers are temporarily reduced by 32 to their lighter homologues and then replaced with the correct atom number."
                     )
-
-        # Check for super heavy elements in forbidden elements
-        super_heavy_elements = set(range(86, 102))
-        if self.generate.element_composition and any(
-            elem in super_heavy_elements for elem in self.generate.element_composition
-        ):
-            if verbosity > 0:
-                warnings.warn(
-                    "xTB does not treat super heavy elements. Atomic numbers are temporarily reduced by 32 to their lighter homologues and then replaced with the correct atom number."
-                )
-
-        # Check if postprocessing is turned off
-        if not self.general.postprocess and any(
-            elem in super_heavy_elements for elem in self.generate.element_composition
-        ):
-            if verbosity > 0:
-                warnings.warn(
-                    "Postprocessing is turned off. The structure will not be relaxed."
-                )
+                # Check if postprocessing is turned off
+                if not self.general.postprocess:
+                    if verbosity > 0:
+                        warnings.warn(
+                            "Postprocessing is turned off. The structure will not be relaxed."
+                        )
 
     def get_all_identifiers(self):
         """
