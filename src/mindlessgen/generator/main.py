@@ -190,7 +190,6 @@ def single_molecule_generator(
             config_refine=config.refine,
             verbosity=config.general.verbosity,
         )
-
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
