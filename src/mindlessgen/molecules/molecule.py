@@ -246,7 +246,7 @@ class Molecule:
         molecule = Molecule()
         if isinstance(file, str):
             file_path = Path(file).resolve()
-        if isinstance(file, Path):
+        elif isinstance(file, Path):
             file_path = file.resolve()
         else:
             raise TypeError("String or Path expected.")
