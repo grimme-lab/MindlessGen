@@ -205,12 +205,12 @@ class XTB(QMMethod):
                 check=True,
             )
             # get the output of the xtb calculation (of both stdout and stderr)
-            xtb_log_out = xtb_out.stdout.decode("utf8")
-            xtb_log_err = xtb_out.stderr.decode("utf8")
+            xtb_log_out = xtb_out.stdout.decode("utf8", errors="replace")
+            xtb_log_err = xtb_out.stderr.decode("utf8", errors="replace")
             return xtb_log_out, xtb_log_err, 0
         except sp.CalledProcessError as e:
-            xtb_log_out = e.stdout.decode("utf8")
-            xtb_log_err = e.stderr.decode("utf8")
+            xtb_log_out = e.stdout.decode("utf8", errors="replace")
+            xtb_log_err = e.stderr.decode("utf8", errors="replace")
             return xtb_log_out, xtb_log_err, e.returncode
 
 

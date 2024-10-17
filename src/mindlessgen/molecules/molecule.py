@@ -246,8 +246,10 @@ class Molecule:
         molecule = Molecule()
         if isinstance(file, str):
             file_path = Path(file).resolve()
-        if isinstance(file, Path):
+        elif isinstance(file, Path):
             file_path = file.resolve()
+        else:
+            raise TypeError("String or Path expected.")
         molecule.read_xyz_from_file(file_path)
         if file_path.with_suffix(".CHRG").exists():
             molecule.read_charge_from_file(file_path.with_suffix(".CHRG"))
