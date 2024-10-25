@@ -304,6 +304,44 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
             elif max_count is not None and natoms[elem] > max_count:
                 natoms[elem] = max_count
 
+    def fixed_charge_hydrogen_correction():
+        """
+        Correct the number of hydrogen atoms if the number of electrons is odd.
+        """
+
+        odd_nel, num_atoms = check_nel(natoms, cfg)
+        # If a fixed charge is defined, and the number of electrons is odd, add an hydrogen atom
+        if odd_nel and 0 in valid_elems:
+            for elem, count_range in cfg.element_composition.items():
+                if elem == 0:
+                    min_count, max_count = count_range
+                else:
+                    min_count, max_count = cfg.min_num_atoms, cfg.max_num_atoms
+            if natoms[0] < max_count and num_atoms < cfg.max_num_atoms:
+                natoms[0] = natoms[0] + 1
+                if natoms[0] > max_count:
+                    raise SystemExit("NOT TODAY MY FRIEND")
+            elif natoms[0] > min_count and num_atoms > cfg.min_num_atoms:
+                natoms[0] = natoms[0] - 1
+                if natoms[0] < min_count:
+                    raise SystemExit("NOT TODAY MY FRIEND")
+            elif cfg.min_num_atoms == cfg.max_num_atoms:
+                print("Fixed charge element correction failed. Restarting generation.")
+                generate_atom_list(cfg, verbosity)
+        return natoms
+
+    # TODO: Make this function ready and then look for the last case how this is implemented.
+    def fixed_charge_elem_correction():
+        odd_nel, num_atoms = check_nel(natoms, cfg)
+
+        if odd_nel:
+            temp_count = 0
+            print("temp_count:", temp_count)
+            for atom in natoms:
+                if atom > 0 and atom % 2 == 0:
+                    natoms[atom] += 1
+                    break
+
     ### ACTUAL WORKFLOW START ###
     # Add a random number of atoms of random types
     add_random(low_lim_default_random, max_lim_default_random, 0, 3)
@@ -321,6 +359,10 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     check_composition()
     # Check if the number of atoms is within the defined limits
     check_min_max_atoms()
+    if cfg.fixed_charge and 0 in valid_elems:
+        fixed_charge_hydrogen_correction()
+    if cfg.fixed_charge:
+        fixed_charge_elem_correction()
     ### ACTUAL WORKFLOW END ###
 
     return natoms
@@ -426,3 +468,22 @@ def check_distances(
             if r < scale_minimal_distance * sum_radii:
                 return False
     return True
+
+
+def check_nel(natoms: np.ndarray, cfg: GenerateConfig) -> tuple[bool, int]:
+    """
+    Check if the number of electrons is odd.
+    """
+    nel = 0
+    temp_count = 0
+    num_atoms = 0
+    for atom in natoms:
+        temp_count += 1
+        if atom > 0:
+            nel += (atom) * temp_count
+            num_atoms += atom
+    nel = nel - cfg.fixed_charge
+    if nel % 2 == 0:
+        return False, num_atoms
+    else:
+        return True, num_atoms

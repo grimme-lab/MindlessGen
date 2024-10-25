@@ -183,6 +183,7 @@ class GenerateConfig(BaseConfig):
         self._scale_fragment_detection: float = 1.25
         self._scale_minimal_distance: float = 0.8
         self._contract_coords: bool = False
+        self._fixed_charge: int | None = None
 
     def get_identifier(self) -> str:
         return "generate"
@@ -401,6 +402,22 @@ class GenerateConfig(BaseConfig):
         if not isinstance(contract_coords, bool):
             raise TypeError("Contract coords should be a boolean.")
         self._contract_coords = contract_coords
+
+    @property
+    def fixed_charge(self):
+        """
+        Get the fixed_charge.
+        """
+        return self._fixed_charge
+
+    @fixed_charge.setter
+    def fixed_charge(self, fixed_charge: int):
+        """
+        Set the fixed_charge.
+        """
+        if not isinstance(fixed_charge, int):
+            raise TypeError("Fixed charge should be an integer.")
+        self._fixed_charge = fixed_charge
 
 
 class RefineConfig(BaseConfig):
