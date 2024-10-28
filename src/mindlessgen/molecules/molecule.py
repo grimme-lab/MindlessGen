@@ -545,7 +545,7 @@ class Molecule:
             # read the atomic coordinates
             self.xyz = np.zeros((self.num_atoms, 3))
             self.ati = np.zeros(self.num_atoms, dtype=int)
-            self.atlist = np.zeros(102, dtype=int)
+            self.atlist = np.zeros(103, dtype=int)
             for i in range(self.num_atoms):
                 line = lines[i + 2].split()
                 self.ati[i] = PSE_NUMBERS[line[0].lower()] - 1
