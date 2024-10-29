@@ -17,6 +17,7 @@ from .miscellaneous import (
     get_four_d_metals,
     get_five_d_metals,
     get_lanthanides,
+    get_actinides,
     get_alkali_metals,
     get_alkaline_earth_metals,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "get_four_d_metals",
     "get_five_d_metals",
     "get_lanthanides",
+    "get_actinides",
     "get_alkali_metals",
     "get_alkaline_earth_metals",
     "PSE_NUMBERS",
