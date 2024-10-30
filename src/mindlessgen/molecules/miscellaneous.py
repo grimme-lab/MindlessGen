@@ -16,14 +16,15 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
     if verbosity > 1:
         print(f"Number of protons in molecule: {nel}")
 
-    if np.any(np.isin(ati, get_lanthanides())):
-        ### Special mode for lanthanides
+    if np.any(np.isin(ati, get_lanthanides() + get_actinides())):
+        ### Special mode for lanthanides and actinides
         # -> always high spin
-        # -> Divide the molecule into Ln3+ ions and negative "ligands"
+        # -> Divide the molecule into Ln3+/Ac3+ ions and negative "ligands"
         # -> The ligands are the remaining protons are assumed to be low spin
         uhf = 0
         charge = 0
         ln_protons = 0
+        ac_protons = 0
         for atom in ati:
             if atom in get_lanthanides():
                 if atom < 64:
@@ -33,9 +34,20 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
                 ln_protons += (
                     atom - 3 + 1
                 )  # subtract 3 to get the number of protons in the Ln3+ ion
-        ligand_protons = nel - ln_protons
+            elif atom in get_actinides():
+                if atom < 96:
+                    uhf += atom - 88
+                else:
+                    uhf += 102 - atom
+                ac_protons += (
+                    atom - 3 + 1
+                )  # subtract 3 to get the number of protons in the Ln3+ ion
+        ligand_protons = nel - ln_protons - ac_protons
         if verbosity > 2:
-            print(f"Number of protons from Ln^3+ ions: {ln_protons}")
+            if np.any(np.isin(ati, get_lanthanides())):
+                print(f"Number of protons from Ln^3+ ions: {ln_protons}")
+            if np.any(np.isin(ati, get_actinides())):
+                print(f"Number of protons from Ac^3+ ions: {ac_protons}")
             print(
                 f"Number of protons from ligands (assuming negative charge): {ligand_protons}"
             )

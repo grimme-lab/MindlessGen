@@ -37,7 +37,18 @@ from mindlessgen.molecules.miscellaneous import set_random_charge  # type: ignor
             7,
         ),  # Gd (64), C, C -> Lanthanide case, UHF = 7, CHRG = 1
         (np.array([57, 7, 0]), [0], 1),  # Ce (58), O, H -> Lanthanide case, UHF = 1
-        (np.array([69, 7, 0]), [0], 1),  # Ce (58), O, H -> Lanthanide case, UHF = 1
+        (np.array([69, 7, 0]), [0], 1),  # Yb (70), O, H -> Lanthanide case, UHF = 1
+        (np.array([5, 7, 0, 98]), [0], 4),  # Es(99), O, C, H -> Actinides case, UHF = 4
+        (
+            np.array([59, 92, 0, 0]),
+            [0],
+            7,
+        ),  # Nd(60), Np(93), H, H -> Lanthanide and Actinide case, UHF = 7
+        (
+            np.array([59, 91, 92, 5, 7, 0]),
+            [0],
+            10,
+        ),  # Nd(60), U(92), Np(93), H, H -> Lanthanide and Actinides case, UHF = 10
     ],
     ids=[
         "B-N-H (standard, odd)",
@@ -49,6 +60,9 @@ from mindlessgen.molecules.miscellaneous import set_random_charge  # type: ignor
         "Gd-C-N (lanthanide)",
         "Ce-O-H (lanthanide)",
         "Yb-O-H (lanthanide)",
+        "Es-O-C-H (actinides)",
+        "Nd-Np-H-H (lanthanide and actinide)",
+        "Nd-Eu-Np-H-H (lanthanide and actinides)",
     ],
 )
 def test_set_random_charge(atom_types, expected_charges, expected_uhf):

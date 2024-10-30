@@ -73,8 +73,8 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         valid_elems = set_all_elem
 
     natoms = np.zeros(
-        102, dtype=int
-    )  # 102 is the number of accessible elements in the periodic table
+        103, dtype=int
+    )  # 103 is the number of accessible elements in the periodic table
 
     # Some sanity checks:
     # - Check if the minimum number of atoms is smaller than the maximum number of atoms

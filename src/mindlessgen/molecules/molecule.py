@@ -246,8 +246,10 @@ class Molecule:
         molecule = Molecule()
         if isinstance(file, str):
             file_path = Path(file).resolve()
-        if isinstance(file, Path):
+        elif isinstance(file, Path):
             file_path = file.resolve()
+        else:
+            raise TypeError("String or Path expected.")
         molecule.read_xyz_from_file(file_path)
         if file_path.with_suffix(".CHRG").exists():
             molecule.read_charge_from_file(file_path.with_suffix(".CHRG"))
@@ -545,7 +547,7 @@ class Molecule:
             # read the atomic coordinates
             self.xyz = np.zeros((self.num_atoms, 3))
             self.ati = np.zeros(self.num_atoms, dtype=int)
-            self.atlist = np.zeros(102, dtype=int)
+            self.atlist = np.zeros(103, dtype=int)
             for i in range(self.num_atoms):
                 line = lines[i + 2].split()
                 self.ati[i] = PSE_NUMBERS[line[0].lower()] - 1
