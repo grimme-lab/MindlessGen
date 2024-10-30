@@ -35,7 +35,7 @@ def test_generate_atom_list(min_atoms, max_atoms, default_generate_config):
 
     # Common assertions for atom count range
     assert isinstance(atom_list, np.ndarray)
-    assert atom_list.shape == (102,)
+    assert atom_list.shape == (103,)
     assert np.sum(atom_list) > 0
     assert np.sum(atom_list) >= min_atoms
     assert np.sum(atom_list) <= max_atoms

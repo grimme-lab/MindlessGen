@@ -197,7 +197,7 @@ def detect_fragments(
         # Remove the atoms that are not in the fragment from ati
         fragment_molecule.ati = np.array([mol.ati[i] for i in fragment])
         # Update atlist by going through ati and add the occurences of each atom onto an empty array
-        fragment_molecule.atlist = np.zeros(102, dtype=int)
+        fragment_molecule.atlist = np.zeros(103, dtype=int)
         for atom in fragment_molecule.ati:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
