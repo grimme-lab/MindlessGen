@@ -796,7 +796,9 @@ class ConfigManager:
                         for elem in self.generate.element_composition
                     ):
                         warnings.warn(
-                            "f-block elements could be within the molecule. xTB does not treat f electrons explicitly. In this case UHF is set to 0."
+                            "f-block elements could be within the molecule. "
+                            + "xTB does not treat f electrons explicitly. "
+                            + "UHF is temporarily set to 0."
                         )
 
             # Check for super heavy elements in forbidden elements

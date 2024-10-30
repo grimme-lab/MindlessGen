@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit conversion for (currenly unused) vdW radii from the original Fortran project
 - minor print output issues (no new line breaks, more consistent verbosity differentiation, ...)
 - bug in `postprocess_mol` which led to an unassigned return variable in the single-point case
+- bug with all atom lists being initialized with a length of 102 instead of 103
 
 ### Added
 - Support for the novel "g-xTB" method (working title: GP3-xTB)
