@@ -405,3 +405,26 @@ def test_hydrogen_addition(
         assert atom_list[0] > 0
     else:
         np.testing.assert_equal(atom_list[0], 0)
+
+
+# Check the atom list extention when a fixed charge is given.
+@pytest.mark.parametrize(
+    "charge, expected_charge",
+    [
+        (0, 0),  # Neutral charge
+        (1, 1),  # Positive charge
+        (-1, -1),  # Negative charge
+    ],
+    ids=["neutral", "positive", "negative"],
+)
+def test_generate_atom_list_with_charge(
+    charge, expected_charge, default_generate_config
+):
+    """Test generate_atom_list when a fixed charge is given."""
+    default_generate_config.charge = charge
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 15
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Ensure the charge is correctly set
+    assert np.sum(atom_list) == expected_charge
