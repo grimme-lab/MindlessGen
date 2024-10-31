@@ -408,23 +408,44 @@ def test_hydrogen_addition(
 
 
 # Check the atom list extention when a fixed charge is given.
-@pytest.mark.parametrize(
-    "charge, expected_charge",
-    [
-        (0, 0),  # Neutral charge
-        (1, 1),  # Positive charge
-        (-1, -1),  # Negative charge
-    ],
-    ids=["neutral", "positive", "negative"],
-)
-def test_generate_atom_list_with_charge(
-    charge, expected_charge, default_generate_config
+def test_fixed_charge(
+    default_generate_config,
 ):
-    """Test generate_atom_list when a fixed charge is given."""
-    default_generate_config.charge = charge
+    """Test the right assinged charge when a fixed charge is given"""
+    default_generate_config.fixed_charge = 3
     default_generate_config.min_num_atoms = 5
     default_generate_config.max_num_atoms = 15
-    atom_list = generate_atom_list(default_generate_config, verbosity=1)
 
     # Ensure the charge is correctly set
-    assert np.sum(atom_list) == expected_charge
+    mol = generate_random_molecule(default_generate_config, verbosity=1)
+    assert mol.charge == 3
+
+
+def test_fixed_charge_and_no_possible_correction(
+    default_generate_config,
+):
+    """Test the hydrogen correction for a fixed charge"""
+    default_generate_config.fixed_charge = 3
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 5
+    default_generate_config.forbidden_elements = "1-10, 12-*"
+
+    # Ensure the charge is correctly set
+    mol = generate_random_molecule(default_generate_config, verbosity=1)
+    assert mol.charge == 3
+    assert mol.uhf == 0
+    assert mol.atlist[0] == 0
+    assert mol.atlist[10] == 5
+
+
+def test_fixed_charge_hydrogen_correction(default_generate_config):
+    """Test the hydrogen correction for a fixed charge"""
+    default_generate_config.fixed_charge = 3
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 15
+    default_generate_config.fixed_elements = "5:1, 10:2, 15:1, 17:1"
+    default_generate_config.forbidden_elements = "2-10, 11, 12-*"
+
+    # Ensure the charge is correctly set
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+    assert np.sum(atom_list[0]) % 2 != 0

@@ -4,8 +4,14 @@ Molecule-related helper tools.
 
 import numpy as np
 
+from ..prog import GenerateConfig
 
-def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
+cfg = GenerateConfig()
+
+
+def set_random_charge(
+    ati: np.ndarray, fixed_charge=cfg.fixed_charge, verbosity: int = 1
+) -> tuple[int, int]:
     """
     Set the charge of a molecule so that unpaired electrons are avoided.
     """
@@ -51,12 +57,21 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
             print(
                 f"Number of protons from ligands (assuming negative charge): {ligand_protons}"
             )
+
+        if fixed_charge:
+            charge = fixed_charge
+            return charge, uhf
         if ligand_protons % 2 == 0:
             charge = 0
         else:
             charge = 1
         return charge, uhf
     else:
+        if fixed_charge:
+            ### Fixed charge mode
+            charge = fixed_charge
+            uhf = 0
+            return charge, uhf
         ### Default mode
         iseven = False
         if nel % 2 == 0:
