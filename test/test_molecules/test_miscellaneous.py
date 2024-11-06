@@ -4,7 +4,10 @@ Test the miscellaneous functions in the molecules module.
 
 import pytest
 import numpy as np
+from mindlessgen.prog import GenerateConfig  # type: ignore
 from mindlessgen.molecules.miscellaneous import set_random_charge  # type: ignore
+
+cfg = GenerateConfig()
 
 
 # CAUTION: We use 0-based indexing for atoms and molecules!
@@ -69,6 +72,6 @@ def test_set_random_charge(atom_types, expected_charges, expected_uhf):
     """
     Test the set_random_charge function for both standard and lanthanide modes.
     """
-    charge, uhf = set_random_charge(atom_types)
+    charge, uhf = set_random_charge(atom_types, verbosity=1)
     assert charge in expected_charges
     assert uhf == expected_uhf

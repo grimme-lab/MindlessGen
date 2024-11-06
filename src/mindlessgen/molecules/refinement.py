@@ -50,6 +50,7 @@ def iterative_optimization(
         # Detect fragments from the optimized molecule
         fragmols = detect_fragments(
             mol=rev_mol,
+            config_generate=config_generate,
             vdw_scaling=config_generate.scale_fragment_detection,
             verbosity=verbosity,
         )
@@ -109,7 +110,7 @@ def iterative_optimization(
                     f"Element {ati} is overrepresented "
                     + f"in the largest fragment in cycle {cycle + 1}."
                 )
-
+        # TODO: Check the elektrons if uneven throw the fragment away
         rev_mol = fragmols[
             0
         ]  # Set current_mol to the first fragment for the next cycle
@@ -136,7 +137,10 @@ def iterative_optimization(
 
 
 def detect_fragments(
-    mol: Molecule, vdw_scaling: float, verbosity: int = 1
+    mol: Molecule,
+    config_generate: GenerateConfig,
+    vdw_scaling: float,
+    verbosity: int = 1,
 ) -> list[Molecule]:
     """
     Detects fragments in a molecular system based on atom positions and covalent radii.
@@ -201,9 +205,13 @@ def detect_fragments(
         for atom in fragment_molecule.ati:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
-        fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(
-            fragment_molecule.ati, verbosity
-        )
+        if config_generate.fixed_charge is not None:
+            fragment_molecule.charge = config_generate.fixed_charge
+            fragment_molecule.uhf = 0
+        else:
+            fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(
+                fragment_molecule.ati, verbosity
+            )
         fragment_molecule.set_name_from_formula()
         if verbosity > 1:
             print(f"Fragment molecule: {fragment_molecule}")

@@ -10,7 +10,7 @@ import numpy as np
 from ..molecules import Molecule
 from .base import QMMethod
 from ..prog import XTBConfig
-from ..molecules.miscellaneous import get_lanthanides
+from ..molecules.miscellaneous import get_lanthanides, get_actinides
 
 
 class XTB(QMMethod):
@@ -245,13 +245,27 @@ def check_ligand_uhf(ati: np.ndarray, charge: int) -> None:
     """
     nel = 0
     f_electrons = 0
+    ligand_protons = 0
+    ln_protons = 0
     for atom in ati:
         nel += atom + 1
         if atom in get_lanthanides():
-            f_electrons += atom - 56
+            if atom < 64:
+                f_electrons += atom - 56
+            else:
+                f_electrons += 70 - atom
+            ln_protons += atom - 3 + 1
+        if atom in get_actinides():
+            if atom < 96:
+                f_electrons += atom - 88
+            else:
+                f_electrons += 102 - atom
+            ln_protons += atom - 3 + 1
+    ligand_protons = nel - ln_protons - charge
+    print("ligand protons are:", ligand_protons)
+
     # Check if the number of the remaning electrons is even
-    test_rhf = nel - f_electrons - charge
-    if not test_rhf % 2 == 0:
-        raise ValueError(
-            "The remaining number of electrons after the f electrons are removed is not even."
+    if not ligand_protons % 2 == 0:
+        raise SystemExit(
+            "The number of electrons in the ligand is not even. Please check the input."
         )

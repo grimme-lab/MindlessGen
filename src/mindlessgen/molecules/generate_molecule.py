@@ -15,6 +15,7 @@ from .miscellaneous import (
     get_four_d_metals,
     get_five_d_metals,
     get_lanthanides,
+    get_actinides,
 )
 
 
@@ -47,8 +48,11 @@ def generate_random_molecule(
             ati=mol.ati,
             scale_minimal_distance=config_generate.scale_minimal_distance,
         )
-    mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
-    print(mol.charge, mol.uhf)
+    if config_generate.fixed_charge:
+        mol.charge = config_generate.fixed_charge
+        mol.uhf = 0
+    else:
+        mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
 
     if verbosity > 1:
@@ -134,6 +138,12 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                     + f"Returning: \n{natoms}\n"
                 )
             return natoms
+
+    # if cfg.fixed_charge and fixed_elem:
+    #     raise ValueError(
+    #         "Both fixed charge and fixed composition are defined. "
+    #         + "Please only define one of them."
+    #     )
 
     # Reasoning for the parameters in the following sections:
     # - The number of the atoms added by default (DefaultRandom + AddOrganicAtoms)
@@ -305,57 +315,7 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
             elif max_count is not None and natoms[elem] > max_count:
                 natoms[elem] = max_count
 
-    def fixed_charge_hydrogen_correction():
-        """
-        Correct the number of hydrogen atoms if the number of electrons is odd.
-        """
-        odd_nel, num_atoms = check_nel(natoms, cfg)
-        if not odd_nel:
-            return natoms
-        print("Odd number of electrons. Trying to correct...")
-
-        min_count, max_count = cfg.element_composition.get(0, (0, cfg.max_num_atoms))
-        print(min_count, max_count)
-        print(natoms[0], max_count, num_atoms, cfg.max_num_atoms)
-        print(natoms[0] < max_count, num_atoms < cfg.max_num_atoms)
-        print(natoms[0], min_count, num_atoms, cfg.min_num_atoms)
-        print(natoms[0] > min_count, num_atoms > cfg.min_num_atoms)
-        if natoms[0] < max_count and num_atoms < cfg.max_num_atoms:
-            natoms[0] += 1
-            print("Adding hydrogen atom...")
-        elif natoms[0] > min_count and num_atoms > cfg.min_num_atoms:
-            natoms[0] -= 1
-            print("Removing hydrogen atom...")
-        else:
-            fixed_charge_elem_correction()
-
-        return natoms
-
     # TODO: Make this function ready and then look for the last case how this is implemented.
-    def fixed_charge_elem_correction():
-        """
-        Correct the number of atoms if the number of electrons is odd and hydrogen can not be added.
-        """
-        odd_nel, num_atoms = check_nel(natoms, cfg)
-
-        if odd_nel:
-            print("2 time Odd number of electrons. Trying to correct...")
-            odd_atoms = [elem for elem in valid_elems if elem % 2 == 0 and elem != 0]
-
-            for random_elem in np.random.permutation(odd_atoms):
-                min_count, max_count = cfg.element_composition.get(
-                    random_elem, (0, cfg.max_num_atoms)
-                )
-                if natoms[random_elem] < max_count and num_atoms < cfg.max_num_atoms:
-                    natoms[random_elem] += 1
-                    print(f"Adding atom type {random_elem}...")
-                    return
-                elif natoms[random_elem] > min_count and num_atoms > cfg.min_num_atoms:
-                    natoms[random_elem] -= 1
-                    print(f"Removing atom type {random_elem}...")
-                    return
-
-            generate_random_molecule(cfg, verbosity)
 
     ### ACTUAL WORKFLOW START ###
     # Add a random number of atoms of random types
@@ -374,10 +334,13 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     check_composition()
     # Check if the number of atoms is within the defined limits
     check_min_max_atoms()
-    if cfg.fixed_charge and 0 in valid_elems:
-        fixed_charge_hydrogen_correction()
+    f_block_elements = True
+    if cfg.fixed_charge and f_block_elements:
+        natoms = fixed_charge_f_block_correction(cfg, natoms, valid_elems)
+    elif cfg.fixed_charge and 0 in valid_elems:
+        fixed_charge_hydrogen_correction(cfg, natoms, valid_elems)
     elif cfg.fixed_charge:
-        fixed_charge_elem_correction()
+        natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems)
     ### ACTUAL WORKFLOW END ###
 
     return natoms
@@ -485,20 +448,142 @@ def check_distances(
     return True
 
 
-def check_nel(natoms: np.ndarray, cfg: GenerateConfig) -> tuple[bool, int]:
+def check_nel(natoms: np.ndarray, cfg: GenerateConfig) -> tuple[bool, int, int, int]:
     """
     Check if the number of electrons is odd.
     """
-    nel = 0
-    temp_count = 0
+    # nel = 0
+    # temp_count = 0
+    # num_atoms = 0
+    # for atom in natoms:
+    #     temp_count += 1
+    #     if atom > 0:
+    #         nel += (atom) * temp_count
+    #         num_atoms += atom
+    # nel = nel - cfg.fixed_charge
+    temp_count = -1
+    nel = -cfg.fixed_charge
+    f_electrons = 0
     num_atoms = 0
     for atom in natoms:
         temp_count += 1
-        if atom > 0:
-            nel += (atom) * temp_count
-            num_atoms += atom
-    nel = nel - cfg.fixed_charge
+        nel += (atom) * (temp_count + 1)
+        num_atoms += atom
+        if (
+            atom > 0
+            and temp_count in get_lanthanides()
+            or temp_count in get_actinides()
+        ):
+            f_electrons = True
+
     if nel % 2 == 0:
-        return False, num_atoms
+        return False, num_atoms, f_electrons, nel
     else:
-        return True, num_atoms
+        return True, num_atoms, f_electrons, nel
+
+
+def fixed_charge_f_block_correction(
+    cfg: GenerateConfig, natoms: np.ndarray, valid_elems: set[int]
+) -> np.ndarray:
+    """
+    Correct the number of electrons if f block elements are included.
+    """
+    odd_nel, num_atoms, f_electrons, nel = check_nel(natoms, cfg)
+    ligand_protons = 0
+    ln_protons = 0
+    ac_protons = 0
+    temp_count = 0
+    for atom in natoms:
+        temp_count += 1
+        if (temp_count - 1) in get_lanthanides():
+            ln_protons += atom * (
+                temp_count - 3
+            )  # subtract 3 to get the number of protons in the Ln3+ ion
+        elif (temp_count - 1) in get_actinides():
+            ac_protons += atom * (
+                temp_count - 3
+            )  # subtract 3 to get the number of protons in the Ln3+ ion
+    # charge is already within nel
+    ligand_protons = nel - ln_protons - ac_protons
+    if ligand_protons % 2 != 0:
+        odd_atoms = [
+            elem
+            for elem in valid_elems
+            if elem % 2 == 0 and elem != 0  # TODO: Look for the charge
+        ]
+        for random_elem in np.random.permutation(odd_atoms):
+            min_count, max_count = cfg.element_composition.get(
+                random_elem, (0, cfg.max_num_atoms)
+            )
+            if natoms[random_elem] < max_count and num_atoms < cfg.max_num_atoms:
+                natoms[random_elem] += 1
+                print(f"Adding atom type {random_elem}...")
+                return natoms
+            elif natoms[random_elem] > min_count and num_atoms > cfg.min_num_atoms:
+                natoms[random_elem] -= 1
+                print(f"Removing atom type {random_elem}...")
+                return natoms
+            print(odd_atoms, random_elem, min_count, max_count, num_atoms)
+        raise RuntimeError("Could not correct the odd number of electrons.")
+    else:
+        return natoms
+
+
+def fixed_charge_hydrogen_correction(
+    cfg: GenerateConfig,
+    natoms: np.ndarray,
+    valid_elems: set[int],
+) -> np.ndarray:
+    """
+    Correct the number of hydrogen atoms if the number of electrons is odd.
+    """
+    odd_nel, num_atoms, f_electrons, nel = check_nel(natoms, cfg)
+
+    if not odd_nel:
+        return natoms
+    print("Odd number of electrons. Trying to correct...")
+
+    min_count, max_count = cfg.element_composition.get(
+        0, (0, cfg.max_num_atoms)
+    )  # TODO: Check if max_num_atoms is set when nothing is defined
+    if natoms[0] < max_count and num_atoms < cfg.max_num_atoms:
+        natoms[0] += 1
+        print("Adding hydrogen atom...")
+    elif natoms[0] > min_count and num_atoms > cfg.min_num_atoms:
+        natoms[0] -= 1
+        print("Removing hydrogen atom...")
+    else:
+        natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems)
+
+    return natoms
+
+
+def fixed_charge_elem_correction(
+    cfg: GenerateConfig, natoms: np.ndarray, valid_elems: set[int]
+) -> np.ndarray:
+    """
+    Correct the number of atoms if the number of electrons is odd and hydrogen can not be added.
+    """
+    odd_nel, num_atoms, f_electrons, nel = check_nel(natoms, cfg)
+    if odd_nel:
+        # All other elements
+        odd_atoms = [
+            elem
+            for elem in valid_elems
+            if elem % 2 == 0 and elem != 0  # TODO: Look for the charge
+        ]
+        for random_elem in np.random.permutation(odd_atoms):
+            min_count, max_count = cfg.element_composition.get(
+                random_elem, (0, cfg.max_num_atoms)
+            )
+            if natoms[random_elem] < max_count and num_atoms < cfg.max_num_atoms:
+                natoms[random_elem] += 1
+                print(f"Adding atom type {random_elem}...")
+                return natoms
+            elif natoms[random_elem] > min_count and num_atoms > cfg.min_num_atoms:
+                natoms[random_elem] -= 1
+                print(f"Removing atom type {random_elem}...")
+                return natoms
+
+            raise RuntimeError("Could not correct the odd number of electrons.")
+    return natoms

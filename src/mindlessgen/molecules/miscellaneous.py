@@ -4,13 +4,10 @@ Molecule-related helper tools.
 
 import numpy as np
 
-from ..prog import GenerateConfig
-
-cfg = GenerateConfig()
-
 
 def set_random_charge(
-    ati: np.ndarray, fixed_charge=cfg.fixed_charge, verbosity: int = 1
+    ati: np.ndarray,
+    verbosity: int = 1,
 ) -> tuple[int, int]:
     """
     Set the charge of a molecule so that unpaired electrons are avoided.
@@ -58,20 +55,12 @@ def set_random_charge(
                 f"Number of protons from ligands (assuming negative charge): {ligand_protons}"
             )
 
-        if fixed_charge:
-            charge = fixed_charge
-            return charge, uhf
-        if ligand_protons % 2 == 0:
+        elif ligand_protons % 2 == 0:
             charge = 0
         else:
             charge = 1
         return charge, uhf
     else:
-        if fixed_charge:
-            ### Fixed charge mode
-            charge = fixed_charge
-            uhf = 0
-            return charge, uhf
         ### Default mode
         iseven = False
         if nel % 2 == 0:
@@ -93,6 +82,18 @@ def set_random_charge(
                 charge = 1
         uhf = 0
         return charge, uhf
+
+
+def calculate_protons(natoms: np.ndarray) -> int:
+    """
+    Calculate the number of protons in a molecule.
+    """
+    protons = 0
+    temp_count = 0
+    for atom in natoms:
+        temp_count += 1
+        protons += atom * temp_count
+    return protons
 
 
 def get_alkali_metals() -> list[int]:
