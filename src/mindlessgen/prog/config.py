@@ -177,7 +177,7 @@ class GenerateConfig(BaseConfig):
         self._min_num_atoms: int = 5
         self._max_num_atoms: int = 10
         self._init_coord_scaling: float = 3.0
-        self._increase_scaling_factor: float = 1.25
+        self._increase_scaling_factor: float = 1.1
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
         self._scale_fragment_detection: float = 1.25
