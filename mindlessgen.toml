@@ -15,7 +15,7 @@ max_cycles = 200
 num_molecules = 1
 # > Do post-processing after the optimization with another engine (e.g., `orca`). Default: false. Options: <bool>
 postprocess = false
-# > Switch molecule structure XYZ writing on and off. Default: false. Options: <bool>
+# > Switch molecule structure XYZ writing on and off. Default: true. Options: <bool>
 write_xyz = true
 
 [generate]
