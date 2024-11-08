@@ -150,7 +150,7 @@ def test_refine_config_property_setters(
 @pytest.mark.parametrize(
     "property_name, initial_value",
     [
-        ("max_frag_cycles", 100),
+        ("max_frag_cycles", 10),
         ("engine", "xtb"),
     ],
 )
