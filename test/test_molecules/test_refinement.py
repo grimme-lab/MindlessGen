@@ -122,6 +122,8 @@ def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> Non
     """
     # initialize a configuration object
     config = ConfigManager()
+    config.generate.min_num_atoms = 2
+    config.generate.max_num_atoms = 100
     config.refine.hlgap = 0.001  # TODO: Change charge assignment such that
     # fragment charge is not completely random anymore. Currently, that's the
     # reason for a virtually switched off HL gap check (fragment can be -2, 0, 2)

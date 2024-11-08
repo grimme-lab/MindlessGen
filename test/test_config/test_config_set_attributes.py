@@ -43,7 +43,7 @@ def test_general_config_property_setters(
     "property_name, initial_value",
     [
         ("verbosity", 1),
-        ("max_cycles", 100),
+        ("max_cycles", 200),
         ("print_config", False),
         ("parallel", 1),
         ("num_molecules", 1),
@@ -110,10 +110,10 @@ def test_generate_config_element_composition(
 @pytest.mark.parametrize(
     "property_name, initial_value",
     [
-        ("min_num_atoms", 2),
-        ("max_num_atoms", 100),
+        ("min_num_atoms", 5),
+        ("max_num_atoms", 10),
         ("init_coord_scaling", 3.0),
-        ("increase_scaling_factor", 1.3),
+        ("increase_scaling_factor", 1.1),
         ("element_composition", {}),
         ("forbidden_elements", None),
     ],
@@ -127,8 +127,8 @@ def test_generate_config_default_values(property_name, initial_value):
 @pytest.mark.parametrize(
     "property_name, valid_value, invalid_value, expected_exception",
     [
-        ("max_frag_cycles", 100, -1, ValueError),
-        ("max_frag_cycles", 100, "100", TypeError),
+        ("max_frag_cycles", 200, -1, ValueError),
+        ("max_frag_cycles", 200, "100", TypeError),
         ("engine", "xtb", 123, TypeError),
         ("engine", "xtb", "g16", ValueError),
     ],
@@ -150,7 +150,7 @@ def test_refine_config_property_setters(
 @pytest.mark.parametrize(
     "property_name, initial_value",
     [
-        ("max_frag_cycles", 100),
+        ("max_frag_cycles", 10),
         ("engine", "xtb"),
     ],
 )
