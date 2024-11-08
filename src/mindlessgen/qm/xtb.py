@@ -241,7 +241,7 @@ def get_xtb_path(binary_name: str | Path | None = None) -> Path:
 
 def check_ligand_uhf(ati: np.ndarray, charge: int) -> None:
     """
-    Check if the remaning number of electrons after the f electrons are removed is even.
+    Check if the remaning number of ligand electrons is even.
     """
     nel = 0
     f_electrons = 0
@@ -262,7 +262,6 @@ def check_ligand_uhf(ati: np.ndarray, charge: int) -> None:
                 f_electrons += 102 - atom
             ln_protons += atom - 3 + 1
     ligand_protons = nel - ln_protons - charge
-    print("ligand protons are:", ligand_protons)
 
     # Check if the number of the remaning electrons is even
     if not ligand_protons % 2 == 0:

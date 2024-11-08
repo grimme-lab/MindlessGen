@@ -143,6 +143,18 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Contract the coordinates of the molecule after the coordinats generation.",
     )
+    parser.add_argument(
+        "--set-charge",
+        type=bool,
+        required=False,
+        help="Set the charge of the molecule.",
+    )
+    parser.add_argument(
+        "--molecular-charge",
+        type=int,
+        required=False,
+        help="Define the charge of the molecule.",
+    )
 
     ### Refinement arguments ###
     parser.add_argument(
@@ -280,6 +292,8 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "scale_fragment_detection": args_dict["scale_fragment_detection"],
         "scale_minimal_distance": args_dict["scale_minimal_distance"],
         "contract_coords": args_dict["contract_coords"],
+        "set_molecular_charge": args_dict["set_charge"],
+        "molecular_charge": args_dict["molecular_charge"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

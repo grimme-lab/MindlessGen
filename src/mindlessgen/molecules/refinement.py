@@ -9,7 +9,11 @@ import numpy as np
 from ..qm.base import QMMethod
 from ..prog import GenerateConfig, RefineConfig
 from .molecule import Molecule
-from .miscellaneous import set_random_charge
+from .miscellaneous import (
+    set_random_charge,
+    calculate_protons,
+    calculate_ligand_protons,
+)
 
 COV_RADII = "pyykko"
 BOHR2AA = (
@@ -110,7 +114,18 @@ def iterative_optimization(
                     f"Element {ati} is overrepresented "
                     + f"in the largest fragment in cycle {cycle + 1}."
                 )
-        # TODO: Check the elektrons if uneven throw the fragment away
+        if config_generate.set_molecular_charge:
+            protons, num_atoms = calculate_protons(fragmols[0].atlist)
+            nel = protons - config_generate.molecular_charge
+            f_elem, ligand_protons = calculate_ligand_protons(fragmols[0].atlist, nel)
+            if ligand_protons % 2 != 0:
+                raise RuntimeError(
+                    f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
+                )
+            elif nel % 2 != 0:
+                raise RuntimeError(
+                    f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
+                )
         rev_mol = fragmols[
             0
         ]  # Set current_mol to the first fragment for the next cycle
@@ -205,8 +220,8 @@ def detect_fragments(
         for atom in fragment_molecule.ati:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
-        if config_generate.fixed_charge is not None:
-            fragment_molecule.charge = config_generate.fixed_charge
+        if config_generate.set_molecular_charge:
+            fragment_molecule.charge = config_generate.molecular_charge
             fragment_molecule.uhf = 0
         else:
             fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(
