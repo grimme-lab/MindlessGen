@@ -344,11 +344,11 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     check_composition()
     # Check if the number of atoms is within the defined limits
     check_min_max_atoms()
-    # If f block elements are included, correct the number of electrons
+    # If the molecule is not closed shell, add an atom to ensure a closed shell system
     if cfg.set_molecular_charge:
         protons, num_atoms = calculate_protons(natoms)
         nel = protons - cfg.molecular_charge
-        natoms = fixed_charge_f_block_correction(
+        natoms = fixed_charge_correction(
             cfg, natoms, num_atoms, nel, valid_elems, verbosity
         )
     ### ACTUAL WORKFLOW END ###
@@ -458,7 +458,7 @@ def check_distances(
     return True
 
 
-def fixed_charge_f_block_correction(
+def fixed_charge_correction(
     cfg: GenerateConfig,
     natoms: np.ndarray,
     num_atoms: int,
@@ -467,7 +467,7 @@ def fixed_charge_f_block_correction(
     verbosity: int,
 ) -> np.ndarray:
     """
-    Correct the number of electrons if f block elements are included.
+    Correct the number of electrons if a fixed charge is given and the molecule is not closed shell.
     """
     f_elem, ligand_protons = calculate_ligand_protons(natoms, nel)
     # If f block elements are included, cerrect only if the remaning ligand protons are uneven
