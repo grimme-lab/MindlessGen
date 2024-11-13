@@ -150,7 +150,7 @@ class Molecule:
         self._name = name
 
         self._num_atoms: int | None = None
-        self._charge: int | None = None
+        self._charge: int
         self._uhf: int
         self._atlist: np.ndarray = np.array([], dtype=int)
         self._xyz: np.ndarray = np.array([], dtype=float)
@@ -517,7 +517,7 @@ class Molecule:
         with open(filename, "w", encoding="utf8") as f:
             f.write(self.get_xyz_str())
         # if the charge is set, write it to a '.CHRG' file
-        if self._charge is not None:
+        if self._charge > 0:
             with open(filename.with_suffix(".CHRG"), "w", encoding="utf8") as f:
                 f.write(f"{self.charge}\n")
         # if the UHF is set, write it to a '.UHF' file
