@@ -42,9 +42,8 @@ element_composition = "C:2-3, H:1-2, O:1-2, N:1-*"
 # > CAUTION: This option is overridden by the 'element_composition' option.
 # > I.e., if an element is specified in 'element_composition' with an occurrence > 0, it will be added to the molecule anyway.
 forbidden_elements = "57-71, 81-*"
-# > Set a charge for the molecule generation. Options: <bool>, <int>
-set_molecular_charge = false
-molecular_charge = 0
+# > Set a charge for the molecule generation. Options: ""(turn it off), "int"
+molecular_charge = ""
 
 [refine]
 # > Maximum number of fragment optimization cycles. Options: <int>

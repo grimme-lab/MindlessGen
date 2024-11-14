@@ -10,7 +10,12 @@ import numpy as np
 from ..molecules import Molecule
 from .base import QMMethod
 from ..prog import XTBConfig
-from ..molecules.miscellaneous import get_lanthanides, get_actinides
+from ..molecules.miscellaneous import (
+    calculate_ligand_protons,
+    calculate_protons,
+    get_lanthanides,
+    get_actinides,
+)
 
 
 class XTB(QMMethod):
@@ -41,8 +46,11 @@ class XTB(QMMethod):
         if np.any(molecule.ati > 85):
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-        if np.any(np.isin(molecule.ati, get_lanthanides())):
-            check_ligand_uhf(molecule.ati, molecule.charge)
+        if np.any(
+            np.isin(molecule.ati, get_lanthanides())
+            or np.isin(molecule.ati, get_actinides())
+        ):
+            check_ligand_uhf(molecule.atlist, molecule.charge)
             # Store the original UHF value and set uhf to 0
             # Justification: xTB does not treat f electrons explicitly.
             # The remaining openshell system has to be removed.
@@ -84,7 +92,10 @@ class XTB(QMMethod):
             # read the optimized molecule
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_file(temp_path / "xtbopt.xyz")
-            if np.any(np.isin(molecule.ati, get_lanthanides())):
+            if np.any(
+                np.isin(molecule.ati, get_lanthanides())
+                or np.isin(molecule.ati, get_actinides())
+            ):
                 # Reset the UHF value to the original value before returning the optimized molecule.
                 optimized_molecule.uhf = uhf_original
             if super_heavy_elements:
@@ -102,8 +113,11 @@ class XTB(QMMethod):
         if np.any(molecule.ati > 85):
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-        if np.any(np.isin(molecule.ati, get_lanthanides())):
-            check_ligand_uhf(molecule.ati, molecule.charge)
+        if np.any(
+            np.isin(molecule.ati, get_lanthanides())
+            or np.isin(molecule.ati, get_actinides())
+        ):
+            check_ligand_uhf(molecule.atlist, molecule.charge)
             # Store the original UHF value and set uhf to 0
             # Justification: xTB does not treat f electrons explicitly.
             # The remaining openshell system has to be removed.
@@ -140,7 +154,10 @@ class XTB(QMMethod):
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
 
-            if np.any(np.isin(molecule.ati, get_lanthanides())):
+            if np.any(
+                np.isin(molecule.ati, get_lanthanides())
+                or np.isin(molecule.ati, get_actinides())
+            ):
                 molecule.uhf = uhf_original
             if super_heavy_elements:
                 # Reset the atomic numbers to the original values before returning the optimized molecule.
@@ -239,32 +256,14 @@ def get_xtb_path(binary_name: str | Path | None = None) -> Path:
     raise ImportError("'xtb' binary could not be found.")
 
 
-def check_ligand_uhf(ati: np.ndarray, charge: int) -> None:
+def check_ligand_uhf(atlist: np.ndarray, charge: int) -> None:
     """
     Check if the remaning number of ligand electrons is even.
     """
-    nel = 0
-    f_electrons = 0
-    ligand_protons = 0
-    ln_protons = 0
-    for atom in ati:
-        nel += atom + 1
-        if atom in get_lanthanides():
-            if atom < 64:
-                f_electrons += atom - 56
-            else:
-                f_electrons += 70 - atom
-            ln_protons += atom - 3 + 1
-        if atom in get_actinides():
-            if atom < 96:
-                f_electrons += atom - 88
-            else:
-                f_electrons += 102 - atom
-            ln_protons += atom - 3 + 1
-    ligand_protons = nel - ln_protons - charge
-
-    # Check if the number of the remaning electrons is even
-    if not ligand_protons % 2 == 0:
+    protons = calculate_protons(atlist)
+    nel = protons - charge
+    ligand_protons = calculate_ligand_protons(atlist, nel)
+    if ligand_protons % 2 != 0:
         raise SystemExit(
             "The number of electrons in the ligand is not even. Please check the input."
         )

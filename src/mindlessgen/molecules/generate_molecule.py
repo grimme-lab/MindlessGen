@@ -16,6 +16,7 @@ from .miscellaneous import (
     get_four_d_metals,
     get_five_d_metals,
     get_lanthanides,
+    get_actinides,
     calculate_ligand_protons,
 )
 
@@ -49,7 +50,7 @@ def generate_random_molecule(
             ati=mol.ati,
             scale_minimal_distance=config_generate.scale_minimal_distance,
         )
-    if config_generate.set_molecular_charge:
+    if config_generate.molecular_charge is not None:
         mol.charge = config_generate.molecular_charge
         mol.uhf = 0
     else:
@@ -139,17 +140,16 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                     + f"Returning: \n{natoms}\n"
                 )
             # If the molecular charge is defined, and a fixed element composition is defined, check if the electrons are even. If not raise an error.
-            if cfg.set_molecular_charge:
-                protons, num_atoms = calculate_protons(natoms)
+            if cfg.molecular_charge:
+                protons = calculate_protons(natoms)
                 nel = protons - cfg.molecular_charge
-                f_elem, ligand_protons = calculate_ligand_protons(natoms, nel)
-                if f_elem and ligand_protons % 2 != 0 and fixed_elem:
-                    raise SystemExit(
-                        "Both fixed charge and fixed composition are defined. "
-                        + "Please only define one of them."
-                        + "Or ensure that the fixed composition is closed shell."
-                    )
-                elif nel % 2 != 0 and fixed_elem:
+                f_elem = any(
+                    count > 0 and (i in get_lanthanides() or i in get_actinides())
+                    for i, count in enumerate(natoms)
+                )
+                if (f_elem and calculate_ligand_protons(natoms, nel) % 2 != 0) or (
+                    not f_elem and nel % 2 != 0
+                ):
                     raise SystemExit(
                         "Both fixed charge and fixed composition are defined. "
                         + "Please only define one of them."
@@ -345,12 +345,10 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     # Check if the number of atoms is within the defined limits
     check_min_max_atoms()
     # If the molecule is not closed shell, add an atom to ensure a closed shell system
-    if cfg.set_molecular_charge:
-        protons, num_atoms = calculate_protons(natoms)
+    if cfg.molecular_charge is not None:
+        protons = calculate_protons(natoms)
         nel = protons - cfg.molecular_charge
-        natoms = fixed_charge_correction(
-            cfg, natoms, num_atoms, nel, valid_elems, verbosity
-        )
+        natoms = fixed_charge_correction(cfg, natoms, nel, valid_elems, verbosity)
     ### ACTUAL WORKFLOW END ###
 
     return natoms
@@ -461,7 +459,6 @@ def check_distances(
 def fixed_charge_correction(
     cfg: GenerateConfig,
     natoms: np.ndarray,
-    num_atoms: int,
     nel: int,
     valid_elems: set[int],
     verbosity: int,
@@ -469,81 +466,45 @@ def fixed_charge_correction(
     """
     Correct the number of electrons if a fixed charge is given and the molecule is not closed shell.
     """
-    f_elem, ligand_protons = calculate_ligand_protons(natoms, nel)
-    # If f block elements are included, cerrect only if the remaning ligand protons are uneven
-    if f_elem and ligand_protons % 2 != 0:
-        if 0 in valid_elems:
-            natoms = fixed_charge_hydrogen_correction(
-                cfg, natoms, num_atoms, valid_elems, verbosity
-            )
-            return natoms
-        else:
-            natoms = fixed_charge_elem_correction(
-                cfg, natoms, num_atoms, valid_elems, verbosity
-            )
+    f_elem = any(
+        count > 0 and (i in get_lanthanides() or i in get_actinides())
+        for i, count in enumerate(natoms)
+    )
+    if f_elem:
+        ligand_protons = calculate_ligand_protons(natoms, nel)
+        # If f block elements are included, correct only if the remaning ligand protons are uneven
+        if ligand_protons % 2 != 0:
+            natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems, verbosity)
             return natoms
     # If f block elements are not included, correct if the number of electrons is uneven
     elif nel % 2 != 0 and f_elem is False:
-        if 0 in valid_elems:
-            natoms = fixed_charge_hydrogen_correction(
-                cfg, natoms, num_atoms, valid_elems, verbosity
-            )
-            return natoms
-        else:
-            natoms = fixed_charge_elem_correction(
-                cfg, natoms, num_atoms, valid_elems, verbosity
-            )
-            return natoms
+        natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems, verbosity)
+        return natoms
     return natoms
-
-
-def fixed_charge_hydrogen_correction(
-    cfg: GenerateConfig,
-    natoms: np.ndarray,
-    num_atoms: int,
-    valid_elems: set[int],
-    verbosity: int,
-) -> np.ndarray:
-    """
-    Correct the number of hydrogen atoms if the number of electrons is odd.
-    """
-    min_count, max_count = cfg.element_composition.get(0, (0, cfg.max_num_atoms))
-    if max_count is None:
-        max_count = cfg.max_num_atoms
-    # Check if adding or removing hydrogen atoms is possible
-    if natoms[0] < max_count and num_atoms < cfg.max_num_atoms:
-        natoms[0] += 1
-        if verbosity > 1:
-            print("Adding hydrogen atom...")
-        return natoms
-    elif natoms[0] > min_count and num_atoms > cfg.min_num_atoms:
-        natoms[0] -= 1
-        if verbosity > 1:
-            print("Removing hydrogen atom...")
-        return natoms
-    else:
-        natoms = fixed_charge_elem_correction(
-            cfg, natoms, num_atoms, valid_elems, verbosity
-        )
-        return natoms
 
 
 def fixed_charge_elem_correction(
     cfg: GenerateConfig,
     natoms: np.ndarray,
-    num_atoms: int,
     valid_elems: set[int],
     verbosity: int,
 ) -> np.ndarray:
     """
     Correct the number of atoms if the number of electrons is odd and hydrogen can not be added.
     """
+    num_atoms = np.sum(natoms)
     # All other elements
-    odd_atoms = [elem for elem in valid_elems if elem % 2 == 0 and elem != 0]
-    for random_elem in np.random.permutation(odd_atoms):
+    random_odd_atoms = np.random.permutation(
+        [elem for elem in valid_elems if elem % 2 == 0 and elem != 0]
+    )
+    if 0 in valid_elems:
+        random_odd_atoms = np.insert(random_odd_atoms, 0, 0)
+    for random_elem in random_odd_atoms:
         min_count, max_count = cfg.element_composition.get(
             random_elem, (0, cfg.max_num_atoms)
         )
+        if min_count is None:
+            min_count = 0
         if max_count is None:
             max_count = cfg.max_num_atoms
         # Check if adding or removing the random element is possible
@@ -557,5 +518,4 @@ def fixed_charge_elem_correction(
             if verbosity > 1:
                 print(f"Removing atom type {random_elem} for charge...")
             return natoms
-        raise RuntimeError("Could not correct the odd number of electrons.")
-    return natoms
+    raise RuntimeError("Could not correct the odd number of electrons.")

@@ -13,6 +13,8 @@ from .miscellaneous import (
     set_random_charge,
     calculate_protons,
     calculate_ligand_protons,
+    get_lanthanides,
+    get_actinides,
 )
 
 COV_RADII = "pyykko"
@@ -54,7 +56,7 @@ def iterative_optimization(
         # Detect fragments from the optimized molecule
         fragmols = detect_fragments(
             mol=rev_mol,
-            config_generate=config_generate,
+            molecular_charge=config_generate.molecular_charge,
             vdw_scaling=config_generate.scale_fragment_detection,
             verbosity=verbosity,
         )
@@ -114,14 +116,19 @@ def iterative_optimization(
                     f"Element {ati} is overrepresented "
                     + f"in the largest fragment in cycle {cycle + 1}."
                 )
-        if config_generate.set_molecular_charge:
-            protons, num_atoms = calculate_protons(fragmols[0].atlist)
+        if config_generate.molecular_charge is not None:
+            protons = calculate_protons(fragmols[0].atlist)
             nel = protons - config_generate.molecular_charge
-            f_elem, ligand_protons = calculate_ligand_protons(fragmols[0].atlist, nel)
-            if ligand_protons % 2 != 0:
-                raise RuntimeError(
-                    f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
-                )
+            f_elem = any(
+                count > 0 and (i in get_lanthanides() or i in get_actinides())
+                for i, count in enumerate(fragmols[0].atlist)
+            )
+            if f_elem:
+                ligand_protons = calculate_ligand_protons(fragmols[0].atlist, nel)
+                if ligand_protons % 2 != 0:
+                    raise RuntimeError(
+                        f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
+                    )
             elif nel % 2 != 0:
                 raise RuntimeError(
                     f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
@@ -153,7 +160,7 @@ def iterative_optimization(
 
 def detect_fragments(
     mol: Molecule,
-    config_generate: GenerateConfig,
+    molecular_charge: int,
     vdw_scaling: float,
     verbosity: int = 1,
 ) -> list[Molecule]:
@@ -220,8 +227,8 @@ def detect_fragments(
         for atom in fragment_molecule.ati:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
-        if config_generate.set_molecular_charge:
-            fragment_molecule.charge = config_generate.molecular_charge
+        if molecular_charge is not None:
+            fragment_molecule.charge = molecular_charge
             fragment_molecule.uhf = 0
         else:
             fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(

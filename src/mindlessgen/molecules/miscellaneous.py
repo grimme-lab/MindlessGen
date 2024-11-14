@@ -55,7 +55,7 @@ def set_random_charge(
                 f"Number of protons from ligands (assuming negative charge): {ligand_protons}"
             )
 
-        elif ligand_protons % 2 == 0:
+        if ligand_protons % 2 == 0:
             charge = 0
         else:
             charge = 1
@@ -84,43 +84,27 @@ def set_random_charge(
         return charge, uhf
 
 
-def calculate_protons(natoms: np.ndarray) -> tuple[int, int]:
+def calculate_protons(natoms: np.ndarray) -> int:
     """
     Calculate the number of protons in a molecule from the atom list.
     """
     protons = 0
-    num_atoms = 0
-    temp_count = 0
-    for atom in natoms:
-        temp_count += 1
-        protons += atom * temp_count
-        if atom > 0:
-            num_atoms += atom
-    return protons, num_atoms
+    for i, atom_count in enumerate(natoms):
+        protons += atom_count * (i + 1)
+    return protons
 
 
-def calculate_ligand_protons(natoms: np.ndarray, nel) -> tuple[bool, int]:
+def calculate_ligand_protons(natoms: np.ndarray, nel: int) -> int:
     """
     Calculate the number of ligand protons in a molecule if lanthanides or actinides are within the molecule.
     """
-    ligand_protons = 0
-    f_protons = 0
-    f_elem = False
-    temp_count = -1
-    for atom in natoms:
-        temp_count += 1
-        if (
-            atom > 0
-            and temp_count in get_lanthanides()
-            or atom > 0
-            and temp_count in get_actinides()
-        ):
-            f_protons += atom * (
-                temp_count - 3 + 1
-            )  # subtract 3 to get the number of protons in the Ln3+ ion
-            f_elem = True
+    f_protons = sum(
+        atom * (i - 2)
+        for i, atom in enumerate(natoms)
+        if (i in get_lanthanides() or i in get_actinides())
+    )
     ligand_protons = nel - f_protons
-    return f_elem, ligand_protons
+    return ligand_protons
 
 
 def get_alkali_metals() -> list[int]:

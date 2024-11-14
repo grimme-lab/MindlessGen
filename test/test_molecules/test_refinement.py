@@ -108,7 +108,7 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
     """
     fragmols = detect_fragments(
         mol=mol_H6O2B2Ne2I1Os1Tl1,
-        config_generate=GenerateConfig(),
+        molecular_charge=GenerateConfig().molecular_charge,
         vdw_scaling=1.3333,
         verbosity=0,
     )

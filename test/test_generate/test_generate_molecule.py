@@ -412,7 +412,7 @@ def test_fixed_charge(
     default_generate_config,
 ):
     """Test the right assinged charge when a molecular charge is given"""
-    default_generate_config.molecular_charge = 3
+    default_generate_config.molecular_charge = "3"
     default_generate_config.set_molecular_charge = True
     default_generate_config.min_num_atoms = 5
     default_generate_config.max_num_atoms = 15
@@ -420,13 +420,14 @@ def test_fixed_charge(
     # Ensure the charge is correctly set
     mol = generate_random_molecule(default_generate_config, verbosity=1)
     assert mol.charge == 3
+    assert mol.uhf == 0
 
 
 def test_fixed_charge_and_no_possible_correction(
     default_generate_config,
 ):
     """Test the hydrogen correction for a fixed charge"""
-    default_generate_config.molecular_charge = 3
+    default_generate_config.molecular_charge = "3"
     default_generate_config.set_molecular_charge = True
     default_generate_config.min_num_atoms = 5
     default_generate_config.max_num_atoms = 5
@@ -441,30 +442,48 @@ def test_fixed_charge_and_no_possible_correction(
     assert mol.atlist[10] == 5
 
 
+def test_fixed_charge_and_fixed_composition(
+    default_generate_config,
+):
+    """Test the hydrogen correction for a fixed charge"""
+    default_generate_config.molecular_charge = "3"
+    default_generate_config.set_molecular_charge = True
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 10
+    default_generate_config.element_composition = "H:5-5, C:2-2, N:1-1, O:1-1"
+
+    # Check if the right system exit is raised
+    with pytest.raises(
+        SystemExit,
+        match="Both fixed charge and fixed composition are defined. Please only define one of them.Or ensure that the fixed composition is closed shell.",
+    ):
+        generate_random_molecule(default_generate_config, verbosity=1)
+
+
 def test_fixed_charge_hydrogen_correction(default_generate_config):
     """Test the hydrogen correction for a fixed charge"""
-    default_generate_config.molecular_charge = 3
+    default_generate_config.molecular_charge = "3"
     default_generate_config.set_molecular_charge = True
     default_generate_config.min_num_atoms = 7
     default_generate_config.max_num_atoms = 15
     default_generate_config.element_composition = "B:1-1, Ne:2-2, P:1-1, Cl:1-1"
     default_generate_config.forbidden_elements = "2-*"
 
-    # Ensure the charge is correctly set
+    # Ensure the right hydrogen correction is applied
     atom_list = generate_atom_list(default_generate_config, verbosity=1)
     assert atom_list[0] % 2 == 0
 
 
 def test_fixed_charge_no_hydrogen_correction(default_generate_config):
     """Test the hydrogen correction for a fixed charge"""
-    default_generate_config.molecular_charge = 2
+    default_generate_config.molecular_charge = "2"
     default_generate_config.set_molecular_charge = True
     default_generate_config.min_num_atoms = 11
     default_generate_config.max_num_atoms = 15
     default_generate_config.element_composition = "H:4-4, B:1-1, Ne:2-2, P:1-1, Cl:1-1"
     default_generate_config.forbidden_elements = "1-10, 12-*"
 
-    # Ensure the charge is correctly set
+    # Ensure the right atom correction is applied
     atom_list = generate_atom_list(default_generate_config, verbosity=1)
     assert atom_list[0] == 4
     assert atom_list[10] % 2 != 0
@@ -472,28 +491,28 @@ def test_fixed_charge_no_hydrogen_correction(default_generate_config):
 
 def test_fixed_charge_with_lanthanides(default_generate_config):
     """Test the hydrogen correction for a fixed charge"""
-    default_generate_config.molecular_charge = 3
+    default_generate_config.molecular_charge = "3"
     default_generate_config.set_molecular_charge = True
     default_generate_config.min_num_atoms = 7
     default_generate_config.max_num_atoms = 15
     default_generate_config.element_composition = "B:1-1, Ne:2-2, P:1-1, Cl:1-1, Lr:1-1"
     default_generate_config.forbidden_elements = "2-*"
 
-    # Ensure the charge is correctly set
+    # Ensure the right ligand correction is applied
     atom_list = generate_atom_list(default_generate_config, verbosity=1)
-    print(atom_list)
     assert atom_list[0] % 2 != 0
 
 
 def test_fixed_charge_with_lanthanides_2(default_generate_config):
     """Test the hydrogen correction for a fixed charge"""
-    default_generate_config.molecular_charge = 2
+    default_generate_config.molecular_charge = "2"
     default_generate_config.set_molecular_charge = True
     default_generate_config.min_num_atoms = 7
     default_generate_config.max_num_atoms = 15
     default_generate_config.element_composition = "B:1-1, Ne:2-2, P:1-1, Cl:1-1, Lu:1-1"
     default_generate_config.forbidden_elements = "1-10, 12-*"
 
-    # Ensure the charge is correctly set
+    # Ensure the right ligand correction is applied
     atom_list = generate_atom_list(default_generate_config, verbosity=1)
+    assert atom_list[0] == 0
     assert atom_list[10] % 2 == 0

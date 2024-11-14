@@ -183,8 +183,7 @@ class GenerateConfig(BaseConfig):
         self._scale_fragment_detection: float = 1.25
         self._scale_minimal_distance: float = 0.8
         self._contract_coords: bool = True
-        self._set_molecular_charge: bool = False
-        self._molecular_charge: int = 0
+        self._molecular_charge: int | None = None
 
     def get_identifier(self) -> str:
         return "generate"
@@ -405,22 +404,6 @@ class GenerateConfig(BaseConfig):
         self._contract_coords = contract_coords
 
     @property
-    def set_molecular_charge(self):
-        """
-        Get the set_molecular_charge flag.
-        """
-        return self._set_molecular_charge
-
-    @set_molecular_charge.setter
-    def set_molecular_charge(self, set_molecular_charge: bool):
-        """
-        Set the set_molecular_charge flag.
-        """
-        if not isinstance(set_molecular_charge, bool):
-            raise TypeError("Set molecular charge should be a boolean.")
-        self._set_molecular_charge = set_molecular_charge
-
-    @property
     def molecular_charge(self):
         """
         Get the molecular_charge.
@@ -428,11 +411,15 @@ class GenerateConfig(BaseConfig):
         return self._molecular_charge
 
     @molecular_charge.setter
-    def molecular_charge(self, molecular_charge: int):
+    def molecular_charge(self, molecular_charge_str: str):
         """
         Set the molecular_charge.
         """
-        if not isinstance(molecular_charge, int):
+        if molecular_charge_str.strip() == "":
+            return None
+        else:
+            molecular_charge = int(molecular_charge_str)
+        if not isinstance(molecular_charge, int | None):
             raise TypeError("Fixed charge should be an integer.")
         self._molecular_charge = molecular_charge
 
