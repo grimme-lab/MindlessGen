@@ -72,6 +72,9 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     """
     Generate a random molecule with a random number of atoms.
     """
+    # initialize a default random number generator
+    rng = np.random.default_rng()
+
     # Define a new set of all elements that can be included
     set_all_elem = set(range(0, MAX_ELEM))
     if cfg.forbidden_elements:
@@ -189,17 +192,17 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         """
         Default random atom generation.
         """
-        numatoms_all = np.random.randint(
-            min_adds, max_adds
+        numatoms_all = rng.integers(
+            low=min_adds, high=max_adds
         )  # with range(1, 7) -> mean value: 3.5
         for _ in range(numatoms_all):
             # Define the atom type to be added via a random choice from the set of valid elements
-            ati = np.random.choice(list(valid_elems))
+            ati = rng.choice(list(valid_elems))
             if verbosity > 1:
                 print(f"Adding atom type {ati}...")
             # Add a random number of atoms of the defined type
-            natoms[ati] = natoms[ati] + np.random.randint(
-                min_nat, max_nat
+            natoms[ati] = natoms[ati] + rng.integers(
+                low=min_nat, high=max_nat
             )  # with range(0, 3) -> mean value: 1
             # max value of this section with commented settings: 12
 
@@ -216,11 +219,11 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
             return
         for _ in range(num_adds):  # with range(5) -> mean value 1.5
             # go through the elements B to F (4-9 in 0-based indexing)
-            ati = np.random.choice(valid_organic)
+            ati = rng.choice(valid_organic)
             if verbosity > 1:
                 print(f"Adding atom type {ati}...")
-            natoms[ati] = natoms[ati] + np.random.randint(
-                min_nat, max_nat
+            natoms[ati] = natoms[ati] + rng.integers(
+                low=min_nat, high=max_nat
             )  # with range(0, 3) -> mean value: 1
             # max value of this section with commented settings: 8
 
@@ -266,7 +269,7 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         # If no H is included, add H atoms
         if natoms[0] == 0:
             nat = np.sum(natoms)
-            randint = np.random.rand()
+            randint = rng.random()
             j = 1 + round(randint * nat * 1.2)
             natoms[0] = natoms[0] + j
             # Example: For 5 atoms at this point,
@@ -280,7 +283,7 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                     f"Minimal number of atoms: {cfg.min_num_atoms}; "
                     + f"Actual number of atoms: {np.sum(natoms)}.\nAdding atoms..."
                 )
-            ati = np.random.choice(list(valid_elems))
+            ati = rng.choice(list(valid_elems))
             max_limit = cfg.element_composition.get(ati, (None, None))[1]
             if max_limit is not None and natoms[ati] >= max_limit:
                 continue
@@ -308,7 +311,7 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
             # randomly select an atom type from the list, thereby weighting the selection
             # for reduction by the current occurrence
             # generate a random number between 0 and the number of atoms in the list
-            random_index = np.random.randint(len(atom_list))
+            random_index = rng.integers(0, len(atom_list))
             i = atom_list[int(random_index)]
             if natoms[i] > 0:
                 min_limit = cfg.element_composition.get(i, (None, None))[0]
@@ -389,13 +392,15 @@ def generate_random_coordinates(at: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     atilist: list[int] = []
     xyz = np.zeros((sum(at), 3))
     numatoms = 0
+    rng = np.random.default_rng()
     for elem, count in enumerate(at):
         for m in range(count):
             # different rules for hydrogen
             if elem == 0:
-                xyz[numatoms + m, :] = np.random.rand(3) * 3 - 1.5
+                xyz[numatoms + m, :] = rng.random(3) * 3 - 1.5
             else:
-                xyz[numatoms + m, :] = np.random.rand(3) * 2 - 1
+                xyz[numatoms + m, :] = rng.random(3) * 2 - 1
+
             atilist.append(elem)
 
         numatoms += count
