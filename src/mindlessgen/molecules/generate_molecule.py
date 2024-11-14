@@ -500,16 +500,12 @@ def fixed_charge_elem_correction(
     num_atoms = np.sum(natoms)
     # All other elements
     random_odd_atoms = np.array([], dtype=int)
-    print(f"Odd atoms: {random_odd_atoms.dtype}")
     random_odd_atoms = np.random.permutation(
         [elem for elem in valid_elems if elem % 2 == 0 and elem != 0]
     )
     random_odd_atoms = np.array(random_odd_atoms, dtype=int)
-    print(f"Valid elements: {valid_elems}, random odd atoms: {random_odd_atoms.dtype}")
-    print(f"Valid elements: {random_odd_atoms}")
     if 0 in valid_elems:
         random_odd_atoms = np.insert(random_odd_atoms, 0, int(0))
-    print(f"Random odd atoms: {random_odd_atoms}")
     for random_elem in random_odd_atoms:
         min_count, max_count = cfg.element_composition.get(
             random_elem, (0, cfg.max_num_atoms)
@@ -518,7 +514,6 @@ def fixed_charge_elem_correction(
             min_count = 0
         if max_count is None:
             max_count = cfg.max_num_atoms
-        print(f"Random element: {random_elem}")
         # Check if adding or removing the random element is possible
         if natoms[random_elem] < max_count and num_atoms < cfg.max_num_atoms:
             natoms[random_elem] += 1
