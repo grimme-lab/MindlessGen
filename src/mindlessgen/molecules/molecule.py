@@ -156,6 +156,8 @@ class Molecule:
         self._xyz: np.ndarray = np.array([], dtype=float)
         self._ati: np.ndarray = np.array([], dtype=int)
 
+        self.rng = np.random.default_rng()
+
     def __str__(self) -> str:
         """
         Return a user-friendly string representation of the molecule.
@@ -637,5 +639,5 @@ class Molecule:
 
         molname = self.sum_formula()
         # add a random hash to the name
-        hashname = hashlib.sha256(np.random.bytes(32)).hexdigest()[:6]
+        hashname = hashlib.sha256(self.rng.bytes(32)).hexdigest()[:6]
         self.name = f"{molname}_{hashname}"

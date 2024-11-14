@@ -63,7 +63,8 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
             iseven = True
         # if the number of electrons is even, the charge is -2, 0, or 2
         # if the number of electrons is odd, the charge is -1, 1
-        randint = np.random.rand()
+        rng = np.random.default_rng()
+        randint = rng.random()
         if iseven:
             if randint < 1 / 3:
                 charge = -2
