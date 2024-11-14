@@ -11,8 +11,6 @@ from ..molecules import Molecule
 from .base import QMMethod
 from ..prog import XTBConfig
 from ..molecules.miscellaneous import (
-    calculate_ligand_protons,
-    calculate_protons,
     get_lanthanides,
     get_actinides,
 )
@@ -46,11 +44,9 @@ class XTB(QMMethod):
         if np.any(molecule.ati > 85):
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-        if np.any(
-            np.isin(molecule.ati, get_lanthanides())
-            or np.isin(molecule.ati, get_actinides())
+        if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+            np.isin(molecule.ati, get_actinides())
         ):
-            check_ligand_uhf(molecule.atlist, molecule.charge)
             # Store the original UHF value and set uhf to 0
             # Justification: xTB does not treat f electrons explicitly.
             # The remaining openshell system has to be removed.
@@ -92,9 +88,8 @@ class XTB(QMMethod):
             # read the optimized molecule
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_file(temp_path / "xtbopt.xyz")
-            if np.any(
-                np.isin(molecule.ati, get_lanthanides())
-                or np.isin(molecule.ati, get_actinides())
+            if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+                np.isin(molecule.ati, get_actinides())
             ):
                 # Reset the UHF value to the original value before returning the optimized molecule.
                 optimized_molecule.uhf = uhf_original
@@ -113,11 +108,9 @@ class XTB(QMMethod):
         if np.any(molecule.ati > 85):
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-        if np.any(
-            np.isin(molecule.ati, get_lanthanides())
-            or np.isin(molecule.ati, get_actinides())
+        if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+            np.isin(molecule.ati, get_actinides())
         ):
-            check_ligand_uhf(molecule.atlist, molecule.charge)
             # Store the original UHF value and set uhf to 0
             # Justification: xTB does not treat f electrons explicitly.
             # The remaining openshell system has to be removed.
@@ -154,9 +147,8 @@ class XTB(QMMethod):
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
 
-            if np.any(
-                np.isin(molecule.ati, get_lanthanides())
-                or np.isin(molecule.ati, get_actinides())
+            if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+                np.isin(molecule.ati, get_actinides())
             ):
                 molecule.uhf = uhf_original
             if super_heavy_elements:
@@ -254,16 +246,3 @@ def get_xtb_path(binary_name: str | Path | None = None) -> Path:
             xtb_path = Path(which_xtb).resolve()
             return xtb_path
     raise ImportError("'xtb' binary could not be found.")
-
-
-def check_ligand_uhf(atlist: np.ndarray, charge: int) -> None:
-    """
-    Check if the remaning number of ligand electrons is even.
-    """
-    protons = calculate_protons(atlist)
-    nel = protons - charge
-    ligand_protons = calculate_ligand_protons(atlist, nel)
-    if ligand_protons % 2 != 0:
-        raise SystemExit(
-            "The number of electrons in the ligand is not even. Please check the input."
-        )

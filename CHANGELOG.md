@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout
 - elements 87 to 103 are accessible via the element composition. If `xtb` is the engine, the elements will be replaced by their lighter homologues.
 - support for `python-3.13`
+- function which is abel to set a molecular charge and ensure `uhf = 0`
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
