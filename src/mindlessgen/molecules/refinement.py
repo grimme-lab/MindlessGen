@@ -12,7 +12,7 @@ from .molecule import Molecule
 from .miscellaneous import (
     set_random_charge,
     calculate_protons,
-    calculate_ligand_protons,
+    calculate_ligand_electrons,
     get_lanthanides,
     get_actinides,
 )
@@ -124,8 +124,8 @@ def iterative_optimization(
                 for i, count in enumerate(fragmols[0].atlist)
             )
             if f_elem:
-                ligand_protons = calculate_ligand_protons(fragmols[0].atlist, nel)
-                if ligand_protons % 2 != 0:
+                ligand_electrons = calculate_ligand_electrons(fragmols[0].atlist, nel)
+                if ligand_electrons % 2 != 0:
                     raise RuntimeError(
                         f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
                     )

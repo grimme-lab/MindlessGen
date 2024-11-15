@@ -40,8 +40,8 @@ class XTB(QMMethod):
         Optimize a molecule using xtb.
         """
         super_heavy_elements = False
-        ati_original = molecule.ati.copy()
         if np.any(molecule.ati > 85):
+            ati_original = molecule.ati.copy()
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
         if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
@@ -95,7 +95,7 @@ class XTB(QMMethod):
                 optimized_molecule.uhf = uhf_original
             if super_heavy_elements:
                 # Reset the atomic numbers to the original values before returning the optimized molecule.
-                optimized_molecule.ati = ati_original
+                optimized_molecule.ati = ati_original  # pylint: disable=E0606
                 optimized_molecule.atlist = molecule.atlist
             return optimized_molecule
 

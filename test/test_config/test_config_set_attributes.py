@@ -123,6 +123,24 @@ def test_generate_config_default_values(property_name, initial_value):
     assert getattr(config, property_name) == initial_value
 
 
+# Test for fixed charge
+@pytest.mark.parametrize(
+    "property_name, valid_value, expected_value",
+    [
+        ("molecular_charge", 0, 0),
+        ("molecular_charge", "1", 1),
+        ("molecular_charge", "none", None),
+        ("molecular_charge", "", None),
+    ],
+)
+def test_generate_config_molecular_charge(property_name, valid_value, expected_value):
+    config = GenerateConfig()
+
+    # Test valid value
+    setattr(config, property_name, valid_value)
+    assert getattr(config, property_name) == expected_value
+
+
 # Tests for RefineConfig
 @pytest.mark.parametrize(
     "property_name, valid_value, invalid_value, expected_exception",

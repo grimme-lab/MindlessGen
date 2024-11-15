@@ -95,17 +95,20 @@ def calculate_protons(natoms: np.ndarray) -> int:
     return protons
 
 
-def calculate_ligand_protons(natoms: np.ndarray, nel: int) -> int:
+def calculate_ligand_electrons(natoms: np.ndarray, nel: int) -> int:
     """
-    Calculate the number of ligand protons in a molecule if lanthanides or actinides are within the molecule.
+    Calculate the number of ligand electrons in a molecule if lanthanides or actinides are within the molecule.
     """
-    f_protons = sum(
-        atom * (i - 2)
-        for i, atom in enumerate(natoms)
-        if (i in get_lanthanides() or i in get_actinides())
+    f_electrons = sum(
+        occurence
+        * (
+            ati - 3 + 1
+        )  # subtract 3 to get the number of electrons for an Ln3+ (Ac3+) ion.
+        for ati, occurence in enumerate(natoms)
+        if (ati in get_lanthanides() or ati in get_actinides())
     )
-    ligand_protons = nel - f_protons
-    return ligand_protons
+    ligand_electrons = nel - f_electrons
+    return ligand_electrons
 
 
 def get_alkali_metals() -> list[int]:

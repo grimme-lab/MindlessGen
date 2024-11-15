@@ -145,7 +145,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     )
     parser.add_argument(
         "--molecular-charge",
-        type=int,
+        type=str,
         required=False,
         help="Define the charge of the molecule.",
     )

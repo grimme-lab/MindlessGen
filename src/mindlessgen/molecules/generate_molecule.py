@@ -17,7 +17,7 @@ from .miscellaneous import (
     get_five_d_metals,
     get_lanthanides,
     get_actinides,
-    calculate_ligand_protons,
+    calculate_ligand_electrons,
 )
 
 
@@ -56,7 +56,6 @@ def generate_random_molecule(
     else:
         mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
-
     if verbosity > 1:
         print(mol)
 
@@ -150,7 +149,7 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                     count > 0 and (i in get_lanthanides() or i in get_actinides())
                     for i, count in enumerate(natoms)
                 )
-                if (f_elem and calculate_ligand_protons(natoms, nel) % 2 != 0) or (
+                if (f_elem and calculate_ligand_electrons(natoms, nel) % 2 != 0) or (
                     not f_elem and nel % 2 != 0
                 ):
                     raise SystemExit(
@@ -476,13 +475,13 @@ def fixed_charge_correction(
         for i, count in enumerate(natoms)
     )
     if f_elem:
-        ligand_protons = calculate_ligand_protons(natoms, nel)
+        ligand_electrons = calculate_ligand_electrons(natoms, nel)
         # If f block elements are included, correct only if the remaning ligand protons are uneven
-        if ligand_protons % 2 != 0:
+        if ligand_electrons % 2 != 0:
             natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems, verbosity)
             return natoms
     # If f block elements are not included, correct if the number of electrons is uneven
-    elif nel % 2 != 0 and f_elem is False:
+    elif nel % 2 != 0:
         natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems, verbosity)
         return natoms
     return natoms
@@ -495,17 +494,15 @@ def fixed_charge_elem_correction(
     verbosity: int,
 ) -> np.ndarray:
     """
-    Correct the number of atoms if the number of electrons is odd and hydrogen can not be added.
+    Correct the number of atoms if the number of electrons is odd and a molecular charge is set.
     """
     num_atoms = np.sum(natoms)
     # All other elements
-    random_odd_atoms = np.array([], dtype=int)
-    random_odd_atoms = np.random.permutation(
-        [elem for elem in valid_elems if elem % 2 == 0 and elem != 0]
-    )
-    random_odd_atoms = np.array(random_odd_atoms, dtype=int)
+    rng = np.random.default_rng()
+    odd_atoms = np.array([elem for elem in valid_elems if elem % 2 == 0], dtype=int)
+    random_odd_atoms = rng.permutation(odd_atoms)
     if 0 in valid_elems:
-        random_odd_atoms = np.insert(random_odd_atoms, 0, int(0))
+        random_odd_atoms = np.insert(random_odd_atoms, 0, 0)
     for random_elem in random_odd_atoms:
         min_count, max_count = cfg.element_composition.get(
             random_elem, (0, cfg.max_num_atoms)

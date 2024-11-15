@@ -411,17 +411,19 @@ class GenerateConfig(BaseConfig):
         return self._molecular_charge
 
     @molecular_charge.setter
-    def molecular_charge(self, molecular_charge_str: str):
+    def molecular_charge(self, molecular_charge: str | int):
         """
         Set the molecular_charge.
         """
-        if molecular_charge_str.strip() == "":
-            return None
+        if isinstance(molecular_charge, str):
+            if molecular_charge.lower() == "none" or molecular_charge == "":
+                self._molecular_charge = None
+            else:
+                self._molecular_charge = int(molecular_charge)
+        elif isinstance(molecular_charge, int):
+            self._molecular_charge = molecular_charge
         else:
-            molecular_charge = int(molecular_charge_str)
-        if not isinstance(molecular_charge, int | None):
-            raise TypeError("Fixed charge should be an integer.")
-        self._molecular_charge = molecular_charge
+            raise TypeError("Molecular charge should be a string or an integer.")
 
 
 class RefineConfig(BaseConfig):
