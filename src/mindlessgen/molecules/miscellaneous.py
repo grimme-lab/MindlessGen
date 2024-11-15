@@ -5,7 +5,10 @@ Molecule-related helper tools.
 import numpy as np
 
 
-def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
+def set_random_charge(
+    ati: np.ndarray,
+    verbosity: int = 1,
+) -> tuple[int, int]:
     """
     Set the charge of a molecule so that unpaired electrons are avoided.
     """
@@ -51,6 +54,7 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
             print(
                 f"Number of protons from ligands (assuming negative charge): {ligand_protons}"
             )
+
         if ligand_protons % 2 == 0:
             charge = 0
         else:
@@ -79,6 +83,32 @@ def set_random_charge(ati: np.ndarray, verbosity: int = 1) -> tuple[int, int]:
                 charge = 1
         uhf = 0
         return charge, uhf
+
+
+def calculate_protons(natoms: np.ndarray) -> int:
+    """
+    Calculate the number of protons in a molecule from the atom list.
+    """
+    protons = 0
+    for i, atom_count in enumerate(natoms):
+        protons += atom_count * (i + 1)
+    return protons
+
+
+def calculate_ligand_electrons(natoms: np.ndarray, nel: int) -> int:
+    """
+    Calculate the number of ligand electrons in a molecule if lanthanides or actinides are within the molecule.
+    """
+    f_electrons = sum(
+        occurrence
+        * (
+            ati - 2
+        )  # subtract 3 to get the number of electrons for an Ln3+ (Ac3+) ion and add 1 to account for the 0 based indexing.
+        for ati, occurrence in enumerate(natoms)
+        if (ati in get_lanthanides() or ati in get_actinides())
+    )
+    ligand_electrons = nel - f_electrons
+    return ligand_electrons
 
 
 def get_alkali_metals() -> list[int]:

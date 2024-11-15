@@ -10,7 +10,10 @@ import numpy as np
 from ..molecules import Molecule
 from .base import QMMethod
 from ..prog import XTBConfig
-from ..molecules.miscellaneous import get_lanthanides
+from ..molecules.miscellaneous import (
+    get_lanthanides,
+    get_actinides,
+)
 
 
 class XTB(QMMethod):
@@ -37,12 +40,13 @@ class XTB(QMMethod):
         Optimize a molecule using xtb.
         """
         super_heavy_elements = False
-        ati_original = molecule.ati.copy()
         if np.any(molecule.ati > 85):
+            ati_original = molecule.ati.copy()
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-        if np.any(np.isin(molecule.ati, get_lanthanides())):
-            check_ligand_uhf(molecule.ati, molecule.charge)
+        if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+            np.isin(molecule.ati, get_actinides())
+        ):
             # Store the original UHF value and set uhf to 0
             # Justification: xTB does not treat f electrons explicitly.
             # The remaining openshell system has to be removed.
@@ -84,12 +88,14 @@ class XTB(QMMethod):
             # read the optimized molecule
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_file(temp_path / "xtbopt.xyz")
-            if np.any(np.isin(molecule.ati, get_lanthanides())):
+            if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+                np.isin(molecule.ati, get_actinides())
+            ):
                 # Reset the UHF value to the original value before returning the optimized molecule.
                 optimized_molecule.uhf = uhf_original
             if super_heavy_elements:
                 # Reset the atomic numbers to the original values before returning the optimized molecule.
-                optimized_molecule.ati = ati_original
+                optimized_molecule.ati = ati_original  # pylint: disable=E0606
                 optimized_molecule.atlist = molecule.atlist
             return optimized_molecule
 
@@ -98,12 +104,13 @@ class XTB(QMMethod):
         Perform a single-point calculation using xtb.
         """
         super_heavy_elements = False
-        ati_original = molecule.ati.copy()
         if np.any(molecule.ati > 85):
+            ati_original = molecule.ati.copy()
             super_heavy_elements = True
             molecule.ati[molecule.ati > 85] -= 32
-        if np.any(np.isin(molecule.ati, get_lanthanides())):
-            check_ligand_uhf(molecule.ati, molecule.charge)
+        if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+            np.isin(molecule.ati, get_actinides())
+        ):
             # Store the original UHF value and set uhf to 0
             # Justification: xTB does not treat f electrons explicitly.
             # The remaining openshell system has to be removed.
@@ -140,11 +147,13 @@ class XTB(QMMethod):
                     f"xtb failed with return code {return_code}:\n{xtb_log_err}"
                 )
 
-            if np.any(np.isin(molecule.ati, get_lanthanides())):
+            if np.any(np.isin(molecule.ati, get_lanthanides())) or np.any(
+                np.isin(molecule.ati, get_actinides())
+            ):
                 molecule.uhf = uhf_original
             if super_heavy_elements:
                 # Reset the atomic numbers to the original values before returning the optimized molecule.
-                molecule.ati = ati_original
+                molecule.ati = ati_original  # pylint: disable=E0606
             return xtb_log_out
 
     def check_gap(
@@ -237,21 +246,3 @@ def get_xtb_path(binary_name: str | Path | None = None) -> Path:
             xtb_path = Path(which_xtb).resolve()
             return xtb_path
     raise ImportError("'xtb' binary could not be found.")
-
-
-def check_ligand_uhf(ati: np.ndarray, charge: int) -> None:
-    """
-    Check if the remaning number of electrons after the f electrons are removed is even.
-    """
-    nel = 0
-    f_electrons = 0
-    for atom in ati:
-        nel += atom + 1
-        if atom in get_lanthanides():
-            f_electrons += atom - 56
-    # Check if the number of the remaning electrons is even
-    test_rhf = nel - f_electrons - charge
-    if not test_rhf % 2 == 0:
-        raise ValueError(
-            "The remaining number of electrons after the f electrons are removed is not even."
-        )

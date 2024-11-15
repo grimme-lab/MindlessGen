@@ -7,7 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 import numpy as np
 import pytest
-from mindlessgen.prog import ConfigManager  # type: ignore
+from mindlessgen.prog import ConfigManager, GenerateConfig  # type: ignore
 from mindlessgen.molecules import detect_fragments  # type: ignore
 from mindlessgen.molecules import Molecule  # type: ignore
 from mindlessgen.molecules import iterative_optimization  # type: ignore
@@ -107,7 +107,10 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
     Test the detection of fragments in the molecule H2O2B2I1Os1.
     """
     fragmols = detect_fragments(
-        mol=mol_H6O2B2Ne2I1Os1Tl1, vdw_scaling=1.3333, verbosity=0
+        mol=mol_H6O2B2Ne2I1Os1Tl1,
+        molecular_charge=GenerateConfig().molecular_charge,
+        vdw_scaling=1.3333,
+        verbosity=0,
     )
     assert len(fragmols) == 7
 

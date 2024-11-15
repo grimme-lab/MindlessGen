@@ -9,12 +9,15 @@ from .molecule import Molecule
 from .refinement import get_cov_radii, COV_RADII
 from .miscellaneous import (
     set_random_charge,
+    calculate_protons,
     get_alkali_metals,
     get_alkaline_earth_metals,
     get_three_d_metals,
     get_four_d_metals,
     get_five_d_metals,
     get_lanthanides,
+    get_actinides,
+    calculate_ligand_electrons,
 )
 
 
@@ -47,9 +50,12 @@ def generate_random_molecule(
             ati=mol.ati,
             scale_minimal_distance=config_generate.scale_minimal_distance,
         )
-    mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
+    if config_generate.molecular_charge is not None:
+        mol.charge = config_generate.molecular_charge
+        mol.uhf = 0
+    else:
+        mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()
-
     if verbosity > 1:
         print(mol)
 
@@ -135,6 +141,22 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                     + "Setting the number of atoms for the fixed composition. "
                     + f"Returning: \n{natoms}\n"
                 )
+            # If the molecular charge is defined, and a fixed element composition is defined, check if the electrons are even. If not raise an error.
+            if cfg.molecular_charge:
+                protons = calculate_protons(natoms)
+                nel = protons - cfg.molecular_charge
+                f_elem = any(
+                    count > 0 and (i in get_lanthanides() or i in get_actinides())
+                    for i, count in enumerate(natoms)
+                )
+                if (f_elem and calculate_ligand_electrons(natoms, nel) % 2 != 0) or (
+                    not f_elem and nel % 2 != 0
+                ):
+                    raise SystemExit(
+                        "Both fixed charge and fixed composition are defined. "
+                        + "Please only define one of them."
+                        + "Or ensure that the fixed composition is closed shell."
+                    )
             return natoms
 
     # Reasoning for the parameters in the following sections:
@@ -324,6 +346,11 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     check_composition()
     # Check if the number of atoms is within the defined limits
     check_min_max_atoms()
+    # If the molecule is not closed shell, add an atom to ensure a closed shell system
+    if cfg.molecular_charge is not None:
+        protons = calculate_protons(natoms)
+        nel = protons - cfg.molecular_charge
+        natoms = fixed_charge_correction(cfg, natoms, nel, valid_elems, verbosity)
     ### ACTUAL WORKFLOW END ###
 
     return natoms
@@ -431,3 +458,68 @@ def check_distances(
             if r < scale_minimal_distance * sum_radii:
                 return False
     return True
+
+
+def fixed_charge_correction(
+    cfg: GenerateConfig,
+    natoms: np.ndarray,
+    nel: int,
+    valid_elems: set[int],
+    verbosity: int,
+) -> np.ndarray:
+    """
+    Correct the number of electrons if a fixed charge is given and the molecule is not closed shell.
+    """
+    f_elem = any(
+        count > 0 and (i in get_lanthanides() or i in get_actinides())
+        for i, count in enumerate(natoms)
+    )
+    if f_elem:
+        ligand_electrons = calculate_ligand_electrons(natoms, nel)
+        # If f block elements are included, correct only if the remaning ligand protons are uneven
+        if ligand_electrons % 2 != 0:
+            natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems, verbosity)
+            return natoms
+    # If f block elements are not included, correct if the number of electrons is uneven
+    elif nel % 2 != 0:
+        natoms = fixed_charge_elem_correction(cfg, natoms, valid_elems, verbosity)
+        return natoms
+    return natoms
+
+
+def fixed_charge_elem_correction(
+    cfg: GenerateConfig,
+    natoms: np.ndarray,
+    valid_elems: set[int],
+    verbosity: int,
+) -> np.ndarray:
+    """
+    Correct the number of atoms if the number of electrons is odd and a molecular charge is set.
+    """
+    num_atoms = np.sum(natoms)
+    # All other elements
+    rng = np.random.default_rng()
+    odd_atoms = np.array([elem for elem in valid_elems if elem % 2 == 0], dtype=int)
+    random_odd_atoms = rng.permutation(odd_atoms)
+    if 0 in valid_elems:
+        random_odd_atoms = np.insert(random_odd_atoms, 0, 0)
+    for random_elem in random_odd_atoms:
+        min_count, max_count = cfg.element_composition.get(
+            random_elem, (0, cfg.max_num_atoms)
+        )
+        if min_count is None:
+            min_count = 0
+        if max_count is None:
+            max_count = cfg.max_num_atoms
+        # Check if adding or removing the random element is possible
+        if natoms[random_elem] < max_count and num_atoms < cfg.max_num_atoms:
+            natoms[random_elem] += 1
+            if verbosity > 1:
+                print(f"Adding atom type {random_elem} for charge...")
+            return natoms
+        elif natoms[random_elem] > min_count and num_atoms > cfg.min_num_atoms:
+            natoms[random_elem] -= 1
+            if verbosity > 1:
+                print(f"Removing atom type {random_elem} for charge...")
+            return natoms
+    raise RuntimeError("Could not correct the odd number of electrons.")
