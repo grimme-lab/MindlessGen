@@ -402,6 +402,7 @@ def test_fixed_charge(
     default_generate_config.molecular_charge = "3"
     default_generate_config.min_num_atoms = 5
     default_generate_config.max_num_atoms = 15
+    default_generate_config.forbidden_elements = "57-71, 89-103"
 
     # Ensure the charge is correctly set
     mol = generate_random_molecule(default_generate_config, verbosity=1)
