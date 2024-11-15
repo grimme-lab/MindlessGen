@@ -24,6 +24,8 @@ def set_random_charge(
         # -> always high spin
         # -> Divide the molecule into Ln3+/Ac3+ ions and negative "ligands"
         # -> The ligands are the remaining protons are assumed to be low spin
+
+        # TODO: use the extracted functions from misscellaneous.py
         uhf = 0
         charge = 0
         ln_protons = 0
@@ -109,6 +111,25 @@ def calculate_ligand_electrons(natoms: np.ndarray, nel: int) -> int:
     )
     ligand_electrons = nel - f_electrons
     return ligand_electrons
+
+
+def calculate_uhf(atlist: np.ndarray) -> int:
+    """
+    Calculate the number of unpaired electrons in a molecule.
+    """
+    uhf = 0
+    for ati, occurrence in enumerate(atlist):
+        if ati in get_lanthanides():
+            if ati < 64:
+                uhf += (ati - 56) * occurrence
+            else:
+                uhf += (70 - ati) * occurrence
+        elif ati in get_actinides():
+            if ati < 96:
+                uhf += (ati - 88) * occurrence
+            else:
+                uhf += (102 - ati) * occurrence
+    return uhf
 
 
 def get_alkali_metals() -> list[int]:
