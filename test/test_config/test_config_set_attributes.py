@@ -141,6 +141,23 @@ def test_generate_config_molecular_charge(property_name, valid_value, expected_v
     assert getattr(config, property_name) == expected_value
 
 
+@pytest.mark.parametrize(
+    "property_name, invalid_value, expected_exception",
+    [
+        ("molecular_charge", "two", ValueError),
+        ("molecular_charge", "1.0", ValueError),
+    ],
+)
+def test_generate_config_molecular_charge_invalid(
+    property_name, invalid_value, expected_exception
+):
+    config = GenerateConfig()
+
+    # Test invalid value
+    with pytest.raises(expected_exception):
+        setattr(config, property_name, invalid_value)
+
+
 # Tests for RefineConfig
 @pytest.mark.parametrize(
     "property_name, valid_value, invalid_value, expected_exception",

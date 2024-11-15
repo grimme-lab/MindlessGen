@@ -100,11 +100,11 @@ def calculate_ligand_electrons(natoms: np.ndarray, nel: int) -> int:
     Calculate the number of ligand electrons in a molecule if lanthanides or actinides are within the molecule.
     """
     f_electrons = sum(
-        occurence
+        occurrence
         * (
-            ati - 3 + 1
-        )  # subtract 3 to get the number of electrons for an Ln3+ (Ac3+) ion.
-        for ati, occurence in enumerate(natoms)
+            ati - 2
+        )  # subtract 3 to get the number of electrons for an Ln3+ (Ac3+) ion and add 1 to account for the 0 based indexing.
+        for ati, occurrence in enumerate(natoms)
         if (ati in get_lanthanides() or ati in get_actinides())
     )
     ligand_electrons = nel - f_electrons
