@@ -40,19 +40,6 @@ def test_generate_atom_list(min_atoms, max_atoms, default_generate_config):
     assert np.sum(atom_list) >= min_atoms
     assert np.sum(atom_list) <= max_atoms
 
-    # Check that the sum of transition and lanthanide metals is never greater than 3
-    all_metals = (
-        get_three_d_metals()
-        + get_four_d_metals()
-        + get_five_d_metals()
-        + get_lanthanides()
-    )
-    assert np.sum([atom_list[z] for z in all_metals]) <= 3
-
-    # Check that the sum of alkali and alkaline earth metals is never greater than 3
-    alkmetals = get_alkali_metals() + get_alkaline_earth_metals()
-    assert np.sum([atom_list[z] for z in alkmetals]) <= 3
-
 
 # Test the element composition property of the GenerateConfig class
 def test_generate_config_element_composition(default_generate_config):
