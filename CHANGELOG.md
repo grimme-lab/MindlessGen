@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bug leading to `UnicodeDecodeError` when reading `xtb` output files
 - bug with all atom lists being initialized with a length of 102 instead of 103
 - inconsistent default values for the `mindlessgen.toml` and the `ConfigManager` class
+- legacy pseudo random number generation removed and replaced by `np.random.default_rng()` for avoiding interference with other packages
 
 ### Added
 - support for the novel "g-xTB" method (working title: GP3-xTB)
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout
 - elements 87 to 103 are accessible via the element composition. If `xtb` is the engine, the elements will be replaced by their lighter homologues.
 - support for `python-3.13`
+- option to set a fixed molecular charge, while ensuring `uhf = 0`
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
