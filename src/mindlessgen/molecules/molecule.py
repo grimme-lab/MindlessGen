@@ -641,3 +641,29 @@ class Molecule:
         # add a random hash to the name
         hashname = hashlib.sha256(self.rng.bytes(32)).hexdigest()[:6]
         self.name = f"{molname}_{hashname}"
+
+
+def ati_to_atlist(ati: np.ndarray) -> np.ndarray:
+    """
+    Convert the atomic number per index to the array with the number of atoms of each element.
+
+    :param ati: The atomic number per index.
+    :return: The array with the number of atoms of each element.
+    """
+    atlist = np.zeros(103, dtype=int)
+    for atomtype in ati:
+        atlist[atomtype] += 1
+    return atlist
+
+
+def atlist_to_ati(atlist: np.ndarray) -> np.ndarray:
+    """
+    Convert the array with the number of atoms of each element to the atomic number per index.
+
+    :param atlist: The array with the number of atoms of each element.
+    :return: The atomic number per index.
+    """
+    ati = np.array([], dtype=int)
+    for i, num in enumerate(atlist):
+        ati = np.append(ati, np.full(shape=num, fill_value=i))
+    return ati
