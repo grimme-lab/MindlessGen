@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pytest
-from mindlessgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.molecules.molecule import Molecule, ati_to_atlist, atlist_to_ati  # type: ignore
 
 
 # load the molecule: C2H4N1O1Au1
@@ -249,3 +249,39 @@ def test_set_name_from_formula():
 
     mol.set_name_from_formula()
     assert "C2H4_" in mol.name  # Ensure the generated name includes the correct formula
+
+
+def test_atlist_to_ati():
+    """
+    Test the atlist_to_ati function.
+    """
+    atlist = np.zeros(103, dtype=int)
+    atlist[0] = 1
+    atlist[4] = 2
+    atlist[5] = 2
+    atlist[6] = 1
+    atlist[7] = 1
+    atlist[43] = 2
+    atlist[58] = 1
+
+    ati = atlist_to_ati(atlist)
+    np.testing.assert_array_equal(ati, np.array([0, 4, 4, 5, 5, 6, 7, 43, 43, 58]))
+
+
+def test_ati_to_atlist():
+    """
+    Test the ati_to_atlist function.
+    """
+    ati = np.array([0, 4, 4, 5, 5, 6, 7, 43, 43, 58])
+
+    atlist = ati_to_atlist(ati)
+    expected_atlist = np.zeros(103, dtype=int)
+    expected_atlist[0] = 1
+    expected_atlist[4] = 2
+    expected_atlist[5] = 2
+    expected_atlist[6] = 1
+    expected_atlist[7] = 1
+    expected_atlist[43] = 2
+    expected_atlist[58] = 1
+
+    np.testing.assert_array_equal(atlist, expected_atlist)
