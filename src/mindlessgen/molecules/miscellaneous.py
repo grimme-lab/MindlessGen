@@ -15,7 +15,8 @@ def set_random_charge(
     Set the charge of a molecule so that unpaired electrons are avoided.
     """
     # go through all ati and add its own value + 1 to get the number of protons
-    nel = calculate_protons(ati_to_atlist(ati))
+    atlist = ati_to_atlist(ati)
+    nel = calculate_protons(atlist)
     if verbosity > 1:
         print(f"Number of protons in molecule: {nel}")
 
@@ -26,8 +27,8 @@ def set_random_charge(
         # -> The ligands are the remaining protons are assumed to be low spin
         uhf = 0
         charge = 0
-        ligand_electrons = calculate_ligand_electrons(ati_to_atlist(ati), nel)
-        uhf = calculate_uhf(ati_to_atlist(ati))
+        ligand_electrons = calculate_ligand_electrons(atlist, nel)
+        uhf = calculate_uhf(atlist)
         if ligand_electrons % 2 == 0:
             charge = 0
         else:
