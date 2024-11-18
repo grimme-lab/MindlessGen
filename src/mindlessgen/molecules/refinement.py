@@ -13,6 +13,7 @@ from .miscellaneous import (
     set_random_charge,
     calculate_protons,
     calculate_ligand_electrons,
+    calculate_uhf,
     get_lanthanides,
     get_actinides,
 )
@@ -229,7 +230,7 @@ def detect_fragments(
         # Update the charge of the fragment molecule
         if molecular_charge is not None:
             fragment_molecule.charge = molecular_charge
-            fragment_molecule.uhf = 0
+            fragment_molecule.uhf = calculate_uhf(fragment_molecule.atlist)
         else:
             fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(
                 fragment_molecule.ati, verbosity
