@@ -18,6 +18,7 @@ from .miscellaneous import (
     get_lanthanides,
     get_actinides,
     calculate_ligand_electrons,
+    calculate_uhf,
 )
 
 
@@ -52,7 +53,7 @@ def generate_random_molecule(
         )
     if config_generate.molecular_charge is not None:
         mol.charge = config_generate.molecular_charge
-        mol.uhf = 0
+        mol.uhf = calculate_uhf(mol.atlist)
     else:
         mol.charge, mol.uhf = set_random_charge(mol.ati, verbosity)
     mol.set_name_from_formula()

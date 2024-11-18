@@ -402,6 +402,7 @@ def test_fixed_charge(
     default_generate_config.molecular_charge = "3"
     default_generate_config.min_num_atoms = 5
     default_generate_config.max_num_atoms = 15
+    default_generate_config.forbidden_elements = "57-71, 89-103"
 
     # Ensure the charge is correctly set
     mol = generate_random_molecule(default_generate_config, verbosity=1)
@@ -496,3 +497,33 @@ def test_fixed_charge_with_lanthanides_2(default_generate_config):
     atom_list = generate_atom_list(default_generate_config, verbosity=1)
     assert atom_list[0] == 0
     assert atom_list[10] % 2 == 0
+
+
+def test_fixed_charge_with_actinides(default_generate_config):
+    """Test the hydrogen correction for a fixed charge"""
+    default_generate_config.molecular_charge = "3"
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 7
+    default_generate_config.element_composition = (
+        "H:1-1, B:1-1, Ne:2-2, P:1-1, Cl:1-1, Es:1-1"
+    )
+    default_generate_config.forbidden_elements = "2-*"
+
+    # Ensure the right ligand correction is applied
+    mol = generate_random_molecule(default_generate_config, verbosity=1)
+    assert mol.uhf == 4
+
+
+def test_fixed_charge_with_lanthanides_and_actinides(default_generate_config):
+    """Test the hydrogen correction for a fixed charge"""
+    default_generate_config.molecular_charge = "3"
+    default_generate_config.min_num_atoms = 5
+    default_generate_config.max_num_atoms = 7
+    default_generate_config.element_composition = (
+        "B:1-1, Ne:2-2, P:1-1, Cl:1-1, Es:1-1, Pr:1-1"
+    )
+    default_generate_config.forbidden_elements = "2-*"
+
+    # Ensure the right ligand correction is applied
+    mol = generate_random_molecule(default_generate_config, verbosity=1)
+    assert mol.uhf == 6
