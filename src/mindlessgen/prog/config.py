@@ -37,7 +37,7 @@ class GeneralConfig(BaseConfig):
 
     def __init__(self: GeneralConfig) -> None:
         self._verbosity: int = 1
-        self._max_cycles: int = 100
+        self._max_cycles: int = 200
         self._print_config: bool = False
         self._parallel: int = 1
         self._num_molecules: int = 1
@@ -220,15 +220,16 @@ class GenerateConfig(BaseConfig):
     """
 
     def __init__(self: GenerateConfig) -> None:
-        self._min_num_atoms: int = 2
-        self._max_num_atoms: int = 100
+        self._min_num_atoms: int = 5
+        self._max_num_atoms: int = 10
         self._init_coord_scaling: float = 3.0
-        self._increase_scaling_factor: float = 1.3
+        self._increase_scaling_factor: float = 1.1
         self._element_composition: dict[int, tuple[int | None, int | None]] = {}
         self._forbidden_elements: list[int] | None = None
         self._scale_fragment_detection: float = 1.25
         self._scale_minimal_distance: float = 0.8
-        self._contract_coords: bool = False
+        self._contract_coords: bool = True
+        self._molecular_charge: int | None = None
 
     def get_identifier(self) -> str:
         return "generate"
@@ -448,6 +449,28 @@ class GenerateConfig(BaseConfig):
             raise TypeError("Contract coords should be a boolean.")
         self._contract_coords = contract_coords
 
+    @property
+    def molecular_charge(self):
+        """
+        Get the molecular_charge.
+        """
+        return self._molecular_charge
+
+    @molecular_charge.setter
+    def molecular_charge(self, molecular_charge: str | int):
+        """
+        Set the molecular_charge.
+        """
+        if isinstance(molecular_charge, str):
+            if molecular_charge.lower() == "none" or molecular_charge == "":
+                self._molecular_charge = None
+            else:
+                self._molecular_charge = int(molecular_charge)
+        elif isinstance(molecular_charge, int):
+            self._molecular_charge = molecular_charge
+        else:
+            raise TypeError("Molecular charge should be a string or an integer.")
+
 
 class RefineConfig(BaseConfig):
     """
@@ -455,7 +478,7 @@ class RefineConfig(BaseConfig):
     """
 
     def __init__(self: RefineConfig) -> None:
-        self._max_frag_cycles: int = 100
+        self._max_frag_cycles: int = 10
         self._engine: str = "xtb"
         self._hlgap: float = 0.5
         self._debug: bool = False
@@ -541,8 +564,8 @@ class PostProcessConfig(BaseConfig):
 
     def __init__(self: PostProcessConfig) -> None:
         self._engine: str = "orca"
-        self._opt_cycles: int | None = None
-        self._optimize: bool = False
+        self._opt_cycles: int | None = 5
+        self._optimize: bool = True
         self._debug: bool = False
 
     def get_identifier(self) -> str:
@@ -670,7 +693,7 @@ class ORCAConfig(BaseConfig):
     def __init__(self: ORCAConfig) -> None:
         self._orca_path: str | Path = "orca"
         self._functional: str = "PBE"
-        self._basis: str = ""
+        self._basis: str = "def2-SVP"
         self._gridsize: int = 1
         self._scf_cycles: int = 100
 

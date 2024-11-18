@@ -173,6 +173,12 @@ def single_molecule_generator(
                 print(e)
         stop_event.set()
         return None
+    except RuntimeError as e:
+        if config.general.verbosity > 0:
+            print(f"Generation failed for cycle {cycle + 1}.")
+            if config.general.verbosity > 1:
+                print(e)
+        return None
 
     try:
         #    ____        _   _           _

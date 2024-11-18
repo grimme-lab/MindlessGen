@@ -7,26 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
-- The check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
+- check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
 - better type hints for `Callables`
-- A clearer differentiation between the distinct scaling factors for the van der Waals radii.
-- `README.md` with more detailed explanation of the element composition function.
+- clearer differentiation between the distinct scaling factors for the van der Waals radii
+- `README.md` with more detailed explanation of the element composition function
+- Default `max_cycles` for the generation & refinement set to 200
 
 ### Fixed
-- Unit conversion for (currenly unused) vdW radii from the original Fortran project
+- unit conversion for (currenly unused) vdW radii from the original Fortran project
 - minor print output issues (no new line breaks, more consistent verbosity differentiation, ...)
 - bug in `postprocess_mol` which led to an unassigned return variable in the single-point case
+- bug leading to `UnicodeDecodeError` when reading `xtb` output files
 - bug with all atom lists being initialized with a length of 102 instead of 103
+- inconsistent default values for the `mindlessgen.toml` and the `ConfigManager` class
+- legacy pseudo random number generation removed and replaced by `np.random.default_rng()` for avoiding interference with other packages
 
 ### Added
-- Support for the novel "g-xTB" method (working title: GP3-xTB)
-- A function which contracts the coordinates after the initial generation.
-- A function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout.
-- Elements 87 to 103 are accessible via the element composition. If `xtb` is the engine, the elements will be replaced by their lighter homologues.
+- support for the novel "g-xTB" method (working title: GP3-xTB)
+- function which contracts the coordinates after the initial generation
+- function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout
+- elements 87 to 103 are accessible via the element composition. If `xtb` is the engine, the elements will be replaced by their lighter homologues.
+- support for `python-3.13`
+- option to set a fixed molecular charge, while ensuring `uhf = 0`
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
 - The number of unpaired electrons (`Molecule.uhf`) is now set to 0 if `xtb` is used as `QMMethod` and a lanthanide is within the molecule to match the `f-in-core` approximation.
+- "Contract Coordinates" functionality set to `true` by default in the `mindlessgen.toml` file.
+- `basename.UHF` and `basename.CHRG` are only written to disk if they differ from the default value (0 and 0, respectively).
 
 ## [0.4.0] - 2024-09-19
 ### Changed

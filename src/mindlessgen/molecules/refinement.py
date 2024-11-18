@@ -9,7 +9,14 @@ import numpy as np
 from ..qm.base import QMMethod
 from ..prog import GenerateConfig, RefineConfig
 from .molecule import Molecule
-from .miscellaneous import set_random_charge
+from .miscellaneous import (
+    set_random_charge,
+    calculate_protons,
+    calculate_ligand_electrons,
+    calculate_uhf,
+    get_lanthanides,
+    get_actinides,
+)
 
 COV_RADII = "pyykko"
 BOHR2AA = (
@@ -50,6 +57,7 @@ def iterative_optimization(
         # Detect fragments from the optimized molecule
         fragmols = detect_fragments(
             mol=rev_mol,
+            molecular_charge=config_generate.molecular_charge,
             vdw_scaling=config_generate.scale_fragment_detection,
             verbosity=verbosity,
         )
@@ -109,7 +117,23 @@ def iterative_optimization(
                     f"Element {ati} is overrepresented "
                     + f"in the largest fragment in cycle {cycle + 1}."
                 )
-
+        if config_generate.molecular_charge is not None:
+            protons = calculate_protons(fragmols[0].atlist)
+            nel = protons - config_generate.molecular_charge
+            f_elem = any(
+                count > 0 and (i in get_lanthanides() or i in get_actinides())
+                for i, count in enumerate(fragmols[0].atlist)
+            )
+            if f_elem:
+                ligand_electrons = calculate_ligand_electrons(fragmols[0].atlist, nel)
+                if ligand_electrons % 2 != 0:
+                    raise RuntimeError(
+                        f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
+                    )
+            elif nel % 2 != 0:
+                raise RuntimeError(
+                    f"Number of electrons in the largest fragment in cycle {cycle + 1} is odd."
+                )
         rev_mol = fragmols[
             0
         ]  # Set current_mol to the first fragment for the next cycle
@@ -136,7 +160,10 @@ def iterative_optimization(
 
 
 def detect_fragments(
-    mol: Molecule, vdw_scaling: float, verbosity: int = 1
+    mol: Molecule,
+    molecular_charge: int,
+    vdw_scaling: float,
+    verbosity: int = 1,
 ) -> list[Molecule]:
     """
     Detects fragments in a molecular system based on atom positions and covalent radii.
@@ -201,9 +228,13 @@ def detect_fragments(
         for atom in fragment_molecule.ati:
             fragment_molecule.atlist[atom] += 1
         # Update the charge of the fragment molecule
-        fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(
-            fragment_molecule.ati, verbosity
-        )
+        if molecular_charge is not None:
+            fragment_molecule.charge = molecular_charge
+            fragment_molecule.uhf = calculate_uhf(fragment_molecule.atlist)
+        else:
+            fragment_molecule.charge, fragment_molecule.uhf = set_random_charge(
+                fragment_molecule.ati, verbosity
+            )
         fragment_molecule.set_name_from_formula()
         if verbosity > 1:
             print(f"Fragment molecule: {fragment_molecule}")

@@ -4,8 +4,8 @@
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="Apache-2.0"/>
 </a>
-<a href="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12-blue.svg">
-  <img src="https://img.shields.io/badge/Python-3.10%20|%203.11|%203.12-blue.svg" alt="Python Versions"/>
+<a href="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg">
+  <img src="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg" alt="Python Versions"/>
 </a>
 <img align="right" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" height="150" />
 
@@ -49,10 +49,10 @@ Both installation methods work in principle also without a virtual environment, 
 ### Development purposes
 
 For working on the code of `mindlessgen`, the following setup is recommended:
-```
+```bash
 mamba create -n mindlessgen python=3.12
 mamba activate mindlessgen
-git clone {link to the MindlessGen repository}
+git clone https://github.com/grimme-lab/MindlessGen.git # or the analogous SSH link
 pip install -e '.[dev]'
 ```
 Thereby, all necessary development tools (e.g., `ruff`, `mypy`, `tox`, `pytest`, and `pre-commit`) are installed.
@@ -82,11 +82,12 @@ If the path is not specified with `-c/--config`, `mindlessgen.toml` will be sear
 1. Current working directory (`$CWD`)
 2. Home directory (`$USER/`)
 
-The active configuration can be printed using `--print-config`.
+If neither a corresponding CLI command nor an entry in the configuration file is provided, the default values are used.
+The active configuration, including the default values, can be printed using `--print-config`.
 
 ### Element composition
 There are two related aspects of the element composition:
-1. _Which elements_ should occur within the generated molecule?
+1. **Which elements** should occur within the generated molecule?
 2. **How many atoms** of the specified element should occur?
 - **Example 1**: `C:1-3, O:1-1, H:1-*` would result in a molecule with 1, 2, or 3 carbon atoms, exactly 1 oxygen atom, and between 1 and an undefined number of hydrogen atoms (i.e., at least 1).
 - **Example 2**: `Na:10-10, In:10-10, O:20-20`. This example would result in a molecule with exactly 10 sodium atoms, 10 indium atoms, and 20 oxygen atoms. **For a fixed element composition, the number of atoms (40) has to be within the min_num_atoms and max_num_atom interval.** `mindlessgen` will consequently always return a molecule with exactly 40 atoms.
@@ -98,28 +99,46 @@ There are two related aspects of the element composition:
 
 ## Citation
 
-When using the program for academic purposes, please cite:
+When using the program for academic purposes, please cite _i)_ the original idea and _ii)_ the new Python implementation.
 
-_J. Chem. Theory Comput._ 2009, **5**, 4, 993–1003
+1.  _J. Chem. Theory Comput._ 2009, **5**, 4, 993–1003
+    ```
+    @article{korth_mindless_2009,
+    	title = {Mindless {DFT} benchmarking},
+    	volume = {5},
+    	issn = {15499618},
+    	url = {https://pubs.acs.org/doi/full/10.1021/ct800511q},
+    	doi = {10.1021/ct800511q},
+    	number = {4},
+    	urldate = {2022-11-07},
+    	journal = {J. Chem. Theo. Comp.},
+    	author = {Korth, Martin and Grimme, Stefan},
+    	month = apr,
+    	year = {2009},
+    	note = {Publisher: American Chemical Society},
+    	pages = {993--1003},
+    }
+    ```
 
-or in `BibTeX` format:
-```
-@article{doi:10.1021/ct800511q,
-author = {Korth, Martin and Grimme, Stefan},
-title = {“Mindless” DFT Benchmarking},
-journal = {Journal of Chemical Theory and Computation},
-volume = {5},
-number = {4},
-pages = {993-1003},
-year = {2009},
-doi = {10.1021/ct800511q},
-note ={PMID: 26609608},
-URL = {https://doi.org/10.1021/ct800511q},
-eprint = {https://doi.org/10.1021/ct800511q}
-}
-```
+2.  A new publication featuring all functionalities and improvements of `mindlessgen` is in preparation.
+    In the meantime, please refer to the original publication and to the following preprint, which uses the `mindlessgen` program for the first time:
+    Müller, M.; Froitzheim, T.; Hansen, A.; Grimme, S. _ChemRxiv_ October 28, 2024. https://doi.org/10.26434/chemrxiv-2024-h76ms.
+    ```
+    @misc{muller_advanced_2024,
+    	title = {Advanced {Charge} {Extended} {Hückel} ({CEH}) {Model} and a {Consistent} {Adaptive} {Minimal} {Basis} {Set} for the {Elements} {Z}=1-103},
+    	url = {https://chemrxiv.org/engage/chemrxiv/article-details/671a92581fb27ce1247466ad},
+    	doi = {10.26434/chemrxiv-2024-h76ms},
+    	urldate = {2024-10-28},
+    	publisher = {ChemRxiv},
+    	author = {Müller, Marcel and Froitzheim, Thomas and Hansen, Andreas and Grimme, Stefan},
+    	month = oct,
+    	year = {2024},
+    	keywords = {DFT, Basis sets, EHT, SQM},
+    }
+    ```
 
-## Acknowdledgements
+## Acknowledgements
 
 [T. Gasevic](https://github.com/gasevic) for creating an initial `GitHub` [migration](https://github.com/gasevic/mlmgen) of the code and making important adjustments to the workflow.
 [S. Grimme](https://www.chemie.uni-bonn.de/grimme/de/grimme) and M. Korth for the original code written in Fortran associated to the publication in [J. Chem. Theory Comput.](https://pubs.acs.org/doi/full/10.1021/ct800511q).
+[T. Froitzheim](https://github.com/thfroitzheim) for helpful discussons during the development of the program.
