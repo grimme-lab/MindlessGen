@@ -69,6 +69,6 @@ def test_set_random_charge(atom_types, expected_charges, expected_uhf):
     """
     Test the set_random_charge function for both standard and lanthanide modes.
     """
-    charge, uhf = set_random_charge(atom_types)
+    charge, uhf = set_random_charge(atom_types, verbosity=1)
     assert charge in expected_charges
     assert uhf == expected_uhf

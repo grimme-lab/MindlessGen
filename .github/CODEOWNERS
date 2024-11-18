@@ -2,11 +2,11 @@
 # the repo. Unless a later match takes precedence,
 # @marcelmbn and @thfroitzheim will be requested for
 # review when someone opens a pull request.
-*  @marcelmbn @thfroitzheim
+*  @marcelmbn @jonathan-schoeps
 
 # These parts are specifically owned by some people
 /src/mindlessgen/cli @marcelmbn
 /src/mindlessgen/generator @marcelmbn
-/src/mindlessgen/molecules @marcelmbn
-/src/mindlessgen/prog @marcelmbn
+/src/mindlessgen/molecules @marcelmbn @jonathan-schoeps
+/src/mindlessgen/prog @marcelmbn @jonathan-schoeps
 /src/mindlessgen/qm @marcelmbn
