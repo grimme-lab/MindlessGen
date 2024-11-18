@@ -2,7 +2,7 @@
 # the repo. Unless a later match takes precedence,
 # @marcelmbn and @thfroitzheim will be requested for
 # review when someone opens a pull request.
-*  @marcelmbn @thfroitzheim
+*  @marcelmbn @jonathan-schoeps
 
 # These parts are specifically owned by some people
 /src/mindlessgen/cli @marcelmbn
