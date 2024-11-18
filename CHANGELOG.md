@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removal of the `dist_threshold` flag and in the `-toml` file.
 - The number of unpaired electrons (`Molecule.uhf`) is now set to 0 if `xtb` is used as `QMMethod` and a lanthanide is within the molecule to match the `f-in-core` approximation.
 - "Contract Coordinates" functionality set to `true` by default in the `mindlessgen.toml` file.
+- `basename.UHF` and `basename.CHRG` are only written to disk if they differ from the default value (0 and 0, respectively).
 
 ## [0.4.0] - 2024-09-19
 ### Changed
