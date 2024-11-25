@@ -1,8 +1,5 @@
 """
-Math
-====
-
-This module contains all mathematical functions.
+This module is the entry point for the main generator module.
 """
 
 from .main import generator
