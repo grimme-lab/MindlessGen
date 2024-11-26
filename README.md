@@ -68,6 +68,8 @@ Further information on how to contribute to this project can also be found in th
 
 ## Usage
 
+### Command line interface
+
 > [!WARNING]
 > `mindlessgen` may still be subject to API changes.
 
@@ -96,6 +98,62 @@ There are two related aspects of the element composition:
 > When using `orca` and specifying elements with `Z > 86`, ensure that the basis set you've selected is compatible with (super-)heavy elements like actinides.
 > You can find a list of available basis sets [here](https://www.faccts.de/docs/orca/6.0/manual/contents/detailed/basisset.html#built-in-basis-sets).
 > A reliable standard choice that covers the entire periodic table is `def2-mTZVPP`.
+
+### Python application programming interface
+
+```python
+"""
+Python script that calls the MindlessGen API.
+"""
+
+import warnings
+
+from mindlessgen.generator import generator
+from mindlessgen.prog import ConfigManager
+
+
+def main():
+    """
+    Main function for execution of MindlessGen via Python API.
+    """
+    config = ConfigManager()
+
+    # General settings
+    config.general.max_cycles = 500
+    config.general.parallel = 6
+    config.general.verbosity = -1
+    config.general.num_molecules = 2
+    config.general.postprocess = False
+    config.general.write_xyz = False
+
+    # Settings for the random molecule generation
+    config.generate.min_num_atoms = 10
+    config.generate.max_num_atoms = 15
+    config.generate.element_composition = "Ce:1-1"
+    config.generate.forbidden_elements = "21-30,39-48,57-80"
+
+    # xtb-related settings
+    config.xtb.level = 1
+
+    try:
+        molecules, exitcode = generator(config)
+    except RuntimeError as e:
+        print(f"\nGeneration failed: {e}")
+        raise RuntimeError("Generation failed.") from e
+    if exitcode != 0:
+        warnings.warn("Generation completed with errors for parts of the generation.")
+    for molecule in molecules:
+        molecule.write_xyz_to_file()
+        print(
+            "\n###############\nProperties of molecule "
+            + f"'{molecule.name}' with formula {molecule.sum_formula()}:"
+        )
+        print(molecule)
+
+
+if __name__ == "__main__":
+    main()
+```
 
 ## Citation
 
