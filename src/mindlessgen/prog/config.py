@@ -8,6 +8,8 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 import warnings
 import multiprocessing as mp
+
+import numpy as np
 import toml
 
 from ..molecules import PSE_NUMBERS
@@ -167,6 +169,24 @@ class GeneralConfig(BaseConfig):
             raise TypeError("Write xyz should be a boolean.")
         self._write_xyz = write_xyz
 
+    def check_config(self, verbosity: int = 1) -> None:
+        ### GeneralConfig checks ###
+        # lower number of the available cores and the configured parallelism
+        num_cores = min(mp.cpu_count(), self.parallel)
+        if self.parallel > mp.cpu_count() and verbosity > -1:
+            warnings.warn(
+                f"Number of cores requested ({self.parallel}) is greater "
+                + f"than the number of available cores ({mp.cpu_count()})."
+                + f"Using {num_cores} cores instead."
+            )
+
+        if num_cores > 1 and verbosity > 0:
+            # raise warning that parallelization will disable verbosity
+            warnings.warn(
+                "Parallelization will disable verbosity during iterative search. "
+                + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
+            )
+
 
 class GenerateConfig(BaseConfig):
     """
@@ -184,6 +204,7 @@ class GenerateConfig(BaseConfig):
         self._scale_minimal_distance: float = 0.8
         self._contract_coords: bool = True
         self._molecular_charge: int | None = None
+        self._fixed_composition: bool = False
 
     def get_identifier(self) -> str:
         return "generate"
@@ -424,6 +445,80 @@ class GenerateConfig(BaseConfig):
             self._molecular_charge = molecular_charge
         else:
             raise TypeError("Molecular charge should be a string or an integer.")
+
+    @property
+    def fixed_composition(self):
+        """
+        Get the fixed_composition flag.
+        """
+        return self._fixed_composition
+
+    @fixed_composition.setter
+    def fixed_composition(self, fixed_composition: bool):
+        """
+        Set the fixed_composition flag.
+        """
+        if not isinstance(fixed_composition, bool):
+            raise TypeError("Fixed composition should be a boolean.")
+        self._fixed_composition = fixed_composition
+
+    def check_config(self, verbosity: int = 1) -> None:
+        """
+        GenerateConfig checks for any incompatibilities that are imaginable
+        """
+        # - Check if the minimum number of atoms is smaller than the maximum number of atoms
+        if self.min_num_atoms is not None and self.max_num_atoms is not None:
+            if self.min_num_atoms > self.max_num_atoms:
+                raise ValueError(
+                    "The minimum number of atoms is larger than the maximum number of atoms."
+                )
+        # - Check if the summed number of minimally required atoms from cfg.element_composition
+        #   is larger than the maximum number of atoms
+        if self.max_num_atoms is not None:
+            if (
+                np.sum(
+                    [
+                        self.element_composition.get(i, (0, 0))[0]
+                        if self.element_composition.get(i, (0, 0))[0] is not None
+                        else 0
+                        for i in self.element_composition
+                    ]
+                )
+                > self.max_num_atoms
+            ):
+                raise ValueError(
+                    "The summed number of minimally required atoms "
+                    + "from the fixed composition is larger than the maximum number of atoms."
+                )
+        if self.fixed_composition:
+            # - Check if all defintions in cfg.element_composition
+            #   are completely fixed (min and max are equal)
+            for elem, count_range in self.element_composition.items():
+                # check if for all entries: min and max are both not None, and if min and max are equal.
+                if (
+                    (count_range[0] is None)
+                    or (count_range[1] is None)
+                    or (count_range[0] != count_range[1])
+                ):
+                    raise ValueError(
+                        f"Element {elem} is not completely fixed in the element composition. "
+                        + "Usage together with fixed_composition is not possible."
+                    )
+            # Check if the summed number of fixed atoms
+            # is within the defined overall limits
+            sum_fixed_atoms = np.sum(
+                [
+                    self.element_composition.get(i, (0, 0))[0]
+                    for i in self.element_composition
+                ]
+            )
+            if self.min_num_atoms is not None and not (
+                self.min_num_atoms <= sum_fixed_atoms
+            ):
+                raise ValueError(
+                    "The summed number of fixed atoms from the fixed composition "
+                    + "is not within the range of min_num_atoms and max_num_atoms."
+                )
 
 
 class RefineConfig(BaseConfig):
@@ -765,15 +860,15 @@ class ConfigManager:
         Checks ConfigClass for any incompatibilities that are imaginable
         """
 
-        # lower number of the available cores and the configured parallelism
-        num_cores = min(mp.cpu_count(), self.general.parallel)
-        if self.general.parallel > mp.cpu_count() and verbosity > -1:
-            warnings.warn(
-                f"Number of cores requested ({self.general.parallel}) is greater "
-                + f"than the number of available cores ({mp.cpu_count()})."
-                + f"Using {num_cores} cores instead."
-            )
+        ### Config-specific checks ###
+        for attr_name in dir(self):
+            attr_value = getattr(self, attr_name)
+            if isinstance(attr_value, BaseConfig):
+                if hasattr(attr_value, "check_config"):
+                    attr_value.check_config(verbosity)
 
+        ### Overlapping checks ###
+        num_cores = min(mp.cpu_count(), self.general.parallel)
         if num_cores > 1 and self.postprocess.debug and verbosity > -1:
             # raise warning that debugging of postprocessing will disable parallelization
             warnings.warn(
@@ -781,14 +876,6 @@ class ConfigManager:
                 + "with possibly similar errors in parallel mode. "
                 + "Don't be confused!"
             )
-
-        if num_cores > 1 and verbosity > 0:
-            # raise warning that parallelization will disable verbosity
-            warnings.warn(
-                "Parallelization will disable verbosity during iterative search. "
-                + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
-            )
-
         if self.refine.engine == "xtb":
             # Check for f-block elements in forbidden elements
             if self.generate.forbidden_elements:
