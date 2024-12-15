@@ -268,28 +268,65 @@ class GenerateConfig(BaseConfig):
         return self._element_composition
 
     @element_composition.setter
-    def element_composition(self, composition_str):
+    def element_composition(
+        self, composition: None | str | dict[int, tuple[int | None, int | None]]
+    ) -> None:
         """
-        Parses the element_composition string and stores the parsed data
-        in the _element_composition dictionary.
+        If composition_str: str, it should be a string with the format:
+            Parses the element_composition string and stores the parsed data
+            in the _element_composition dictionary.
+            Format: "C:2-10, H:10-20, O:1-5, N:1-*"
+        If composition_str: dict, it should be a dictionary with integer keys and tuple values. Will be stored as is.
 
-        Format: "C:2-10, H:10-20, O:1-5, N:1-*"
+        Arguments:
+            composition_str (str): String with the element composition
+            composition_str (dict): Dictionary with integer keys and tuple values
+        Raises:
+            TypeError: If composition_str is not a string or a dictionary
+            AttributeError: If the element is not found in the periodic table
+            ValueError: If the minimum count is larger than the maximum count
+        Returns:
+            None
         """
 
-        if not isinstance(composition_str, str):
-            raise TypeError("Element composition should be a string.")
-        if not composition_str:
+        if not composition:
             return
+        if isinstance(composition, dict):
+            for key, value in composition.items():
+                if (
+                    not isinstance(key, int)
+                    or not isinstance(value, tuple)
+                    or len(value) != 2
+                    or not all(isinstance(val, int) or val is None for val in value)
+                ):
+                    raise TypeError(
+                        "Element composition dictionary should be a dictionary with integer keys and tuple values (int, int)."
+                    )
+            self._element_composition = composition
+            return
+        if not isinstance(composition, str):
+            raise TypeError(
+                "Element composition should be a string (will be parsed) or "
+                + "a dictionary with integer keys and tuple values."
+            )
 
-        element_dict = {}
-        elements = composition_str.split(",")
+        element_dict: dict[int, tuple[int | None, int | None]] = {}
+        elements = composition.split(",")
         # remove leading and trailing whitespaces
         elements = [element.strip() for element in elements]
 
+        min_count: int | str | None
+        max_count: int | str | None
         for element in elements:
             element_type, range_str = element.split(":")
             min_count, max_count = range_str.split("-")
-            element_number = PSE_NUMBERS.get(element_type.lower(), None) - 1
+            element_number = PSE_NUMBERS.get(element_type.lower(), None)
+            if element_number is None:
+                raise AttributeError(
+                    f"Element {element_type} not found in the periodic table."
+                )
+            # correct for 1- vs. 0-based indexing
+            element_number = element_number - 1
 
             # Convert counts, handle wildcard '*'
             min_count = None if min_count == "*" else int(min_count)
@@ -315,19 +352,41 @@ class GenerateConfig(BaseConfig):
         return self._forbidden_elements
 
     @forbidden_elements.setter
-    def forbidden_elements(self: GenerateConfig, forbidden_str: str) -> None:
+    def forbidden_elements(
+        self: GenerateConfig, forbidden: None | str | list[int]
+    ) -> None:
         """
-        Parses the forbidden_elements string and stores the parsed data
-        in the _forbidden_elements set.
+        If forbidden: str:
+            Parses the forbidden_elements string and stores the parsed data
+            in the _forbidden_elements set.
+            Format: "57-71, 8, 1" or "19-*"
+        If forbidden: list:
+            Stores the forbidden elements as is.
 
-        Format: "57-71, 8, 1" or "19-*"
+        Arguments:
+            forbidden (str): String with the forbidden elements
+            forbidden (list): List with integer values
+        Raises:
+            TypeError: If forbidden is not a string or a list of integers
+            ValueError: If both start and end are wildcard '*'
+        Returns:
+            None
         """
         # if string is empty or None, set to None
-        if not forbidden_str:
+        if not forbidden:
             self._forbidden_elements = None
             return
+        if isinstance(forbidden, list):
+            if all(isinstance(elem, int) for elem in forbidden):
+                self._forbidden_elements = sorted(forbidden)
+                return
+            raise TypeError("Forbidden elements should be a list of integers.")
+        if not isinstance(forbidden, str):
+            raise TypeError(
+                "Forbidden elements should be a string or a list of integers."
+            )
         forbidden_set: set[int] = set()
-        elements = forbidden_str.split(",")
+        elements = forbidden.split(",")
         elements = [element.strip() for element in elements]
 
         for item in elements:

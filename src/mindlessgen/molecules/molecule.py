@@ -10,7 +10,7 @@ import numpy as np
 from ..__version__ import __version__
 
 
-PSE = {
+PSE: dict[int, str] = {
     0: "X",
     1: "H",
     2: "He",
