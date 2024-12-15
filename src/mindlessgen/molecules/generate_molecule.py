@@ -335,7 +335,6 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
                 low=min_count, high=max_count, endpoint=True
             )
             natoms[elem] = added_atoms_from_composition
-            print(f"Adding {added_atoms_from_composition} atoms of type {elem}...")
 
     ### ACTUAL WORKFLOW START ###
     # Add a random number of atoms of random types
