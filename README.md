@@ -132,7 +132,9 @@ def main():
     config.generate.min_num_atoms = 10
     config.generate.max_num_atoms = 15
     config.generate.element_composition = "Ce:1-1"
+    # alternatively as a dictionary: config.generate.element_composition = {39:(1,1)}
     config.generate.forbidden_elements = "21-30,39-48,57-80"
+    # alternatively as a list: config.generate.forbidden_elements = [20,21,22,23] # 24,25,26...
 
     # xtb-related settings
     config.xtb.level = 1
