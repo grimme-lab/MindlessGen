@@ -8,6 +8,8 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 import warnings
 import multiprocessing as mp
+
+import numpy as np
 import toml
 
 from ..molecules import PSE_NUMBERS
@@ -213,6 +215,24 @@ class GeneralConfig(BaseConfig):
     ### End of g-xTB-specific settings #########################
     ############################################################
 
+    def check_config(self, verbosity: int = 1) -> None:
+        ### GeneralConfig checks ###
+        # lower number of the available cores and the configured parallelism
+        num_cores = min(mp.cpu_count(), self.parallel)
+        if self.parallel > mp.cpu_count() and verbosity > -1:
+            warnings.warn(
+                f"Number of cores requested ({self.parallel}) is greater "
+                + f"than the number of available cores ({mp.cpu_count()})."
+                + f"Using {num_cores} cores instead."
+            )
+
+        if num_cores > 1 and verbosity > 0:
+            # raise warning that parallelization will disable verbosity
+            warnings.warn(
+                "Parallelization will disable verbosity during iterative search. "
+                + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
+            )
+
 
 class GenerateConfig(BaseConfig):
     """
@@ -230,6 +250,7 @@ class GenerateConfig(BaseConfig):
         self._scale_minimal_distance: float = 0.8
         self._contract_coords: bool = True
         self._molecular_charge: int | None = None
+        self._fixed_composition: bool = False
 
     def get_identifier(self) -> str:
         return "generate"
@@ -314,28 +335,65 @@ class GenerateConfig(BaseConfig):
         return self._element_composition
 
     @element_composition.setter
-    def element_composition(self, composition_str):
+    def element_composition(
+        self, composition: None | str | dict[int, tuple[int | None, int | None]]
+    ) -> None:
         """
-        Parses the element_composition string and stores the parsed data
-        in the _element_composition dictionary.
+        If composition_str: str, it should be a string with the format:
+            Parses the element_composition string and stores the parsed data
+            in the _element_composition dictionary.
+            Format: "C:2-10, H:10-20, O:1-5, N:1-*"
+        If composition_str: dict, it should be a dictionary with integer keys and tuple values. Will be stored as is.
 
-        Format: "C:2-10, H:10-20, O:1-5, N:1-*"
+        Arguments:
+            composition_str (str): String with the element composition
+            composition_str (dict): Dictionary with integer keys and tuple values
+        Raises:
+            TypeError: If composition_str is not a string or a dictionary
+            AttributeError: If the element is not found in the periodic table
+            ValueError: If the minimum count is larger than the maximum count
+        Returns:
+            None
         """
 
-        if not isinstance(composition_str, str):
-            raise TypeError("Element composition should be a string.")
-        if not composition_str:
+        if not composition:
             return
+        if isinstance(composition, dict):
+            for key, value in composition.items():
+                if (
+                    not isinstance(key, int)
+                    or not isinstance(value, tuple)
+                    or len(value) != 2
+                    or not all(isinstance(val, int) or val is None for val in value)
+                ):
+                    raise TypeError(
+                        "Element composition dictionary should be a dictionary with integer keys and tuple values (int, int)."
+                    )
+            self._element_composition = composition
+            return
+        if not isinstance(composition, str):
+            raise TypeError(
+                "Element composition should be a string (will be parsed) or "
+                + "a dictionary with integer keys and tuple values."
+            )
 
-        element_dict = {}
-        elements = composition_str.split(",")
+        element_dict: dict[int, tuple[int | None, int | None]] = {}
+        elements = composition.split(",")
         # remove leading and trailing whitespaces
         elements = [element.strip() for element in elements]
 
+        min_count: int | str | None
+        max_count: int | str | None
         for element in elements:
             element_type, range_str = element.split(":")
             min_count, max_count = range_str.split("-")
-            element_number = PSE_NUMBERS.get(element_type.lower(), None) - 1
+            element_number = PSE_NUMBERS.get(element_type.lower(), None)
+            if element_number is None:
+                raise AttributeError(
+                    f"Element {element_type} not found in the periodic table."
+                )
+            # correct for 1- vs. 0-based indexing
+            element_number = element_number - 1
 
             # Convert counts, handle wildcard '*'
             min_count = None if min_count == "*" else int(min_count)
@@ -361,19 +419,41 @@ class GenerateConfig(BaseConfig):
         return self._forbidden_elements
 
     @forbidden_elements.setter
-    def forbidden_elements(self: GenerateConfig, forbidden_str: str) -> None:
+    def forbidden_elements(
+        self: GenerateConfig, forbidden: None | str | list[int]
+    ) -> None:
         """
-        Parses the forbidden_elements string and stores the parsed data
-        in the _forbidden_elements set.
+        If forbidden: str:
+            Parses the forbidden_elements string and stores the parsed data
+            in the _forbidden_elements set.
+            Format: "57-71, 8, 1" or "19-*"
+        If forbidden: list:
+            Stores the forbidden elements as is.
 
-        Format: "57-71, 8, 1" or "19-*"
+        Arguments:
+            forbidden (str): String with the forbidden elements
+            forbidden (list): List with integer values
+        Raises:
+            TypeError: If forbidden is not a string or a list of integers
+            ValueError: If both start and end are wildcard '*'
+        Returns:
+            None
         """
         # if string is empty or None, set to None
-        if not forbidden_str:
+        if not forbidden:
             self._forbidden_elements = None
             return
+        if isinstance(forbidden, list):
+            if all(isinstance(elem, int) for elem in forbidden):
+                self._forbidden_elements = sorted(forbidden)
+                return
+            raise TypeError("Forbidden elements should be a list of integers.")
+        if not isinstance(forbidden, str):
+            raise TypeError(
+                "Forbidden elements should be a string or a list of integers."
+            )
         forbidden_set: set[int] = set()
-        elements = forbidden_str.split(",")
+        elements = forbidden.split(",")
         elements = [element.strip() for element in elements]
 
         for item in elements:
@@ -470,6 +550,80 @@ class GenerateConfig(BaseConfig):
             self._molecular_charge = molecular_charge
         else:
             raise TypeError("Molecular charge should be a string or an integer.")
+
+    @property
+    def fixed_composition(self):
+        """
+        Get the fixed_composition flag.
+        """
+        return self._fixed_composition
+
+    @fixed_composition.setter
+    def fixed_composition(self, fixed_composition: bool):
+        """
+        Set the fixed_composition flag.
+        """
+        if not isinstance(fixed_composition, bool):
+            raise TypeError("Fixed composition should be a boolean.")
+        self._fixed_composition = fixed_composition
+
+    def check_config(self, verbosity: int = 1) -> None:
+        """
+        GenerateConfig checks for any incompatibilities that are imaginable
+        """
+        # - Check if the minimum number of atoms is smaller than the maximum number of atoms
+        if self.min_num_atoms is not None and self.max_num_atoms is not None:
+            if self.min_num_atoms > self.max_num_atoms:
+                raise ValueError(
+                    "The minimum number of atoms is larger than the maximum number of atoms."
+                )
+        # - Check if the summed number of minimally required atoms from cfg.element_composition
+        #   is larger than the maximum number of atoms
+        if self.max_num_atoms is not None:
+            if (
+                np.sum(
+                    [
+                        self.element_composition.get(i, (0, 0))[0]
+                        if self.element_composition.get(i, (0, 0))[0] is not None
+                        else 0
+                        for i in self.element_composition
+                    ]
+                )
+                > self.max_num_atoms
+            ):
+                raise ValueError(
+                    "The summed number of minimally required atoms "
+                    + "from the fixed composition is larger than the maximum number of atoms."
+                )
+        if self.fixed_composition:
+            # - Check if all defintions in cfg.element_composition
+            #   are completely fixed (min and max are equal)
+            for elem, count_range in self.element_composition.items():
+                # check if for all entries: min and max are both not None, and if min and max are equal.
+                if (
+                    (count_range[0] is None)
+                    or (count_range[1] is None)
+                    or (count_range[0] != count_range[1])
+                ):
+                    raise ValueError(
+                        f"Element {elem} is not completely fixed in the element composition. "
+                        + "Usage together with fixed_composition is not possible."
+                    )
+            # Check if the summed number of fixed atoms
+            # is within the defined overall limits
+            sum_fixed_atoms = np.sum(
+                [
+                    self.element_composition.get(i, (0, 0))[0]
+                    for i in self.element_composition
+                ]
+            )
+            if self.min_num_atoms is not None and not (
+                self.min_num_atoms <= sum_fixed_atoms
+            ):
+                raise ValueError(
+                    "The summed number of fixed atoms from the fixed composition "
+                    + "is not within the range of min_num_atoms and max_num_atoms."
+                )
 
 
 class RefineConfig(BaseConfig):
@@ -811,15 +965,15 @@ class ConfigManager:
         Checks ConfigClass for any incompatibilities that are imaginable
         """
 
-        # lower number of the available cores and the configured parallelism
-        num_cores = min(mp.cpu_count(), self.general.parallel)
-        if self.general.parallel > mp.cpu_count() and verbosity > -1:
-            warnings.warn(
-                f"Number of cores requested ({self.general.parallel}) is greater "
-                + f"than the number of available cores ({mp.cpu_count()})."
-                + f"Using {num_cores} cores instead."
-            )
+        ### Config-specific checks ###
+        for attr_name in dir(self):
+            attr_value = getattr(self, attr_name)
+            if isinstance(attr_value, BaseConfig):
+                if hasattr(attr_value, "check_config"):
+                    attr_value.check_config(verbosity)
 
+        ### Overlapping checks ###
+        num_cores = min(mp.cpu_count(), self.general.parallel)
         if num_cores > 1 and self.postprocess.debug and verbosity > -1:
             # raise warning that debugging of postprocessing will disable parallelization
             warnings.warn(
@@ -827,14 +981,6 @@ class ConfigManager:
                 + "with possibly similar errors in parallel mode. "
                 + "Don't be confused!"
             )
-
-        if num_cores > 1 and verbosity > 0:
-            # raise warning that parallelization will disable verbosity
-            warnings.warn(
-                "Parallelization will disable verbosity during iterative search. "
-                + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
-            )
-
         if self.refine.engine == "xtb":
             # Check for f-block elements in forbidden elements
             if self.generate.forbidden_elements:

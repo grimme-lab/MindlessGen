@@ -68,6 +68,8 @@ Further information on how to contribute to this project can also be found in th
 
 ## Usage
 
+### Command line interface
+
 > [!WARNING]
 > `mindlessgen` may still be subject to API changes.
 
@@ -85,17 +87,77 @@ If the path is not specified with `-c/--config`, `mindlessgen.toml` will be sear
 If neither a corresponding CLI command nor an entry in the configuration file is provided, the default values are used.
 The active configuration, including the default values, can be printed using `--print-config`.
 
-### Element composition
+#### Element composition
 There are two related aspects of the element composition:
 1. **Which elements** should occur within the generated molecule?
 2. **How many atoms** of the specified element should occur?
 - **Example 1**: `C:1-3, O:1-1, H:1-*` would result in a molecule with 1, 2, or 3 carbon atoms, exactly 1 oxygen atom, and between 1 and an undefined number of hydrogen atoms (i.e., at least 1).
-- **Example 2**: `Na:10-10, In:10-10, O:20-20`. This example would result in a molecule with exactly 10 sodium atoms, 10 indium atoms, and 20 oxygen atoms. **For a fixed element composition, the number of atoms (40) has to be within the min_num_atoms and max_num_atom interval.** `mindlessgen` will consequently always return a molecule with exactly 40 atoms.
+- **Example 2**: `Na:10-10, In:10-10, O:20-20`. This example would result in a molecule with exactly 10 sodium atoms, 10 indium atoms, and 20 oxygen atoms.
+For fixing the whole molecule to this composition, set `fixed_composition` to `true`.
+`mindlessgen` will consequently always return a molecule with exactly 40 atoms.
 
 > [!WARNING]
 > When using `orca` and specifying elements with `Z > 86`, ensure that the basis set you've selected is compatible with (super-)heavy elements like actinides.
 > You can find a list of available basis sets [here](https://www.faccts.de/docs/orca/6.0/manual/contents/detailed/basisset.html#built-in-basis-sets).
 > A reliable standard choice that covers the entire periodic table is `def2-mTZVPP`.
+
+### Python application programming interface
+
+```python
+"""
+Python script that calls the MindlessGen API.
+"""
+
+import warnings
+
+from mindlessgen.generator import generator
+from mindlessgen.prog import ConfigManager
+
+
+def main():
+    """
+    Main function for execution of MindlessGen via Python API.
+    """
+    config = ConfigManager()
+
+    # General settings
+    config.general.max_cycles = 500
+    config.general.parallel = 6
+    config.general.verbosity = -1
+    config.general.num_molecules = 2
+    config.general.postprocess = False
+    config.general.write_xyz = False
+
+    # Settings for the random molecule generation
+    config.generate.min_num_atoms = 10
+    config.generate.max_num_atoms = 15
+    config.generate.element_composition = "Ce:1-1"
+    # alternatively as a dictionary: config.generate.element_composition = {39:(1,1)}
+    config.generate.forbidden_elements = "21-30,39-48,57-80"
+    # alternatively as a list: config.generate.forbidden_elements = [20,21,22,23] # 24,25,26...
+
+    # xtb-related settings
+    config.xtb.level = 1
+
+    try:
+        molecules, exitcode = generator(config)
+    except RuntimeError as e:
+        print(f"\nGeneration failed: {e}")
+        raise RuntimeError("Generation failed.") from e
+    if exitcode != 0:
+        warnings.warn("Generation completed with errors for parts of the generation.")
+    for molecule in molecules:
+        molecule.write_xyz_to_file()
+        print(
+            "\n###############\nProperties of molecule "
+            + f"'{molecule.name}' with formula {molecule.sum_formula()}:"
+        )
+        print(molecule)
+
+
+if __name__ == "__main__":
+    main()
+```
 
 ## Citation
 
@@ -121,19 +183,22 @@ When using the program for academic purposes, please cite _i)_ the original idea
     ```
 
 2.  A new publication featuring all functionalities and improvements of `mindlessgen` is in preparation.
-    In the meantime, please refer to the original publication and to the following preprint, which uses the `mindlessgen` program for the first time:
-    Müller, M.; Froitzheim, T.; Hansen, A.; Grimme, S. _ChemRxiv_ October 28, 2024. https://doi.org/10.26434/chemrxiv-2024-h76ms.
+    In the meantime, please refer to the original publication and to the following publication, which uses the `mindlessgen` program for the first time:
+    Marcel Müller, Thomas Froitzheim, Andreas Hansen, and Stefan Grimme, *The Journal of Physical Chemistry A* **2024** *128* (49), 10723-10736, DOI: 10.1021/acs.jpca.4c06989.
     ```
-    @misc{muller_advanced_2024,
-    	title = {Advanced {Charge} {Extended} {Hückel} ({CEH}) {Model} and a {Consistent} {Adaptive} {Minimal} {Basis} {Set} for the {Elements} {Z}=1-103},
-    	url = {https://chemrxiv.org/engage/chemrxiv/article-details/671a92581fb27ce1247466ad},
-    	doi = {10.26434/chemrxiv-2024-h76ms},
-    	urldate = {2024-10-28},
-    	publisher = {ChemRxiv},
-    	author = {Müller, Marcel and Froitzheim, Thomas and Hansen, Andreas and Grimme, Stefan},
-    	month = oct,
-    	year = {2024},
-    	keywords = {DFT, Basis sets, EHT, SQM},
+    @article{
+        doi:10.1021/acs.jpca.4c06989,
+        author = {M{\"u}ller, Marcel and Froitzheim, Thomas and Hansen, Andreas and Grimme, Stefan},
+        title = {Advanced Charge Extended Hückel (CEH) Model and a Consistent Adaptive Minimal Basis Set for the Elements Z = 1–103},
+        journal = {The Journal of Physical Chemistry A},
+        volume = {128},
+        number = {49},
+        pages = {10723-10736},
+        year = {2024},
+        doi = {10.1021/acs.jpca.4c06989},
+        note ={PMID: 39621818},
+        URL = {https://doi.org/10.1021/acs.jpca.4c06989},
+        eprint = {https://doi.org/10.1021/acs.jpca.4c06989}
     }
     ```
 

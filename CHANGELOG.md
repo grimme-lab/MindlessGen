@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.5.0] - 2024-12-16
 ### Changed
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
 - check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
@@ -12,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - clearer differentiation between the distinct scaling factors for the van der Waals radii
 - `README.md` with more detailed explanation of the element composition function
 - Default `max_cycles` for the generation & refinement set to 200
+- Allow fixed molecule compositions in a simpler way
+- `check_config` now ConfigClass-specific
+- modify atom list adaption to `element_composition` such that a random integer in the given range is taken and not the lower/upper bound
 
 ### Fixed
 - unit conversion for (currenly unused) vdW radii from the original Fortran project
@@ -23,12 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - legacy pseudo random number generation removed and replaced by `np.random.default_rng()` for avoiding interference with other packages
 
 ### Added
-- support for the novel "g-xTB" method (working title: GP3-xTB)
+- support for the novel "g-xTB" method (previous working title: GP3-xTB)
 - function which contracts the coordinates after the initial generation
 - function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout
 - elements 87 to 103 are accessible via the element composition. If `xtb` is the engine, the elements will be replaced by their lighter homologues.
 - support for `python-3.13`
 - option to set a fixed molecular charge, while ensuring `uhf = 0`
+- `element_composition` and `forbidden_elements` can now be directly set to a `dict` or `list`, respectively, via API access
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
