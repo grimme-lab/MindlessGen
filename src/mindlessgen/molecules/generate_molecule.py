@@ -276,10 +276,16 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
         # CAUTION: The setting to min/max count may violate the metal count restrictions
         for elem, count_range in cfg.element_composition.items():
             min_count, max_count = count_range
-            if min_count is not None and natoms[elem] < min_count:
-                natoms[elem] = min_count
-            elif max_count is not None and natoms[elem] > max_count:
-                natoms[elem] = max_count
+            # define the random number of atoms to be added
+            if min_count is None:
+                min_count = 0
+            if max_count is None:
+                max_count = cfg.max_num_atoms
+                # 50 % of the maximally allowed number of atoms
+            added_atoms_from_composition = rng.integers(
+                low=min_count, high=max_count, endpoint=True
+            )
+            natoms[elem] = added_atoms_from_composition
 
     ### ACTUAL WORKFLOW START ###
     # Add a random number of atoms of random types
