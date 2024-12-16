@@ -149,6 +149,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Define the charge of the molecule.",
     )
+    parser.add_argument(
+        "--fixed-composition",
+        type=bool,
+        required=False,
+        help="Fix the element composition of the molecule.",
+    )
 
     ### Refinement arguments ###
     parser.add_argument(
@@ -287,6 +293,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "scale_minimal_distance": args_dict["scale_minimal_distance"],
         "contract_coords": args_dict["contract_coords"],
         "molecular_charge": args_dict["molecular_charge"],
+        "fixed_composition": args_dict["fixed_composition"],
     }
     # XTB specific arguments
     rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}

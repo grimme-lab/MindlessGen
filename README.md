@@ -87,12 +87,14 @@ If the path is not specified with `-c/--config`, `mindlessgen.toml` will be sear
 If neither a corresponding CLI command nor an entry in the configuration file is provided, the default values are used.
 The active configuration, including the default values, can be printed using `--print-config`.
 
-### Element composition
+#### Element composition
 There are two related aspects of the element composition:
 1. **Which elements** should occur within the generated molecule?
 2. **How many atoms** of the specified element should occur?
 - **Example 1**: `C:1-3, O:1-1, H:1-*` would result in a molecule with 1, 2, or 3 carbon atoms, exactly 1 oxygen atom, and between 1 and an undefined number of hydrogen atoms (i.e., at least 1).
-- **Example 2**: `Na:10-10, In:10-10, O:20-20`. This example would result in a molecule with exactly 10 sodium atoms, 10 indium atoms, and 20 oxygen atoms. **For a fixed element composition, the number of atoms (40) has to be within the min_num_atoms and max_num_atom interval.** `mindlessgen` will consequently always return a molecule with exactly 40 atoms.
+- **Example 2**: `Na:10-10, In:10-10, O:20-20`. This example would result in a molecule with exactly 10 sodium atoms, 10 indium atoms, and 20 oxygen atoms.
+For fixing the whole molecule to this composition, set `fixed_composition` to `true`.
+`mindlessgen` will consequently always return a molecule with exactly 40 atoms.
 
 > [!WARNING]
 > When using `orca` and specifying elements with `Z > 86`, ensure that the basis set you've selected is compatible with (super-)heavy elements like actinides.

@@ -38,6 +38,9 @@ contract_coords = true
 # > Elements that are not specified are only added by random selection.
 # > A star sign (*) can be used as a wildcard for integer value.
 element_composition = "C:2-3, H:1-2, O:1-2, N:1-*"
+# > Set an exactly defined composition
+# > CAUTION: Only possible if 'element_composition' is set to defined values. Example: "C:3-3, H:8-8, O:1-1"
+fixed_composition = false
 # > Atom types that are not chosen for random selection. Format: "<element1>, <element2>, ..."
 # > CAUTION: This option is overridden by the 'element_composition' option.
 # > I.e., if an element is specified in 'element_composition' with an occurrence > 0, it will be added to the molecule anyway.

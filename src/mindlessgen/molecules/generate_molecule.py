@@ -82,83 +82,34 @@ def generate_atom_list(cfg: GenerateConfig, verbosity: int = 1) -> np.ndarray:
     else:
         valid_elems = set_all_elem
 
-    natoms = np.zeros(
-        103, dtype=int
-    )  # 103 is the number of accessible elements in the periodic table
+    natoms = np.zeros(103, dtype=int)  # Support for up to element 103 (Lr)
 
-    # Some sanity checks:
-    # - Check if the minimum number of atoms is smaller than the maximum number of atoms
-    if cfg.min_num_atoms is not None and cfg.max_num_atoms is not None:
-        if cfg.min_num_atoms > cfg.max_num_atoms:
-            raise ValueError(
-                "The minimum number of atoms is larger than the maximum number of atoms."
+    if cfg.fixed_composition:
+        # Set the number of atoms for the fixed composition
+        for elem, count_range in cfg.element_composition.items():
+            natoms[elem] = count_range[0]
+        if verbosity > 1:
+            print(
+                "Setting the number of atoms for the fixed composition. "
+                + f"Returning: \n{natoms}\n"
             )
-
-    # - Check if the summed number of minimally required atoms from cfg.element_composition
-    #   is larger than the maximum number of atoms
-    if cfg.max_num_atoms is not None:
-        if (
-            np.sum(
-                [
-                    cfg.element_composition.get(i, (0, 0))[0]
-                    for i in cfg.element_composition
-                ]
+        # If the molecular charge is defined, and a fixed element composition is defined, check if the electrons are even. If not raise an error.
+        if cfg.molecular_charge:
+            protons = calculate_protons(natoms)
+            nel = protons - cfg.molecular_charge
+            f_elem = any(
+                count > 0 and (i in get_lanthanides() or i in get_actinides())
+                for i, count in enumerate(natoms)
             )
-            > cfg.max_num_atoms
-        ):
-            raise ValueError(
-                "The summed number of minimally required atoms "
-                + "from the fixed composition is larger than the maximum number of atoms."
-            )
-    fixed_elem = False
-    # - Check if all defintions in cfg.element_composition
-    #   are completely fixed (min and max are equal)
-    for elem, count_range in cfg.element_composition.items():
-        # check if for all entries: min and max are both not None, and if min and max are equal.
-        # If both is true, set a boolean to True
-        if (
-            count_range[0] is not None
-            and count_range[1] is not None
-            and count_range[0] == count_range[1]
-        ):
-            fixed_elem = True
-        else:
-            fixed_elem = False
-            break
-    # If the boolean is True, check if the summed number of fixed atoms
-    # is within the defined overall limits
-    if fixed_elem:
-        sum_fixed_atoms = np.sum(
-            [cfg.element_composition.get(i, (0, 0))[0] for i in cfg.element_composition]
-        )
-        if cfg.min_num_atoms <= sum_fixed_atoms <= cfg.max_num_atoms:
-            # If the fixed composition is within the defined limits,
-            # set the number of atoms for the fixed composition
-            for elem, count_range in cfg.element_composition.items():
-                natoms[elem] = count_range[0]
-            if verbosity > 1:
-                print(
-                    "Fixed composition is within the defined limits. "
-                    + "Setting the number of atoms for the fixed composition. "
-                    + f"Returning: \n{natoms}\n"
+            if (f_elem and calculate_ligand_electrons(natoms, nel) % 2 != 0) or (
+                not f_elem and nel % 2 != 0
+            ):
+                raise ValueError(
+                    "Both fixed charge and fixed composition are defined. "
+                    + "Please only define one of them."
+                    + "Or ensure that the fixed composition is closed shell."
                 )
-            # If the molecular charge is defined, and a fixed element composition is defined, check if the electrons are even. If not raise an error.
-            if cfg.molecular_charge:
-                protons = calculate_protons(natoms)
-                nel = protons - cfg.molecular_charge
-                f_elem = any(
-                    count > 0 and (i in get_lanthanides() or i in get_actinides())
-                    for i, count in enumerate(natoms)
-                )
-                if (f_elem and calculate_ligand_electrons(natoms, nel) % 2 != 0) or (
-                    not f_elem and nel % 2 != 0
-                ):
-                    raise SystemExit(
-                        "Both fixed charge and fixed composition are defined. "
-                        + "Please only define one of them."
-                        + "Or ensure that the fixed composition is closed shell."
-                    )
-            return natoms
+        return natoms
 
     # Reasoning for the parameters in the following sections:
     # - The number of the atoms added by default (DefaultRandom + AddOrganicAtoms)
@@ -524,7 +475,7 @@ def fixed_charge_elem_correction(
             if verbosity > 1:
                 print(f"Adding atom type {random_elem} for charge...")
             return natoms
-        elif natoms[random_elem] > min_count and num_atoms > cfg.min_num_atoms:
+        if natoms[random_elem] > min_count and num_atoms > cfg.min_num_atoms:
             natoms[random_elem] -= 1
             if verbosity > 1:
                 print(f"Removing atom type {random_elem} for charge...")

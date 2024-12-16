@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - clearer differentiation between the distinct scaling factors for the van der Waals radii
 - `README.md` with more detailed explanation of the element composition function
 - Default `max_cycles` for the generation & refinement set to 200
+- Allow fixed molecule compositions in a simpler way
+- `check_config` now ConfigClass-specific
 - modify atom list adaption to `element_composition` such that a random integer in the given range is taken and not the lower/upper bound
 
 ### Fixed
