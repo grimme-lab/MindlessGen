@@ -110,8 +110,9 @@ def test_generate_atom_list_with_composition(
 
     if expected_error:
         with pytest.raises(expected_error):
-            generate_atom_list(config, verbosity=1)
+            config.check_config()
     else:
+        config.check_config()
         atom_list = generate_atom_list(config, verbosity=1)
         for elem, count in expected_atom_counts.items():
             if isinstance(count, tuple):
@@ -295,15 +296,6 @@ def test_check_distances(xyz, ati, scale_minimal_bondlength, expected, descripti
     assert check_distances(xyz, ati, scale_minimal_bondlength) == expected
 
 
-def test_generate_atom_list_min_larger_than_max(default_generate_config):
-    """Test the generate_atom_list function when the minimum number of atoms is larger than the maximum number of atoms."""
-    default_generate_config.min_num_atoms = 10
-    default_generate_config.max_num_atoms = 5
-
-    with pytest.raises(ValueError):
-        generate_atom_list(default_generate_config, verbosity=1)
-
-
 # Test to ensure non-integer values for min/max atoms raise errors
 @pytest.mark.parametrize(
     "min_atoms, max_atoms, expected_error",
@@ -342,6 +334,37 @@ def test_generate_atom_list_with_overlapping_forbidden_elements(
 
     # Ensure forbidden elements are not present in the atom list
     assert np.sum([atom_list[z] for z in expected_atoms]) == 0
+
+
+# Test fixed composition with varying min/max atoms and element compositions
+@pytest.mark.parametrize(
+    "min_atoms, max_atoms, element_composition, fixed_composition, should_raise",
+    [
+        (10, 5, "C:3-3, H:3-3", False, True),
+        (5, 10, "C:5-10, H:6-10", False, True),
+        (5, 10, "C:5-10, H:6-6", True, True),
+        (5, 10, "C:5-5, H:6-6", True, True),
+        (5, 10, "C:2-5, H:3-5", False, False),
+        (5, 10, "C:3-3, H:3-3", True, False),
+        (5, 10, "C:*-3, H:2-*", True, True),
+    ],
+)
+def test_check_config_variations(
+    min_atoms, max_atoms, element_composition, fixed_composition, should_raise
+):
+    config = GenerateConfig()
+    config.min_num_atoms = min_atoms
+    config.max_num_atoms = max_atoms
+    config.element_composition = element_composition
+    config.fixed_composition = fixed_composition
+    if should_raise:
+        with pytest.raises(ValueError):
+            config.check_config()
+    else:
+        try:
+            config.check_config()
+        except ValueError:
+            pytest.fail("check_config() raised ValueError unexpectedly!")
 
 
 # Test behavior when composition is empty but min/max are set
@@ -433,14 +456,15 @@ def test_fixed_charge_and_fixed_composition(
 ):
     """Test the hydrogen correction for a fixed charge"""
     default_generate_config.molecular_charge = "3"
-    default_generate_config.min_num_atoms = 5
-    default_generate_config.max_num_atoms = 10
+    default_generate_config.fixed_composition = True
     default_generate_config.element_composition = "H:5-5, C:2-2, N:1-1, O:1-1"
 
     # Check if the right system exit is raised
     with pytest.raises(
-        SystemExit,
-        match="Both fixed charge and fixed composition are defined. Please only define one of them.Or ensure that the fixed composition is closed shell.",
+        ValueError,
+        match="Both fixed charge and fixed composition are defined. "
+        + "Please only define one of them."
+        + "Or ensure that the fixed composition is closed shell.",
     ):
         generate_random_molecule(default_generate_config, verbosity=1)
 
