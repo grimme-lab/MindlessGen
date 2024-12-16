@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.5.0] - 2024-12-16
 ### Changed
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
 - check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
@@ -26,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - legacy pseudo random number generation removed and replaced by `np.random.default_rng()` for avoiding interference with other packages
 
 ### Added
-- support for the novel "g-xTB" method (working title: GP3-xTB)
+- support for the novel "g-xTB" method (previous working title: GP3-xTB)
 - function which contracts the coordinates after the initial generation
 - function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout
 - elements 87 to 103 are accessible via the element composition. If `xtb` is the engine, the elements will be replaced by their lighter homologues.
