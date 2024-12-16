@@ -91,12 +91,16 @@ def test_generate_config_property_setters(
     [
         ("element_composition", "C:1-10", {5: (1, 10)}),
         ("element_composition", "C:1-10, H:2-*", {5: (1, 10), 0: (2, None)}),
+        # additional test for giving the element_composition directly as a dictionary
+        ("element_composition", {5: (1, 10), 0: (2, None)}, {5: (1, 10), 0: (2, None)}),
         ("forbidden_elements", "6,1", [0, 5]),
         (
             "forbidden_elements",
             "86-*",
             [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102],
         ),
+        # additional test for giving the forbidden_elements directly as a list
+        ("forbidden_elements", [0, 5], [0, 5]),
     ],
 )
 def test_generate_config_element_composition(
