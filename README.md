@@ -181,19 +181,22 @@ When using the program for academic purposes, please cite _i)_ the original idea
     ```
 
 2.  A new publication featuring all functionalities and improvements of `mindlessgen` is in preparation.
-    In the meantime, please refer to the original publication and to the following preprint, which uses the `mindlessgen` program for the first time:
-    Müller, M.; Froitzheim, T.; Hansen, A.; Grimme, S. _ChemRxiv_ October 28, 2024. https://doi.org/10.26434/chemrxiv-2024-h76ms.
+    In the meantime, please refer to the original publication and to the following publication, which uses the `mindlessgen` program for the first time:
+    Marcel Müller, Thomas Froitzheim, Andreas Hansen, and Stefan Grimme, *The Journal of Physical Chemistry A* **2024** *128* (49), 10723-10736, DOI: 10.1021/acs.jpca.4c06989.
     ```
-    @misc{muller_advanced_2024,
-    	title = {Advanced {Charge} {Extended} {Hückel} ({CEH}) {Model} and a {Consistent} {Adaptive} {Minimal} {Basis} {Set} for the {Elements} {Z}=1-103},
-    	url = {https://chemrxiv.org/engage/chemrxiv/article-details/671a92581fb27ce1247466ad},
-    	doi = {10.26434/chemrxiv-2024-h76ms},
-    	urldate = {2024-10-28},
-    	publisher = {ChemRxiv},
-    	author = {Müller, Marcel and Froitzheim, Thomas and Hansen, Andreas and Grimme, Stefan},
-    	month = oct,
-    	year = {2024},
-    	keywords = {DFT, Basis sets, EHT, SQM},
+    @article{
+        doi:10.1021/acs.jpca.4c06989,
+        author = {M{\"u}ller, Marcel and Froitzheim, Thomas and Hansen, Andreas and Grimme, Stefan},
+        title = {Advanced Charge Extended Hückel (CEH) Model and a Consistent Adaptive Minimal Basis Set for the Elements Z = 1–103},
+        journal = {The Journal of Physical Chemistry A},
+        volume = {128},
+        number = {49},
+        pages = {10723-10736},
+        year = {2024},
+        doi = {10.1021/acs.jpca.4c06989},
+        note ={PMID: 39621818},
+        URL = {https://doi.org/10.1021/acs.jpca.4c06989},
+        eprint = {https://doi.org/10.1021/acs.jpca.4c06989}
     }
     ```
 
