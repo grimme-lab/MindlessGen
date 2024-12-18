@@ -6,6 +6,7 @@ from .base import QMMethod
 from .xtb import XTB, get_xtb_path
 from .orca import ORCA, get_orca_path
 from .gp3 import GP3, get_gp3_path
+from .tm import Turbomole, get_turbomole_path
 
 __all__ = [
     "XTB",
@@ -15,4 +16,6 @@ __all__ = [
     "get_orca_path",
     "GP3",
     "get_gp3_path",
+    "Turbomole",
+    "get_turbomole_path",
 ]

@@ -60,7 +60,7 @@ hlgap = 0.5
 debug = false
 
 [postprocess]
-# > Engine for the post-processing part. Options: 'xtb', 'orca'
+# > Engine for the post-processing part. Options: 'xtb', 'orca', 'turbomole'
 engine = "orca"
 # > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
 optimize = true
@@ -88,3 +88,11 @@ basis = "def2-SVP"
 gridsize = 1
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
+
+[turbomole]
+# > Path to the turbomole executable. The names `turbomole` and `turbomole_dev` are automatically searched for. Options: <str | Path>
+turbomole_path = "/path/to/turbomole"
+# > Functional/Method: Options: <str>
+functional = "PBE"
+# > Basis set: Options: <str>
+basis = "def2-SVP"

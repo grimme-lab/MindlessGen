@@ -626,8 +626,8 @@ class RefineConfig(BaseConfig):
         """
         if not isinstance(engine, str):
             raise TypeError("Refinement engine should be a string.")
-        if engine not in ["xtb", "orca"]:
-            raise ValueError("Refinement engine can only be xtb or orca.")
+        if engine not in ["xtb", "orca", "turbomole"]:
+            raise ValueError("Refinement engine can only be xtb, orca or turbomole.")
         self._engine = engine
 
     @property
@@ -693,8 +693,8 @@ class PostProcessConfig(BaseConfig):
         """
         if not isinstance(engine, str):
             raise TypeError("Postprocess engine should be a string.")
-        if engine not in ["xtb", "orca", "gp3"]:
-            raise ValueError("Postprocess engine can only be xtb or orca.")
+        if engine not in ["xtb", "orca", "gp3", "turbomole"]:
+            raise ValueError("Postprocess engine can only be xtb, orca turbomole.")
         self._engine = engine
 
     @property
@@ -895,6 +895,86 @@ class ORCAConfig(BaseConfig):
         self._scf_cycles = max_scf_cycles
 
 
+class TURBOMOLEConfig(BaseConfig):
+    """
+    Configuration class for TURBOMOLE.
+    """
+
+    def __init__(self: TURBOMOLEConfig) -> None:
+        self._turbomole_path: str | Path = "turbomole"
+        self._functional: str = "PBE"
+        self._basis: str = "def2-SVP"
+        self._scf_cycles: int = 100
+
+    def get_identifier(self) -> str:
+        return "turbomole"
+
+    @property
+    def turbomole_path(self):
+        """
+        Get the turbomole path.
+        """
+        return self._turbomole_path
+
+    @turbomole_path.setter
+    def turbomole_path(self, turbomole_path: str | Path):
+        """
+        Set the turbomole path.
+        """
+        if not isinstance(turbomole_path, str | Path):
+            raise TypeError("turbomole_path should be a string or Path.")
+        self._turbomole_path = turbomole_path
+
+    @property
+    def functional(self):
+        """
+        Get the TURBOMOLE functional/method.
+        """
+        return self._functional
+
+    @functional.setter
+    def functional(self, functional: str):
+        """
+        Set the TURBOMOLE functional/method.
+        """
+        if not isinstance(functional, str):
+            raise TypeError("Functional should be a string.")
+        self._functional = functional
+
+    @property
+    def basis(self):
+        """
+        Get the TURBOMOLE basis set.
+        """
+        return self._basis
+
+    @basis.setter
+    def basis(self, basis: str):
+        """
+        Set the TURBOMOLE basis set.
+        """
+        if not isinstance(basis, str):
+            raise TypeError("Basis should be a string.")
+        self._basis = basis
+
+    @property
+    def scf_cycles(self):
+        """
+        Get the maximum number of SCF cycles.
+        """
+        return self._scf_cycles
+
+    @scf_cycles.setter
+    def scf_cycles(self, max_scf_cycles: int):
+        """
+        Set the maximum number of SCF cycles.
+        """
+        if not isinstance(max_scf_cycles, int):
+            raise TypeError("Max SCF cycles should be an integer.")
+        if max_scf_cycles < 1:
+            raise ValueError("Max SCF cycles should be greater than 0.")
+
+
 class ConfigManager:
     """
     Overall configuration manager for the program.
@@ -907,6 +987,7 @@ class ConfigManager:
         self.general = GeneralConfig()
         self.xtb = XTBConfig()
         self.orca = ORCAConfig()
+        self.turbomole = TURBOMOLEConfig()
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
@@ -996,6 +1077,9 @@ class ConfigManager:
         [orca]
         orca_option = "opt"
 
+        [turbomole]
+        turbomole_option = "opt"
+
         Arguments:
             config_file (str): Path to the configuration file
 
@@ -1018,6 +1102,9 @@ class ConfigManager:
             },
             "orca": {
                 "orca_option": "opt"
+            },
+            "turbomole": {
+                "turbomole_option": "opt"
             }
         }
 
