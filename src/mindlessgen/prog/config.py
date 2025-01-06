@@ -12,6 +12,8 @@ import multiprocessing as mp
 import numpy as np
 import toml
 
+from mindlessgen.molecules.molecule import PSE_SYMBOLS
+
 from ..molecules import PSE_NUMBERS
 
 
@@ -290,18 +292,18 @@ class GenerateConfig(BaseConfig):
 
     @element_composition.setter
     def element_composition(
-        self, composition: None | str | dict[int, tuple[int | None, int | None]]
+        self, composition: None | str | dict[int | str, tuple[int | None, int | None]]
     ) -> None:
         """
         If composition_str: str, it should be a string with the format:
             Parses the element_composition string and stores the parsed data
             in the _element_composition dictionary.
             Format: "C:2-10, H:10-20, O:1-5, N:1-*"
-        If composition_str: dict, it should be a dictionary with integer keys and tuple values. Will be stored as is.
+        If composition_str: dict, it should be a dictionary with integer/string keys and tuple values. Will be stored as is.
 
         Arguments:
             composition_str (str): String with the element composition
-            composition_str (dict): Dictionary with integer keys and tuple values
+            composition_str (dict): Dictionary with integer/str keys and tuple values
         Raises:
             TypeError: If composition_str is not a string or a dictionary
             AttributeError: If the element is not found in the periodic table
@@ -312,25 +314,52 @@ class GenerateConfig(BaseConfig):
 
         if not composition:
             return
+
+        # Will return if composition dict does not contain either int or str keys and tuple[int | None, int | None] values
+        # Will also return if dict is valid after setting property
         if isinstance(composition, dict):
+            tmp = {}
+
+            # Check validity and also convert str keys into atomic numbers
             for key, value in composition.items():
                 if (
-                    not isinstance(key, int)
+                    not (isinstance(key, int) or isinstance(key, str))
                     or not isinstance(value, tuple)
                     or len(value) != 2
                     or not all(isinstance(val, int) or val is None for val in value)
                 ):
                     raise TypeError(
-                        "Element composition dictionary should be a dictionary with integer keys and tuple values (int, int)."
+                        "Element composition dictionary should be a dictionary with either integer or string keys and tuple values (int, int)."
                     )
-            self._element_composition = composition
+
+                # Convert str keys
+                if isinstance(key, str):
+                    element_number = PSE_NUMBERS.get(key.lower(), None)
+                    print(key, element_number)
+                    if element_number is None:
+                        raise KeyError(
+                            f"Element {key} not found in the periodic table."
+                        )
+                    tmp[element_number - 1] = composition[key]
+                # Check int keys
+                else:
+                    if key in PSE_SYMBOLS:
+                        tmp[key] = composition[key]
+                    else:
+                        raise KeyError(
+                            f"Element with atomic number {key} not found in the periodic table."
+                        )
+            print(tmp)
+            self._element_composition = tmp
             return
+
         if not isinstance(composition, str):
             raise TypeError(
                 "Element composition should be a string (will be parsed) or "
-                + "a dictionary with integer keys and tuple values."
+                + "a dictionary with integer/string keys and tuple values."
             )
 
+        # Parsing composition string
         element_dict: dict[int, tuple[int | None, int | None]] = {}
         elements = composition.split(",")
         # remove leading and trailing whitespaces
@@ -537,9 +566,11 @@ class GenerateConfig(BaseConfig):
             if (
                 np.sum(
                     [
-                        self.element_composition.get(i, (0, 0))[0]
-                        if self.element_composition.get(i, (0, 0))[0] is not None
-                        else 0
+                        (
+                            self.element_composition.get(i, (0, 0))[0]
+                            if self.element_composition.get(i, (0, 0))[0] is not None
+                            else 0
+                        )
                         for i in self.element_composition
                     ]
                 )
