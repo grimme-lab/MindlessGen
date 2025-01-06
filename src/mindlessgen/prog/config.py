@@ -346,7 +346,7 @@ class GenerateConfig(BaseConfig):
                         tmp[key] = composition[key]
                     else:
                         raise KeyError(
-                            f"Element with atomic number {key} not found in the periodic table."
+                            f"Element with atomic number {key+1} (provided key: {key}) not found in the periodic table."
                         )
             self._element_composition = tmp
             return
