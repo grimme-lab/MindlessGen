@@ -335,7 +335,6 @@ class GenerateConfig(BaseConfig):
                 # Convert str keys
                 if isinstance(key, str):
                     element_number = PSE_NUMBERS.get(key.lower(), None)
-                    print(key, element_number)
                     if element_number is None:
                         raise KeyError(
                             f"Element {key} not found in the periodic table."
@@ -349,7 +348,6 @@ class GenerateConfig(BaseConfig):
                         raise KeyError(
                             f"Element with atomic number {key} not found in the periodic table."
                         )
-            print(tmp)
             self._element_composition = tmp
             return
 
