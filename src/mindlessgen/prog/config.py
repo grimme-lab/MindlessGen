@@ -342,7 +342,7 @@ class GenerateConfig(BaseConfig):
                     tmp[element_number - 1] = composition[key]
                 # Check int keys
                 else:
-                    if key in PSE_SYMBOLS:
+                    if key + 1 in PSE_SYMBOLS:
                         tmp[key] = composition[key]
                     else:
                         raise KeyError(
