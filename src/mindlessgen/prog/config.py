@@ -694,7 +694,7 @@ class PostProcessConfig(BaseConfig):
         if not isinstance(engine, str):
             raise TypeError("Postprocess engine should be a string.")
         if engine not in ["xtb", "orca", "gp3", "turbomole"]:
-            raise ValueError("Postprocess engine can only be xtb, orca turbomole.")
+            raise ValueError("Postprocess engine can only be xtb, orca or turbomole.")
         self._engine = engine
 
     @property

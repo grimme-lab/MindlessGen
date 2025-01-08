@@ -180,7 +180,7 @@ class Turbomole(QMMethod):
             original_threads = os.environ.get("PARNODES")
             os.environ["PARNODES"] = "1"
 
-            print(f"Temporäre Einstellung von PARNODES: {os.environ['PARNODES']}")
+            print(f"Temporal setting for PARNODES: {os.environ['PARNODES']}")
 
             sp.run(
                 arguments,
@@ -214,7 +214,7 @@ class Turbomole(QMMethod):
                 os.environ["PARNODES"] = original_threads
 
             print(
-                f"Zurückgesetzte Einstellung von PARNODES: {os.environ.get('PARNODES', 'nicht gesetzt')}"
+                f"Revert the settings for PARNODES: {os.environ.get('PARNODES', 'not set')}"
             )
             return turbomole_log_out, turbomole_log_err, 0
         except sp.CalledProcessError as e:
@@ -260,7 +260,7 @@ def get_turbomole_path(binary_name: str | Path | None = None) -> Path:
         binary_names = [binary_name] + default_turbomole_names
     else:
         binary_names = default_turbomole_names
-    # Get turbomole path from 'which turbomole' command
+    # Get turbomole path from 'which ridft' command
     for binpath in binary_names:
         which_ridft = shutil.which(binpath)
         if which_ridft:
