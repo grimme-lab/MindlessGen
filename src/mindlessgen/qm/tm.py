@@ -4,6 +4,7 @@ This module handles all Turbomole-related functionality.
 
 from pathlib import Path
 import shutil
+import os
 import subprocess as sp
 from tempfile import TemporaryDirectory
 
@@ -30,53 +31,84 @@ class Turbomole(QMMethod):
         self.cfg = turbomolecfg
 
     def optimize(
-        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
     ) -> Molecule:
         """
-        Optimize a molecule using turbomole.
+        Optimize a molecule using ORCA.
         """
 
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="turbomole_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
-            molecule.write_xyz_to_file(temp_path / "molecule.xyz")
+            molfile = "molecule.xyz"
+            molecule.write_xyz_to_file(temp_path / molfile)
 
-            inputname = "turbomole_opt.inp"
-            turbomole_input = self._gen_input(
-                molecule, "molecule.xyz", True, max_cycles
-            )
+            # convert molfile to coord file (tm format)
+            command = f"x2t {temp_path / molfile} > {temp_path / 'coord'}"
+
+            try:
+                # run the command in a shell
+                sp.run(command, shell=True, check=True)
+            except sp.CalledProcessError as e:
+                print(f"The xyz file could not be converted to a coord file: {e}")
+
+            if verbosity > 2:
+                with open(temp_path / "coord", encoding="utf8") as f:
+                    tm_coordinates = f.read()
+                    print(tm_coordinates)
+
+            # write the input file
+            inputname = "control"
+            tm_input = self._gen_input(molecule)
             if verbosity > 1:
-                print("turbomole input file:\n##################")
-                print(turbomole_input)
+                print("Turbomole input file:\n##################")
+                print(tm_input)
                 print("##################")
             with open(temp_path / inputname, "w", encoding="utf8") as f:
-                f.write(turbomole_input)
+                f.write(tm_input)
 
-            # run turbomole
+            # Setup the turbomole optimization command including the max number of optimization cycles
             arguments = [
-                inputname,
+                "jobex",
+                "-ri",
+                "-c",
+                f"{max_cycles}",
+                ">",
+                "jobex.out",
             ]
 
-            turbomole_log_out, turbomole_log_err, return_code = self._run(
+            if verbosity > 2:
+                print(f"Running command: {' '.join(arguments)}")
+
+            tm_log_out, tm_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
             if verbosity > 2:
-                print(turbomole_log_out)
+                print(tm_log_out)
             if return_code != 0:
                 raise RuntimeError(
-                    f"turbomole failed with return code {return_code}:\n{turbomole_log_err}"
+                    f"Turbomole failed with return code {return_code}:\n{tm_log_err}"
                 )
 
+            # revert the coord file to xyz file
+            revert_command = f"t2x {temp_path / 'coord'} > {temp_path / 'molecule.xyz'}"
+            try:
+                sp.run(revert_command, shell=True, check=True)
+            except sp.CalledProcessError as e:
+                print(f"The coord file could not be converted to a xyz file: {e}")
             # read the optimized molecule from the output file
-            xyzfile = Path(temp_path / inputname).resolve().with_suffix(".xyz")
+            xyzfile = Path(temp_path / "molecule.xyz").resolve().with_suffix(".xyz")
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_file(xyzfile)
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
-        Perform a single point calculation using turbomole.
+        Perform a single point calculation using Turbomole.
         """
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="turbomole_") as temp_dir:
@@ -84,44 +116,44 @@ class Turbomole(QMMethod):
             # write the molecule to a temporary file
             molfile = "mol.xyz"
             molecule.write_xyz_to_file(temp_path / molfile)
+            print(temp_path / molfile)
 
-            # converte mol.xyz to tm format
-            arguments = [
-                "x2t mol.xyz > coord",
-            ]
-            print("Running", arguments)
+            # convert molfile to coord file
+            command = f"x2t {temp_path / molfile} > {temp_path / 'coord'}"
 
-            # run cefine to write control file
-            arguments = [
-                "cefine",
-                "-bas",
-                f"{self.cfg.basis}",
-                "-func",
-                f"{self.cfg.functional}",
-            ]
-            if molecule.charge != 0:
-                arguments += ["-chrg", str(molecule.charge)]
-            if molecule.uhf != 0:
-                arguments += ["-uhf", str(molecule.uhf)]
-            # if molecule.symmetry is not None:
-            #     arguments += ["-sym", str(molecule.symmetry)]
-            print("Running cefine", arguments)
+            try:
+                # run the command in a shell
+                sp.run(command, shell=True, check=True)
+            except sp.CalledProcessError as e:
+                print(f"The xyz file could not be converted to a coord file: {e}")
+            with open(temp_path / "coord", encoding="utf8") as f:
+                content = f.read()
+                print(content)
 
-            # run turbomole
-            arguments = [
-                "ridft > rifdt.out",
-            ]
-            turbomole_log_out, turbomole_log_err, return_code = self._run(
-                temp_path=temp_path, arguments=arguments
+            # write the input file
+            inputname = "control"
+            tm_input = self._gen_input(molecule)
+            if verbosity > 1:
+                print("Turbomole input file:\n##################")
+                print(self._gen_input(molecule))
+                print("##################")
+            with open(temp_path / inputname, "w", encoding="utf8") as f:
+                f.write(tm_input)
+
+            # set up the turbomole single point calculation command
+            run_tm = ["ridft"]
+
+            tm_log_out, tm_log_err, return_code = self._run(
+                temp_path=temp_path, arguments=run_tm
             )
             if verbosity > 2:
-                print(turbomole_log_out)
+                print(tm_log_out)
             if return_code != 0:
                 raise RuntimeError(
-                    f"turbomole failed with return code {return_code}:\n{turbomole_log_err}"
+                    f"Turbomole failed with return code {return_code}:\n{tm_log_err}"
                 )
 
-            return turbomole_log_out
+            return tm_log_out
 
     def check_gap(
         self, molecule: Molecule, threshold: float, verbosity: int = 1
@@ -142,76 +174,74 @@ class Turbomole(QMMethod):
         tuple[str, str, int]: The output of the turbomole calculation (stdout and stderr)
                               and the return code
         """
+
         try:
-            turbomole_out = sp.run(
-                [str(self.path)] + arguments,
+            # Change the enviroment variable to run the calculation on one cpu
+            original_threads = os.environ.get("PARNODES")
+            os.environ["PARNODES"] = "1"
+
+            print(f"Temporäre Einstellung von PARNODES: {os.environ['PARNODES']}")
+
+            sp.run(
+                arguments,
                 cwd=temp_path,
                 capture_output=True,
                 check=True,
+                env={"PARNODES": "1", **os.environ},
             )
-            # get the output of the turbomole calculation (of both stdout and stderr)
-            turbomole_log_out = turbomole_out.stdout.decode("utf8", errors="replace")
-            turbomole_log_err = turbomole_out.stderr.decode("utf8", errors="replace")
-            # check if the output contains "turbomole TERMINATED NORMALLY"
-            if "all done" not in turbomole_log_out:
+
+            # Read the job-last file to get the output of the calculation
+            output_file = temp_path / "job.last"
+            if output_file.exists():
+                with open(output_file, encoding="utf-8") as file:
+                    file_content = file.read()
+                    turbomole_log_out = file_content
+                    turbomole_log_err = ""
+            else:
+                raise FileNotFoundError(f"Output file {output_file} not found.")
+
+            if "ridft : all done" not in turbomole_log_out:
                 raise sp.CalledProcessError(
                     1,
-                    str(self.path),
+                    str(output_file),
                     turbomole_log_out.encode("utf8"),
                     turbomole_log_err.encode("utf8"),
                 )
+            # Revert the enviroment variable to the original setting
+            if original_threads is None:
+                os.environ.pop("PARNODES", None)
+            else:
+                os.environ["PARNODES"] = original_threads
+
+            print(
+                f"Zurückgesetzte Einstellung von PARNODES: {os.environ.get('PARNODES', 'nicht gesetzt')}"
+            )
             return turbomole_log_out, turbomole_log_err, 0
         except sp.CalledProcessError as e:
             turbomole_log_out = e.stdout.decode("utf8", errors="replace")
             turbomole_log_err = e.stderr.decode("utf8", errors="replace")
             return turbomole_log_out, turbomole_log_err, e.returncode
 
-    def _cefine(self, molecule: Molecule) -> list[str]:
-        """
-        Refine a molecule using turbomole.
-        """
-        call = [
-            "cefine",
-            "-bas",
-            f"{self.cfg.basis}",
-            "-func",
-            f"{self.cfg.functional}",
-        ]
-        if molecule.charge != 0:
-            call += ["-chrg", str(molecule.charge)]
-        if molecule.uhf != 0:
-            call += ["-uhf", str(molecule.uhf)]
-        # if molecule.symmetry is not None:
-        #     arguments += ["-sym", str(molecule.symmetry)]
-
-        return call
-
     def _gen_input(
         self,
         molecule: Molecule,
-        xyzfile: str,
-        optimization: bool = False,
-        opt_cycles: int | None = None,
     ) -> str:
         """
-        Generate a default input file for turbomole.
+        Generate a default input file for Turbomole.
         """
-        turbomole_input = f"! {self.cfg.functional} {self.cfg.basis}\n"
-        # turbomole_input += f"! DEFGRID{self.cfg.gridsize}\n"
-        turbomole_input += "! NoTRAH NoSOSCF SlowConv\n"
-        # "! AutoAux" keyword for super-heavy elements as def2/J ends at Rn
-        if any(atom >= 86 for atom in molecule.ati):
-            turbomole_input += "! AutoAux\n"
-        if optimization:
-            turbomole_input += "! OPT\n"
-            if opt_cycles is not None:
-                turbomole_input += f"%geom MaxIter {opt_cycles} end\n"
-        turbomole_input += (
-            f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n\tConvergence Medium\nend\n"
-        )
-        turbomole_input += "%pal nprocs 1 end\n\n"
-        turbomole_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
-        return turbomole_input
+        tm_input = "$coord file=coord\n"
+        tm_input += f"$charge={molecule.charge} unpaired={molecule.uhf}\n"
+        tm_input += "$symmetry c1\n"
+        tm_input += "$atoms\n"
+        tm_input += f"   basis={self.cfg.basis}\n"
+        tm_input += "$dft\n"
+        tm_input += f"   functional {self.cfg.functional}\n"
+        tm_input += "$rij\n"
+        tm_input += f"$scfiterlimit {self.cfg.scf_cycles}\n"
+        tm_input += "$energy file=energy\n"
+        tm_input += "$grad file=gradient\n"
+        tm_input += "$end"
+        return tm_input
 
 
 # TODO: 1. Convert this to a @staticmethod of Class turbomole
@@ -224,7 +254,7 @@ def get_turbomole_path(binary_name: str | Path | None = None) -> Path:
     Get the path to the turbomole binary based on different possible names
     that are searched for in the PATH.
     """
-    default_turbomole_names: list[str | Path] = ["turbomole", "turbomole_dev"]
+    default_turbomole_names: list[str | Path] = ["ridft", "jobex"]
     # put binary name at the beginning of the lixt to prioritize it
     if binary_name is not None:
         binary_names = [binary_name] + default_turbomole_names
@@ -232,8 +262,8 @@ def get_turbomole_path(binary_name: str | Path | None = None) -> Path:
         binary_names = default_turbomole_names
     # Get turbomole path from 'which turbomole' command
     for binpath in binary_names:
-        which_turbomole = shutil.which(binpath)
-        if which_turbomole:
-            turbomole_path = Path(which_turbomole).resolve()
-            return turbomole_path
+        which_ridft = shutil.which(binpath)
+        if which_ridft:
+            ridft_path = Path(which_ridft).resolve()
+            return ridft_path
     raise ImportError("'turbomole' binary could not be found.")

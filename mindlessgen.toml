@@ -90,9 +90,11 @@ gridsize = 1
 scf_cycles = 100
 
 [turbomole]
-# > Path to the turbomole executable. The names `turbomole` and `turbomole_dev` are automatically searched for. Options: <str | Path>
+# > Path to the turbomole executable. The names `ridft` and `jobex` are automatically searched for. Options: <str | Path>
 turbomole_path = "/path/to/turbomole"
 # > Functional/Method: Options: <str>
 functional = "PBE"
 # > Basis set: Options: <str>
 basis = "def2-SVP"
+# > Maximum number of SCF cycles: Options: <int>
+scf_cycles = 100

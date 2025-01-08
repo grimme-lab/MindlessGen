@@ -17,7 +17,6 @@ from ..qm import (
     ORCA,
     get_orca_path,
     GP3,
-    get_gp3_path,
     Turbomole,
     get_turbomole_path,
 )
@@ -61,7 +60,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
     if config.general.postprocess:
         postprocess_engine: QMMethod | None = setup_engines(
-            config.postprocess.engine, config, get_xtb_path, get_orca_path, get_gp3_path
+            config.postprocess.engine,
+            config,
+            get_xtb_path,
+            get_orca_path,
+            get_turbomole_path,
         )
     else:
         postprocess_engine = None

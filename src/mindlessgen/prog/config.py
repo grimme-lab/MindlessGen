@@ -902,7 +902,7 @@ class TURBOMOLEConfig(BaseConfig):
 
     def __init__(self: TURBOMOLEConfig) -> None:
         self._turbomole_path: str | Path = "turbomole"
-        self._functional: str = "PBE"
+        self._functional: str = "pbe"
         self._basis: str = "def2-SVP"
         self._scf_cycles: int = 100
 
