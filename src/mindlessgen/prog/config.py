@@ -299,7 +299,8 @@ class GenerateConfig(BaseConfig):
             Parses the element_composition string and stores the parsed data
             in the _element_composition dictionary.
             Format: "C:2-10, H:10-20, O:1-5, N:1-*"
-        If composition_str: dict, it should be a dictionary with integer/string keys and tuple values. Will be stored as is.
+        If composition: dict:
+            Should be a dictionary with integer/string keys and tuple values. Will be stored as is.
 
         Arguments:
             composition_str (str): String with the element composition
