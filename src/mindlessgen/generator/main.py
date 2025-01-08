@@ -23,7 +23,7 @@ from ..qm import (
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
 
-from .. import __version__
+from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
 
