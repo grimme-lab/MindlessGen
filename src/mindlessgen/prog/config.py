@@ -295,7 +295,7 @@ class GenerateConfig(BaseConfig):
         self, composition: None | str | dict[int | str, tuple[int | None, int | None]]
     ) -> None:
         """
-        If composition_str: str, it should be a string with the format:
+        If composition: str:
             Parses the element_composition string and stores the parsed data
             in the _element_composition dictionary.
             Format: "C:2-10, H:10-20, O:1-5, N:1-*"
