@@ -41,12 +41,66 @@ def test_generate_atom_list(min_atoms, max_atoms, default_generate_config):
     assert np.sum(atom_list) <= max_atoms
 
 
-# Test the element composition property of the GenerateConfig class
-def test_generate_config_element_composition(default_generate_config):
-    """Test the element composition property of the GenerateConfig class."""
+# Test the element composition property of the GenerateConfig class with a composition string
+def test_generate_config_element_composition_string(default_generate_config):
+    """Test the element composition property of the GenerateConfig class with a composition string."""
     default_generate_config.min_num_atoms = 10
     default_generate_config.max_num_atoms = 15
     default_generate_config.element_composition = "C:2-2, N:3-3, O:1-1"
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Check that the atom list contains the correct number of atoms for each element
+    assert atom_list[5] == 2
+    assert atom_list[6] == 3
+    assert atom_list[7] == 1
+
+
+# Test the element composition property of the GenerateConfig class with an int key composition dict
+def test_generate_config_element_composition_dict_int(default_generate_config):
+    """Test the element composition property of the GenerateConfig class with an int key composition dict."""
+
+    # Pure int keys
+    default_generate_config.min_num_atoms = 10
+    default_generate_config.max_num_atoms = 15
+    default_generate_config.element_composition = {
+        5: (2, 2),
+        6: (3, 3),
+        7: (1, 1),
+    }  # NOTE: mind 0-based indexing for atomic numbers
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Check that the atom list contains the correct number of atoms for each element
+    assert atom_list[5] == 2
+    assert atom_list[6] == 3
+    assert atom_list[7] == 1
+
+
+# Test the element composition property of the GenerateConfig class with an int key composition dict
+def test_generate_config_element_composition_dict_string(default_generate_config):
+    """Test the element composition property of the GenerateConfig class with a str key composition dict."""
+
+    default_generate_config.min_num_atoms = 10
+    default_generate_config.max_num_atoms = 15
+    default_generate_config.element_composition = {
+        "C": (2, 2),
+        "N": (3, 3),
+        "O": (1, 1),
+    }
+    atom_list = generate_atom_list(default_generate_config, verbosity=1)
+
+    # Check that the atom list contains the correct number of atoms for each element
+    assert atom_list[5] == 2
+    assert atom_list[6] == 3
+    assert atom_list[7] == 1
+
+
+# Test the element composition property of the GenerateConfig class with an int key composition dict
+def test_generate_config_element_composition_dict_mixed(default_generate_config):
+    """Test the element composition property of the GenerateConfig class with a str key composition dict."""
+
+    default_generate_config.min_num_atoms = 10
+    default_generate_config.max_num_atoms = 15
+    default_generate_config.element_composition = {5: (2, 2), "N": (3, 3), "O": (1, 1)}
     atom_list = generate_atom_list(default_generate_config, verbosity=1)
 
     # Check that the atom list contains the correct number of atoms for each element
