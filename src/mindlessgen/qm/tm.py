@@ -4,7 +4,6 @@ This module handles all Turbomole-related functionality.
 
 from pathlib import Path
 import shutil
-import os
 import subprocess as sp
 from tempfile import TemporaryDirectory
 
@@ -72,14 +71,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # Setup the turbomole optimization command including the max number of optimization cycles
-            arguments = [
-                "jobex",
-                "-ri",
-                "-c",
-                f"{max_cycles}",
-                ">",
-                "jobex.out",
-            ]
+            arguments = [f"PARNODES=1 jobex -ri -c {max_cycles} > jobex.out"]
 
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
@@ -141,7 +133,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # set up the turbomole single point calculation command
-            run_tm = ["ridft"]
+            run_tm = ["PARNODES=1 ridft > ridft.out"]
 
             tm_log_out, tm_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=run_tm
@@ -174,31 +166,29 @@ class Turbomole(QMMethod):
         tuple[str, str, int]: The output of the turbomole calculation (stdout and stderr)
                               and the return code
         """
-
         try:
-            # Change the enviroment variable to run the calculation on one cpu
-            original_threads = os.environ.get("PARNODES")
-            os.environ["PARNODES"] = "1"
-
-            print(f"Temporal setting for PARNODES: {os.environ['PARNODES']}")
-
             sp.run(
                 arguments,
                 cwd=temp_path,
                 capture_output=True,
                 check=True,
-                env={"PARNODES": "1", **os.environ},
+                shell=True,
             )
-
-            # Read the job-last file to get the output of the calculation
-            output_file = temp_path / "job.last"
-            if output_file.exists():
-                with open(output_file, encoding="utf-8") as file:
-                    file_content = file.read()
-                    turbomole_log_out = file_content
+            if "PARNODES=1 ridft > ridft.out" in arguments[0]:
+                with open(temp_path / "ridft.out", encoding="utf-8") as file:
+                    ridft_file = file.read()
+                    turbomole_log_out = ridft_file
                     turbomole_log_err = ""
             else:
-                raise FileNotFoundError(f"Output file {output_file} not found.")
+                # Read the job-last file to get the output of the calculation
+                output_file = temp_path / "job.last"
+                if output_file.exists():
+                    with open(output_file, encoding="utf-8") as file:
+                        file_content = file.read()
+                        turbomole_log_out = file_content
+                        turbomole_log_err = ""
+                else:
+                    raise FileNotFoundError(f"Output file {output_file} not found.")
 
             if "ridft : all done" not in turbomole_log_out:
                 raise sp.CalledProcessError(
@@ -207,15 +197,6 @@ class Turbomole(QMMethod):
                     turbomole_log_out.encode("utf8"),
                     turbomole_log_err.encode("utf8"),
                 )
-            # Revert the enviroment variable to the original setting
-            if original_threads is None:
-                os.environ.pop("PARNODES", None)
-            else:
-                os.environ["PARNODES"] = original_threads
-
-            print(
-                f"Revert the settings for PARNODES: {os.environ.get('PARNODES', 'not set')}"
-            )
             return turbomole_log_out, turbomole_log_err, 0
         except sp.CalledProcessError as e:
             turbomole_log_out = e.stdout.decode("utf8", errors="replace")

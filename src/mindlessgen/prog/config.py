@@ -973,6 +973,7 @@ class TURBOMOLEConfig(BaseConfig):
             raise TypeError("Max SCF cycles should be an integer.")
         if max_scf_cycles < 1:
             raise ValueError("Max SCF cycles should be greater than 0.")
+        self._scf_cycles = max_scf_cycles
 
 
 class ConfigManager:
