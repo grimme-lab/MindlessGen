@@ -22,6 +22,15 @@ def structure_modification_mol(
     if verbosity > 2:
         print("Modifying molecule structure...")
 
+    if config.translation:
+        print("Translating the molecule")
+    if config.mirroring:
+        print("Mirroring the molecule")
+    if config.rotation:
+        print("Rotating the molecule")
+    if config.inversion:
+        print("Inverting the molecule")
+
     print("structure_modification_mol is now working as a function")
 
     return mol

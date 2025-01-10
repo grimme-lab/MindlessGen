@@ -101,3 +101,13 @@ functional = "PBE"
 basis = "def2-SVP"
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
+
+[modification]
+# > Move the molecule. Has to be turned on.
+translation = true
+# > mirror the molecule along the y,z plane.
+mirroring = false
+# > rotate the molecule around the z axis.
+rotation = false
+# > inverts the molecule through the origin.
+inversion = false

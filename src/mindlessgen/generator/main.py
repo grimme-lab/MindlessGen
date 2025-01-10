@@ -228,7 +228,7 @@ def single_molecule_generator(
         # raise SystemExit("Structure modification is not implemented yet.")
         try:
             optimized_molecule = structure_modification_mol(
-                optimized_molecule, config.structuremod, config.general.verbosity
+                optimized_molecule, config.modification, config.general.verbosity
             )
         except RuntimeError as e:
             if config.general.verbosity > 0:

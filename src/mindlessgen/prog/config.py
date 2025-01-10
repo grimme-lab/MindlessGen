@@ -1028,13 +1028,13 @@ class StructureModConfig(BaseConfig):
     """
 
     def __init__(self):
-        self.Transaltion: bool = False
-        self.Mirroring: bool = False
-        self.Rotation: bool = False
-        self.Inversion: bool = False
+        self.translation: bool = True
+        self.mirroring: bool = True
+        self.rotation: bool = True
+        self.inversion: bool = True
 
     def get_identifier(self) -> str:
-        return "structuremod"
+        return "modification"
 
     @property
     def translation(self):
@@ -1117,7 +1117,7 @@ class ConfigManager:
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
-        self.structuremod = StructureModConfig()
+        self.modification = StructureModConfig()
 
         if config_file:
             self.load_from_toml(config_file)
