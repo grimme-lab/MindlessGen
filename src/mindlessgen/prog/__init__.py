@@ -11,6 +11,7 @@ from .config import (
     GenerateConfig,
     RefineConfig,
     PostProcessConfig,
+    StructureModConfig,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "GenerateConfig",
     "RefineConfig",
     "PostProcessConfig",
+    "StructureModConfig",
 ]

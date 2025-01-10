@@ -45,6 +45,7 @@ class GeneralConfig(BaseConfig):
         self._num_molecules: int = 1
         self._postprocess: bool = False
         self._write_xyz: bool = True
+        self._structure_mod: bool = False
 
     def get_identifier(self) -> str:
         return "general"
@@ -186,6 +187,22 @@ class GeneralConfig(BaseConfig):
                 "Parallelization will disable verbosity during iterative search. "
                 + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
             )
+
+    @property
+    def structure_mod(self):
+        """
+        Get the structure_mod flag.
+        """
+        return self._structure_mod
+
+    @structure_mod.setter
+    def structure_mod(self, structure_mod: bool):
+        """
+        Set the structure_mod flag.
+        """
+        if not isinstance(structure_mod, bool):
+            raise TypeError("Structure modification should be a boolean.")
+        self._structure_mod = structure_mod
 
 
 class GenerateConfig(BaseConfig):
@@ -975,6 +992,85 @@ class TURBOMOLEConfig(BaseConfig):
             raise ValueError("Max SCF cycles should be greater than 0.")
 
 
+class StructureModConfig(BaseConfig):
+    """
+    Configuration class for structure modifications.
+    """
+
+    def __init__(self):
+        self.Transaltion: bool = False
+        self.Mirroring: bool = False
+        self.Rotation: bool = False
+        self.Inversion: bool = False
+
+    def get_identifier(self) -> str:
+        return "structuremod"
+
+    @property
+    def translation(self):
+        """
+        Get the translation flag.
+        """
+        return self._translation
+
+    @translation.setter
+    def translation(self, translation: bool):
+        """
+        Set the translation flag.
+        """
+        if not isinstance(translation, bool):
+            raise TypeError("Translation should be a boolean.")
+        self._translation = translation
+
+    @property
+    def mirroring(self):
+        """
+        Get the mirroring flag.
+        """
+        return self._mirroring
+
+    @mirroring.setter
+    def mirroring(self, mirroring: bool):
+        """
+        Set the mirroring flag.
+        """
+        if not isinstance(mirroring, bool):
+            raise TypeError("Mirroring should be a boolean.")
+        self._mirroring = mirroring
+
+    @property
+    def rotation(self):
+        """
+        Get the rotation flag.
+        """
+        return self._rotation
+
+    @rotation.setter
+    def rotation(self, rotation: bool):
+        """
+        Set the rotation flag.
+        """
+        if not isinstance(rotation, bool):
+            raise TypeError("Rotation should be a boolean.")
+        self._rotation = rotation
+
+    @property
+    def inversion(self):
+        """
+        Get the inversion flag.
+        """
+        return self._inversion
+
+    @inversion.setter
+    def inversion(self, inversion: bool):
+        """
+        Set the inversion flag.
+        """
+        if not isinstance(inversion, bool):
+            raise TypeError("Inversion should be a boolean.")
+        self._inversion = inversion
+
+
 class ConfigManager:
     """
     Overall configuration manager for the program.
@@ -991,6 +1087,7 @@ class ConfigManager:
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
+        self.structuremod = StructureModConfig()
 
         if config_file:
             self.load_from_toml(config_file)

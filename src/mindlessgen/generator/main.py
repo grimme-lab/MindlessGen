@@ -20,7 +20,11 @@ from ..qm import (
     Turbomole,
     get_turbomole_path,
 )
-from ..molecules import iterative_optimization, postprocess_mol
+from ..molecules import (
+    iterative_optimization,
+    postprocess_mol,
+    structure_modification_mol,
+)
 from ..prog import ConfigManager
 
 from ..__version__ import __version__
@@ -219,6 +223,21 @@ def single_molecule_generator(
     finally:
         if config.refine.debug:
             stop_event.set()
+
+    if config.general.structure_mod:
+        # raise SystemExit("Structure modification is not implemented yet.")
+        try:
+            optimized_molecule = structure_modification_mol(
+                optimized_molecule, config.structuremod, config.general.verbosity
+            )
+        except RuntimeError as e:
+            if config.general.verbosity > 0:
+                print(f"Structure modification failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1:
+                    print(e)
+            return None
+        if config.general.verbosity > 1:
+            print("Structure modification successful.")
 
     if config.general.postprocess:
         try:

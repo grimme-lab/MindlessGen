@@ -17,6 +17,9 @@ num_molecules = 1
 postprocess = false
 # > Switch molecule structure XYZ writing on and off. Default: true. Options: <bool>
 write_xyz = true
+# > Switch structure modification on and off. Defaul: false. Options: <bool>
+# > postprocess has to be turned on and the postprocess engine has to be turbomole.
+structure_mod = false
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>
