@@ -133,6 +133,8 @@ def main():
     config.generate.max_num_atoms = 15
     config.generate.element_composition = "Ce:1-1"
     # alternatively as a dictionary: config.generate.element_composition = {39:(1,1)}
+    # or: config.generate.element_composition = {"Ce":(1,1)"}
+    # or as mixed-key dict, e.g. for Ce and O: {"Ce":(1,1), 7:(2,2)}
     config.generate.forbidden_elements = "21-30,39-48,57-80"
     # alternatively as a list: config.generate.forbidden_elements = [20,21,22,23] # 24,25,26...
 
