@@ -723,7 +723,7 @@ class PostProcessConfig(BaseConfig):
         """
         if not isinstance(engine, str):
             raise TypeError("Postprocess engine should be a string.")
-        if engine not in ["xtb", "orca", "gp3"]:
+        if engine not in ["xtb", "orca", "gxtb"]:
             raise ValueError("Postprocess engine can only be xtb or orca.")
         self._engine = engine
 
