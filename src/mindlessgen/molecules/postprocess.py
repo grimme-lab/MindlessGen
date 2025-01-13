@@ -37,6 +37,6 @@ def postprocess_mol(
             postprocmol = mol
         except RuntimeError as e:
             raise RuntimeError(
-                "Single point calculation in postprocessing failed."
+                f"Single point calculation in postprocessing failed with error: {e}"
             ) from e
     return postprocmol
