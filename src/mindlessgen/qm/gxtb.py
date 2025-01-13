@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..molecules import Molecule
+from ..prog import GXTBConfig
 from .base import QMMethod
 
 
@@ -17,7 +18,7 @@ class GXTB(QMMethod):
     This class handles all interaction with the g-xTB external dependency.
     """
 
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, gxtbcfg: GXTBConfig) -> None:
         """
         Initialize the GXTB class.
         """

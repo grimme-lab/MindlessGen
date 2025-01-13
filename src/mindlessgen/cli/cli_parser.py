@@ -258,6 +258,19 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Maximum number of SCF cycles in ORCA.",
     )
+    ### g-xTB specific arguments ###
+    parser.add_argument(
+        "--gxtb-path",
+        type=str,
+        required=False,
+        help="Path to the g-xTB binary.",
+    )
+    parser.add_argument(
+        "--gxtb-scf-cycles",
+        type=int,
+        required=False,
+        help="Maximum number of SCF cycles in g-xTB.",
+    )
     args = parser.parse_args(argv)
     args_dict = vars(args)
 
@@ -305,6 +318,11 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "basis": args_dict["orca_basis"],
         "gridsize": args_dict["orca_gridsize"],
         "scf_cycles": args_dict["orca_scf_cycles"],
+    }
+    # g-xTB specific arguments
+    rev_args_dict["gxtb"] = {
+        "gxtb_path": args_dict["gxtb_path"],
+        "scf_cycles": args_dict["gxtb_scf_cycles"],
     }
     # Postprocessing arguments
     rev_args_dict["postprocess"] = {
