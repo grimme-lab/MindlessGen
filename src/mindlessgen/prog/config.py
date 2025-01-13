@@ -51,6 +51,7 @@ class GeneralConfig(BaseConfig):
         ############################################################
         ## g-xTB-specific settings not intended for general use ####
         self._gxtb_development: bool = False
+        self._gxtb_ipea: bool = False
         self._gxtb_scf_cycles: int = 100
         ### End of g-xTB-specific settings #########################
         ############################################################
@@ -213,6 +214,22 @@ class GeneralConfig(BaseConfig):
         if not isinstance(gxtb_development, bool):
             raise TypeError("gxtb_development should be a boolean.")
         self._gxtb_development = gxtb_development
+
+    @property
+    def gxtb_ipea(self):
+        """
+        Check for cation and anion with g-xTB.
+        """
+        return self._gxtb_ipea
+
+    @gxtb_ipea.setter
+    def gxtb_ipea(self, gxtb_ipea: bool):
+        """
+        Set the g-xTB IPEA flag.
+        """
+        if not isinstance(gxtb_ipea, bool):
+            raise TypeError("gxtb_ipea should be a boolean.")
+        self._gxtb_ipea = gxtb_ipea
 
     @property
     def gxtb_scf_cycles(self):

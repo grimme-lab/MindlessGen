@@ -340,7 +340,7 @@ def single_molecule_step(
         # additional g-xTB engine after refinement and postprocessing for development purposes
         gp3 = GP3(get_gp3_path())
         try:
-            _gxtb_dev_check(
+            _gxtb_scf_check(
                 optimized_molecule,
                 gp3,
                 config.general.gxtb_scf_cycles,
@@ -348,12 +348,30 @@ def single_molecule_step(
             )
         except (RuntimeError, ValueError) as e:
             if config.general.verbosity > 0:
-                print(f"g-xTB postprocessing failed for cycle {cycle + 1}.")
+                print(
+                    f"g-xTB postprocessing (SCF cycles check) failed for cycle {cycle + 1}."
+                )
                 if config.general.verbosity > 1:
                     print(e)
             return None
         if config.general.verbosity > 1:
-            print("g-xTB postprocessing successful.")
+            print("g-xTB postprocessing (SCF cycles check) successful.")
+        if config.general.gxtb_ipea:
+            try:
+                _gxtb_ipea_check(
+                    optimized_molecule,
+                    gp3,
+                    config.general.gxtb_scf_cycles,
+                    config.general.verbosity,
+                )
+            except (RuntimeError, ValueError) as e:
+                if config.general.verbosity > 0:
+                    print(f"g-xTB postprocessing failed for cycle {cycle + 1}.")
+                    if config.general.verbosity > 1:
+                        print(e)
+                return None
+            if config.general.verbosity > 1:
+                print("g-xTB postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
@@ -443,7 +461,7 @@ def setup_engines(
         raise NotImplementedError("Engine not implemented.")
 
 
-def _gxtb_dev_check(
+def _gxtb_ipea_check(
     mol: Molecule, gp3: GP3, scf_iter_limit: int, verbosity: int = 0
 ) -> None:
     """
@@ -488,6 +506,32 @@ def _gxtb_dev_check(
             + "(Could be ill-defined.)"
         )
     gxtb_output = gp3.singlepoint(tmp_mol, verbosity=verbosity)
+    # Check for the number of scf iterations
+    scf_iterations = 0
+    for line in gxtb_output.split("\n"):
+        if "scf iterations" in line:
+            scf_iterations = int(line.split()[0])
+            break
+    if scf_iterations == 0:
+        raise ValueError("SCF iterations not found in GP3 output.")
+    if scf_iterations > scf_iter_limit:
+        raise ValueError(f"SCF iterations exceeded limit of {scf_iter_limit}.")
+
+
+def _gxtb_scf_check(
+    mol: Molecule, gp3: GP3, scf_iter_limit: int, verbosity: int = 0
+) -> None:
+    """
+    ONLY FOR IN-HOUSE g-xTB DEVELOPMENT PURPOSES: Check the SCF iterations with g-xTB.
+    """
+    # 1) Single point calculation with g-xTB for the cation
+    gxtb_output = gp3.singlepoint(mol, verbosity=verbosity)
+    # gp3_output looks like this:
+    # [...]
+    #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
+    #           13  scf iterations
+    #           eigenvalues
+    # [...]
     # Check for the number of scf iterations
     scf_iterations = 0
     for line in gxtb_output.split("\n"):
