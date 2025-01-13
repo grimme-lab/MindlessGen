@@ -76,7 +76,7 @@ class GXTB(QMMethod):
             scf_iterations = 0
             for line in gxtb_log_out.split("\n"):
                 if "scf iterations" in line:
-                    scf_iterations = int(line.split()[0])
+                    scf_iterations = int(line.strip().split()[0])
                     break
             if scf_iterations == 0:
                 raise RuntimeError("SCF iterations not found in GP3 output.")
