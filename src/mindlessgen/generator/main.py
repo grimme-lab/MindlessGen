@@ -294,9 +294,9 @@ def setup_engines(
     elif engine_type == "gxtb":
         if gxtb_path_func is None:
             raise ImportError("No callable function for determining the g-xTB path.")
-        path = gxtb_path_func()
+        path = gxtb_path_func(cfg.gxtb.gxtb_path)
         if not path:
             raise ImportError("'gxtb' binary could not be found.")
-        return GXTB(path)
+        return GXTB(path, cfg.gxtb)
     else:
         raise NotImplementedError("Engine not implemented.")

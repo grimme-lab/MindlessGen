@@ -925,6 +925,53 @@ class ORCAConfig(BaseConfig):
         self._scf_cycles = max_scf_cycles
 
 
+class GXTBConfig(BaseConfig):
+    """
+    Configuration class for g-xTB.
+    """
+
+    def __init__(self: GXTBConfig) -> None:
+        self._gxtb_path: str | Path = "gxtb"
+        self._scf_cycles: int = 100
+
+    def get_identifier(self) -> str:
+        return "gxtb"
+
+    @property
+    def gxtb_path(self):
+        """
+        Get the g-xTB path.
+        """
+        return self._gxtb_path
+
+    @gxtb_path.setter
+    def gxtb_path(self, gxtb_path: str | Path):
+        """
+        Set the g-xTB path.
+        """
+        if not isinstance(gxtb_path, str | Path):
+            raise TypeError("gxtb_path should be a string or Path.")
+        self._gxtb_path = gxtb_path
+
+    @property
+    def scf_cycles(self):
+        """
+        Get the maximum number of SCF cycles.
+        """
+        return self._scf_cycles
+
+    @scf_cycles.setter
+    def scf_cycles(self, max_scf_cycles: int):
+        """
+        Set the maximum number of SCF cycles.
+        """
+        if not isinstance(max_scf_cycles, int):
+            raise TypeError("Max SCF cycles should be an integer.")
+        if max_scf_cycles < 1:
+            raise ValueError("Max SCF cycles should be greater than 0.")
+        self._scf_cycles = max_scf_cycles
+
+
 class ConfigManager:
     """
     Overall configuration manager for the program.
@@ -940,6 +987,7 @@ class ConfigManager:
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
+        self.gxtb = GXTBConfig()
 
         if config_file:
             self.load_from_toml(config_file)

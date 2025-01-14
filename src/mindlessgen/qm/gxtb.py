@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..molecules import Molecule
+from ..prog import GXTBConfig
 from .base import QMMethod
 
 
@@ -17,7 +18,7 @@ class GXTB(QMMethod):
     This class handles all interaction with the g-xTB external dependency.
     """
 
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, gxtbcfg: GXTBConfig) -> None:
         """
         Initialize the GXTB class.
         """
@@ -27,6 +28,7 @@ class GXTB(QMMethod):
             self.path = path
         else:
             raise TypeError("gxtb_path should be a string or a Path object.")
+        self.cfg = gxtbcfg
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
@@ -63,6 +65,24 @@ class GXTB(QMMethod):
             if return_code != 0:
                 raise RuntimeError(
                     f"g-xTB failed with return code {return_code}:\n{gxtb_log_err}"
+                )
+            # gp3_output looks like this:
+            # [...]
+            #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
+            #           13  scf iterations
+            #           eigenvalues
+            # [...]
+            # Check for the number of scf iterations
+            scf_iterations = 0
+            for line in gxtb_log_out.split("\n"):
+                if "scf iterations" in line:
+                    scf_iterations = int(line.strip().split()[0])
+                    break
+            if scf_iterations == 0:
+                raise RuntimeError("SCF iterations not found in GP3 output.")
+            if scf_iterations > self.cfg.scf_cycles:
+                raise RuntimeError(
+                    f"SCF iterations exceeded limit of {self.cfg.scf_cycles}."
                 )
 
             return gxtb_log_out
