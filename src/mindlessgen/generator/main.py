@@ -16,9 +16,9 @@ from ..qm import (
     QMMethod,
     ORCA,
     get_orca_path,
-    GP3,
     Turbomole,
     get_turbomole_path,
+    GXTB,
 )
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
@@ -54,7 +54,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         config.refine.engine,
         config,
         get_xtb_path,
-        get_orca_path,  # GP3 cannot be used anyway
+        get_orca_path,  # g-xTB cannot be used anyway
         get_turbomole_path,
     )
 
@@ -87,12 +87,12 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     for molcount in range(config.general.num_molecules):
         # print a decent header for each molecule iteration
         if config.general.verbosity > 0:
-            print(f"\n{'='*80}")
+            print(f"\n{'=' * 80}")
             print(
-                f"{'='*22} Generating molecule {molcount + 1:<4} of "
-                + f"{config.general.num_molecules:<4} {'='*24}"
+                f"{'=' * 22} Generating molecule {molcount + 1:<4} of "
+                + f"{config.general.num_molecules:<4} {'=' * 24}"
             )
-            print(f"{'='*80}")
+            print(f"{'=' * 80}")
         manager = mp.Manager()
         stop_event = manager.Event()
         cycles = range(config.general.max_cycles)
@@ -281,7 +281,7 @@ def setup_engines(
     xtb_path_func: Callable,
     orca_path_func: Callable,
     turbomole_path_func: Callable,
-    gp3_path_func: Callable | None = None,
+    gxtb_path_func: Callable | None = None,
 ):
     """
     Set up the required engine.
@@ -310,12 +310,12 @@ def setup_engines(
         except ImportError as e:
             raise ImportError("turbomole not found.") from e
         return Turbomole(path, cfg.turbomole)
-    elif engine_type == "gp3":
-        if gp3_path_func is None:
-            raise ImportError("No callable function for determining the gp3 path.")
-        path = gp3_path_func()
+    elif engine_type == "gxtb":
+        if gxtb_path_func is None:
+            raise ImportError("No callable function for determining the g-xTB path.")
+        path = gxtb_path_func(cfg.gxtb.gxtb_path)
         if not path:
-            raise ImportError("'gp3' binary could not be found.")
-        return GP3(path)
+            raise ImportError("'gxtb' binary could not be found.")
+        return GXTB(path, cfg.gxtb)
     else:
         raise NotImplementedError("Engine not implemented.")

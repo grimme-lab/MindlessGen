@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - to set the elemental composition it is now possible to use dicts with not only int but also the element symbols (str)
 - dict keys for elemental compositions will now always be checked for validity
+- Renamed GP3-xTB to g-xTB
+
+### Added
+- `GXTBConfig` class for the g-xTB method, supporting SCF cycles check
+
+### Fixed
+- version string is now correctly formatted and printed
 
 ## [0.5.0] - 2024-12-16
 ### Changed

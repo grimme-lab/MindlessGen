@@ -1,5 +1,5 @@
 """
-This module contains all interactions with the GP3-xTB binary
+This module contains all interactions with the g-xTB binary
 for next-gen tight-binding calculations.
 """
 
@@ -9,37 +9,39 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..molecules import Molecule
+from ..prog import GXTBConfig
 from .base import QMMethod
 
 
-class GP3(QMMethod):
+class GXTB(QMMethod):
     """
-    This class handles all interaction with the GP3 external dependency.
+    This class handles all interaction with the g-xTB external dependency.
     """
 
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, gxtbcfg: GXTBConfig) -> None:
         """
-        Initialize the GP3 class.
+        Initialize the GXTB class.
         """
         if isinstance(path, str):
             self.path: Path = Path(path).resolve()
         elif isinstance(path, Path):
             self.path = path
         else:
-            raise TypeError("gp3_path should be a string or a Path object.")
+            raise TypeError("gxtb_path should be a string or a Path object.")
+        self.cfg = gxtbcfg
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
         """
-        Perform a single-point calculation using GP3-xTB.
+        Perform a single-point calculation using g-xTB.
         """
 
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="gp3_") as temp_dir:
+        with TemporaryDirectory(prefix="gxtb_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molecule.write_xyz_to_file(str(temp_path / "molecule.xyz"))
 
-            # run gp3
+            # run g-xTB
             arguments = [
                 "-c",
                 "molecule.xyz",
@@ -53,19 +55,37 @@ class GP3(QMMethod):
                     f.write(str(molecule.uhf))
 
             if verbosity > 2:
-                print(f"Running command: gp3 {' '.join(arguments)}")
+                print(f"Running command: gxtb {' '.join(arguments)}")
 
-            gp3_log_out, gp3_log_err, return_code = self._run(
+            gxtb_log_out, gxtb_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=arguments
             )
             if verbosity > 2:
-                print(gp3_log_out)
+                print(gxtb_log_out)
             if return_code != 0:
                 raise RuntimeError(
-                    f"GP3-xTB failed with return code {return_code}:\n{gp3_log_err}"
+                    f"g-xTB failed with return code {return_code}:\n{gxtb_log_err}"
+                )
+            # gp3_output looks like this:
+            # [...]
+            #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
+            #           13  scf iterations
+            #           eigenvalues
+            # [...]
+            # Check for the number of scf iterations
+            scf_iterations = 0
+            for line in gxtb_log_out.split("\n"):
+                if "scf iterations" in line:
+                    scf_iterations = int(line.strip().split()[0])
+                    break
+            if scf_iterations == 0:
+                raise RuntimeError("SCF iterations not found in GP3 output.")
+            if scf_iterations > self.cfg.scf_cycles:
+                raise RuntimeError(
+                    f"SCF iterations exceeded limit of {self.cfg.scf_cycles}."
                 )
 
-            return gp3_log_out
+            return gxtb_log_out
 
     def check_gap(
         self, molecule: Molecule, threshold: float = 0.5, verbosity: int = 1
@@ -83,13 +103,13 @@ class GP3(QMMethod):
 
         # Perform a single point calculation
         try:
-            gp3_out = self.singlepoint(molecule)
+            gxtb_out = self.singlepoint(molecule)
         except RuntimeError as e:
             raise RuntimeError("Single point calculation failed.") from e
 
         # Parse the output to get the gap
         hlgap = None
-        for line in gp3_out.split("\n"):
+        for line in gxtb_out.split("\n"):
             if "gap (eV)" in line and "dE" not in line:
                 # check if "alpha->alpha" is present in the same line
                 # then, the line looks as follows:
@@ -102,10 +122,10 @@ class GP3(QMMethod):
                 hlgap = float(line.split()[3])
                 break
         if hlgap is None:
-            raise ValueError("GP3-xTB gap not determined.")
+            raise ValueError("g-xTB gap not determined.")
 
         if verbosity > 1:
-            print(f"GP3-xTB HOMO-LUMO gap: {hlgap:5f}")
+            print(f"g-xTB HOMO-LUMO gap: {hlgap:5f}")
 
         return hlgap > threshold
 
@@ -113,68 +133,68 @@ class GP3(QMMethod):
         self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
     ) -> Molecule:
         """
-        Optimize a molecule using GP3-xTB.
+        Optimize a molecule using g-xTB.
         """
-        raise NotImplementedError("Optimization is not yet implemented for GP3-xTB.")
+        raise NotImplementedError("Optimization is not yet implemented for g-xTB.")
 
     def _run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
         """
-        Run GP3-xTB with the given arguments.
+        Run g-xTB with the given arguments.
 
         Arguments:
-        arguments (list[str]): The arguments to pass to GP3-xTB.
+        arguments (list[str]): The arguments to pass to g-xTB.
 
         Returns:
-        tuple[str, str, int]: The output of the GP3-xTB calculation (stdout and stderr)
+        tuple[str, str, int]: The output of the g-xTB calculation (stdout and stderr)
                               and the return code
         """
         try:
-            gp3_out = sp.run(
+            gxtb_out = sp.run(
                 [str(self.path)] + arguments,
                 cwd=temp_path,
                 capture_output=True,
                 check=True,
             )
-            # get the output of the GP3-xTB calculation (of both stdout and stderr)
-            gp3_log_out = gp3_out.stdout.decode("utf8")
-            gp3_log_err = gp3_out.stderr.decode("utf8")
+            # get the output of the g-xTB calculation (of both stdout and stderr)
+            gxtb_log_out = gxtb_out.stdout.decode("utf8")
+            gxtb_log_err = gxtb_out.stderr.decode("utf8")
             if (
-                "no SCF convergence" in gp3_log_out
-                or "nuclear repulsion" not in gp3_log_out
+                "no SCF convergence" in gxtb_log_out
+                or "nuclear repulsion" not in gxtb_log_out
             ):
                 raise sp.CalledProcessError(
                     1,
                     str(self.path),
-                    gp3_log_out.encode("utf8"),
-                    gp3_log_err.encode("utf8"),
+                    gxtb_log_out.encode("utf8"),
+                    gxtb_log_err.encode("utf8"),
                 )
-            return gp3_log_out, gp3_log_err, 0
+            return gxtb_log_out, gxtb_log_err, 0
         except sp.CalledProcessError as e:
-            gp3_log_out = e.stdout.decode("utf8")
-            gp3_log_err = e.stderr.decode("utf8")
-            return gp3_log_out, gp3_log_err, e.returncode
+            gxtb_log_out = e.stdout.decode("utf8")
+            gxtb_log_err = e.stderr.decode("utf8")
+            return gxtb_log_out, gxtb_log_err, e.returncode
 
 
-# TODO: 1. Convert this to a @staticmethod of Class GP3
+# TODO: 1. Convert this to a @staticmethod of Class GXTB
 #       2. Rename to `get_method` or similar to enable an abstract interface
 #       3. Add the renamed method to the ABC `QMMethod`
 #       4. In `main.py`: Remove the passing of the path finder functions as arguments
 #          and remove the boiler plate code to make it more general.
-def get_gp3_path(binary_name: str | Path | None = None) -> Path:
+def get_gxtb_path(binary_name: str | Path | None = None) -> Path:
     """
-    Get the path to the GP3 binary based on different possible names
+    Get the path to the g-xTB binary based on different possible names
     that are searched for in the PATH.
     """
-    default_gp3_names: list[str | Path] = ["gp3", "gp3_dev"]
+    default_gxtb_names: list[str | Path] = ["gxtb", "gxtb_dev"]
     # put binary name at the beginning of the lixt to prioritize it
     if binary_name is not None:
-        binary_names = [binary_name] + default_gp3_names
+        binary_names = [binary_name] + default_gxtb_names
     else:
-        binary_names = default_gp3_names
-    # Get gp3 path from 'which gp3' command
+        binary_names = default_gxtb_names
+    # Get g-xTB path from 'which gxtb' command
     for binpath in binary_names:
-        which_gp3 = shutil.which(binpath)
-        if which_gp3:
-            gp3_path = Path(which_gp3).resolve()
-            return gp3_path
-    raise ImportError("'gp3' binary could not be found.")
+        which_gxtb = shutil.which(binpath)
+        if which_gxtb:
+            gxtb_path = Path(which_gxtb).resolve()
+            return gxtb_path
+    raise ImportError("'gxtb' binary could not be found.")
