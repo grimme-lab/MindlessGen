@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for `python-3.13`
 - option to set a fixed molecular charge, while ensuring `uhf = 0`
 - `element_composition` and `forbidden_elements` can now be directly set to a `dict` or `list`, respectively, via API access
-- support for the qm program turbomole.
+- support for TURBOMOLE as QM engine.
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.

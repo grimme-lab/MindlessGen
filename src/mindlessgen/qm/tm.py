@@ -8,7 +8,7 @@ import subprocess as sp
 from tempfile import TemporaryDirectory
 
 from ..molecules import Molecule
-from ..prog import TURBOMOLEConfig as turbomoleConfig
+from ..prog import TURBOMOLEConfig
 from .base import QMMethod
 
 
@@ -17,7 +17,7 @@ class Turbomole(QMMethod):
     This class handles all interaction with the turbomole external dependency.
     """
 
-    def __init__(self, path: str | Path, turbomolecfg: turbomoleConfig) -> None:
+    def __init__(self, path: str | Path, turbomolecfg: TURBOMOLEConfig) -> None:
         """
         Initialize the turbomole class.
         """
@@ -43,22 +43,20 @@ class Turbomole(QMMethod):
         with TemporaryDirectory(prefix="turbomole_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
-            molfile = "molecule.xyz"
-            molecule.write_xyz_to_file(temp_path / molfile)
+            molecule.write_coord_to_file(temp_path / "coord")
 
-            # convert molfile to coord file (tm format)
-            command = f"x2t {temp_path / molfile} > {temp_path / 'coord'}"
+            # # convert molfile to coord file (tm format)
+            # command = f"x2t {temp_path / molfile} > {temp_path / 'coord'}"
 
-            try:
-                # run the command in a shell
-                sp.run(command, shell=True, check=True)
-            except sp.CalledProcessError as e:
-                print(f"The xyz file could not be converted to a coord file: {e}")
+            # try:
+            #     # run the command in a shell
+            #     sp.run(command, shell=True, check=True)
+            # except sp.CalledProcessError as e:
+            #     print(f"The xyz file could not be converted to a coord file: {e}")
 
-            if verbosity > 2:
-                with open(temp_path / "coord", encoding="utf8") as f:
-                    tm_coordinates = f.read()
-                    print(tm_coordinates)
+            with open(temp_path / "coord", encoding="utf8") as f:
+                coord_content = f.read()
+                print(coord_content)
 
             # write the input file
             inputname = "control"
@@ -86,16 +84,17 @@ class Turbomole(QMMethod):
                     f"Turbomole failed with return code {return_code}:\n{tm_log_err}"
                 )
 
-            # revert the coord file to xyz file
-            revert_command = f"t2x {temp_path / 'coord'} > {temp_path / 'molecule.xyz'}"
-            try:
-                sp.run(revert_command, shell=True, check=True)
-            except sp.CalledProcessError as e:
-                print(f"The coord file could not be converted to a xyz file: {e}")
+            # # revert the coord file to xyz file
+
+            # revert_command = f"t2x {temp_path / 'coord'} > {temp_path / 'molecule.xyz'}"
+            # try:
+            #     sp.run(revert_command, shell=True, check=True)
+            # except sp.CalledProcessError as e:
+            #     print(f"The coord file could not be converted to a xyz file: {e}")
             # read the optimized molecule from the output file
-            xyzfile = Path(temp_path / "molecule.xyz").resolve().with_suffix(".xyz")
+            xyzfile = Path(temp_path / "coord").resolve()
             optimized_molecule = molecule.copy()
-            optimized_molecule.read_xyz_from_file(xyzfile)
+            optimized_molecule.read_xyz_from_coord(xyzfile)
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:

@@ -134,6 +134,11 @@ PSE: dict[int, str] = {
 PSE_NUMBERS: dict[str, int] = {k.lower(): v for v, k in PSE.items()}
 PSE_SYMBOLS: dict[int, str] = {v: k.lower() for v, k in PSE.items()}
 
+BOHR2AA = (
+    0.529177210544  # taken from https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
+)
+AA2BOHR = 1 / BOHR2AA
+
 
 class Molecule:
     """
@@ -262,6 +267,43 @@ class Molecule:
         else:
             molecule.uhf = 0
         molecule.name = file_path.stem
+        return molecule
+
+    @staticmethod
+    def read_mol_from_coord(file: str | Path) -> Molecule:
+        """
+        Read the XYZ coordinates and the charge of the molecule from a 'coord' file.
+        Thereby, generate a completely new molecule object from scratch.
+
+        Can be called like this:
+            from molecule import Molecule
+            # Call the static method using the class name
+            coord_file = "coord"
+            molecule_instance = Molecule.read_mol_from_coord(coord_file)
+            # Now you can use the molecule_instance as needed
+            print(molecule_instance.name)
+
+        :param file: The 'coord' file to read from.
+        :return: A new instance of Molecule with the read data.
+        """
+        molecule = Molecule()
+        if isinstance(file, str):
+            file_path = Path(file).resolve()
+        elif isinstance(file, Path):
+            file_path = file.resolve()
+        else:
+            raise TypeError("String or Path expected.")
+        molecule.read_xyz_from_coord(file_path)
+        uhf_path = file_path.parent / ".UHF"
+        if uhf_path.exists():
+            molecule.read_uhf_from_file(uhf_path)
+        else:
+            molecule.uhf = 0
+        chrg_path = file_path.parent / ".CHRG"
+        if chrg_path.exists():
+            molecule.read_charge_from_file(chrg_path)
+        else:
+            molecule.charge = 0
         return molecule
 
     @property
@@ -480,7 +522,7 @@ class Molecule:
         xyz_str += commentline
         for i in range(self.num_atoms):
             xyz_str += (
-                f"{PSE[self.ati[i]+1]:<5} "
+                f"{PSE[self.ati[i] + 1]:<5} "
                 + f"{self.xyz[i, 0]:>12.7f} "
                 + f"{self.xyz[i, 1]:>12.7f} "
                 + f"{self.xyz[i, 2]:>12.7f}\n"
@@ -556,6 +598,120 @@ class Molecule:
                 self.xyz[i, 0] = float(line[1])
                 self.xyz[i, 1] = float(line[2])
                 self.xyz[i, 2] = float(line[3])
+                self.atlist[self.ati[i]] += 1
+
+    def get_coord_str(self) -> str:
+        """
+        Obtain a string with the full 'coord' file information of the molecule.
+        """
+        coord_str = "$coord\n"
+        for i in range(self.num_atoms):
+            coord_str += (
+                f"{self.xyz[i, 0] / BOHR2AA:>20.14f} "
+                + f"{self.xyz[i, 1] / BOHR2AA:>20.14f} "
+                + f"{self.xyz[i, 2] / BOHR2AA:>20.14f} "
+                + f"{PSE[self.ati[i] + 1]}\n"
+            )
+        coord_str += "$end\n"
+        return coord_str
+
+    def write_coord_to_file(self, filename: str | Path | None = None):
+        """
+        Write the 'coord' file of the molecule to a file.
+
+        The layout of the file is as follows:
+        ```
+        $coord
+        <x1> <y1> <z1> <symbol 1>
+        <x2> <y2> <z2> <symbol 2>
+        ...
+        $end
+        ```
+
+        :param filename: The name of the file to write to.
+        """
+        # raise an error if the number of atoms is not set
+        if self._num_atoms is None:
+            raise ValueError("Number of atoms not set.")
+        if not self._ati.size:
+            raise ValueError("Atomic numbers not set.")
+        if not self._xyz.size:
+            raise ValueError("Atomic coordinates not set.")
+
+        if filename:
+            if not isinstance(filename, Path):
+                filename = Path(filename).resolve()
+        else:
+            filename = Path("mlm_" + self.name + ".coord").resolve()
+
+        with open(filename, "w", encoding="utf8") as f:
+            f.write(self.get_coord_str())
+        # if the charge is set, write it to a '.CHRG' file
+        if self._charge is not None and self._charge != 0:
+            chrg_filename = filename.parent / ".CHRG"
+            with open(chrg_filename, "w", encoding="utf8") as f:
+                f.write(f"{self.charge}\n")
+        # if the UHF is set, write it to a '.UHF' file
+        if self._uhf is not None and self._uhf > 0:
+            uhf_filename = filename.parent / ".UHF"
+            with open(uhf_filename, "w", encoding="utf8") as f:
+                f.write(f"{self.uhf}\n")
+
+    def read_xyz_from_coord(self, filename: str | Path) -> None:
+        """
+        Read the XYZ coordinates of the molecule from a 'coord' file.
+
+        The layout of the file is as follows:
+        ```
+        $coord
+         0.00000000000000      0.00000000000000      3.60590687077610     u
+         0.00000000000000      0.00000000000000     -3.60590687077610     u
+         0.00000000000000      2.74684941070244      0.00000000000000     F
+         3.72662552762076      0.00000000000000      5.36334486193405     F
+        -3.72662552762076      0.00000000000000      5.36334486193405     F
+         3.72662552762076      0.00000000000000     -5.36334486193405     F
+         0.00000000000000     -2.74684941070244      0.00000000000000     F
+        -3.72662552762076      0.00000000000000     -5.36334486193405     F
+        $end
+        ... or ...
+        $coord
+            0.00000000000000      0.00000000000000      2.30704866281983  u
+            0.00000000000000      0.00000000000000     -2.30704866281983  u
+        $redundant
+            number_of_atoms             2
+            degrees_of_freedom          1
+            internal_coordinates        1
+            frozen_coordinates          0
+        # definitions of redundant internals
+        1 k  1.0000000000000 stre   1    2           val=   4.61410
+                1 non zero eigenvalues  of BmBt
+                1           2.000000000    1    0
+                1
+        $end
+
+        :param filename: The name of the file to read from.
+        """
+        with open(filename, encoding="utf8") as f:
+            lines = f.readlines()
+            # number of atoms
+            num_atoms = 0
+            for line in lines:
+                if line.startswith("$coord"):
+                    continue
+                if line.startswith("$end") or line.startswith("$redundant"):
+                    break
+                num_atoms += 1
+            self.num_atoms = num_atoms
+            # read the atomic coordinates
+            self.xyz = np.zeros((self.num_atoms, 3))
+            self.ati = np.zeros(self.num_atoms, dtype=int)
+            self.atlist = np.zeros(103, dtype=int)
+            for i in range(self.num_atoms):
+                line_entries = lines[i + 1].split()
+                self.xyz[i, 0] = float(line_entries[0]) * BOHR2AA
+                self.xyz[i, 1] = float(line_entries[1]) * BOHR2AA
+                self.xyz[i, 2] = float(line_entries[2]) * BOHR2AA
+                self.ati[i] = PSE_NUMBERS[line_entries[3].lower()] - 1
                 self.atlist[self.ati[i]] += 1
 
     def read_charge_from_file(self, filename: str | Path):
