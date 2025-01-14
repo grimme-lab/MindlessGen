@@ -698,7 +698,11 @@ class Molecule:
             for line in lines:
                 if line.startswith("$coord"):
                     continue
-                if line.startswith("$end") or line.startswith("$redundant"):
+                if (
+                    line.startswith("$end")
+                    or line.startswith("$redundant")
+                    or line.startswith("$user-defined")
+                ):
                     break
                 num_atoms += 1
             self.num_atoms = num_atoms

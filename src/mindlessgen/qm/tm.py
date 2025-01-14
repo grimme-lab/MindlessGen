@@ -45,19 +45,6 @@ class Turbomole(QMMethod):
             # write the molecule to a temporary file
             molecule.write_coord_to_file(temp_path / "coord")
 
-            # # convert molfile to coord file (tm format)
-            # command = f"x2t {temp_path / molfile} > {temp_path / 'coord'}"
-
-            # try:
-            #     # run the command in a shell
-            #     sp.run(command, shell=True, check=True)
-            # except sp.CalledProcessError as e:
-            #     print(f"The xyz file could not be converted to a coord file: {e}")
-
-            with open(temp_path / "coord", encoding="utf8") as f:
-                coord_content = f.read()
-                print(coord_content)
-
             # write the input file
             inputname = "control"
             tm_input = self._gen_input(molecule)
@@ -69,8 +56,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # Setup the turbomole optimization command including the max number of optimization cycles
-            arguments = [f"PARNODES=1 jobex -ri -c {max_cycles} > jobex.out"]
-
+            arguments = [f"PARNODES=1 jobex -ri -c {max_cycles}"]
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
@@ -85,13 +71,6 @@ class Turbomole(QMMethod):
                 )
 
             # # revert the coord file to xyz file
-
-            # revert_command = f"t2x {temp_path / 'coord'} > {temp_path / 'molecule.xyz'}"
-            # try:
-            #     sp.run(revert_command, shell=True, check=True)
-            # except sp.CalledProcessError as e:
-            #     print(f"The coord file could not be converted to a xyz file: {e}")
-            # read the optimized molecule from the output file
             xyzfile = Path(temp_path / "coord").resolve()
             optimized_molecule = molecule.copy()
             optimized_molecule.read_xyz_from_coord(xyzfile)
@@ -105,21 +84,9 @@ class Turbomole(QMMethod):
         with TemporaryDirectory(prefix="turbomole_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
-            molfile = "mol.xyz"
-            molecule.write_xyz_to_file(temp_path / molfile)
+            molfile = "coord"
+            molecule.write_coord_to_file(temp_path / molfile)
             print(temp_path / molfile)
-
-            # convert molfile to coord file
-            command = f"x2t {temp_path / molfile} > {temp_path / 'coord'}"
-
-            try:
-                # run the command in a shell
-                sp.run(command, shell=True, check=True)
-            except sp.CalledProcessError as e:
-                print(f"The xyz file could not be converted to a coord file: {e}")
-            with open(temp_path / "coord", encoding="utf8") as f:
-                content = f.read()
-                print(content)
 
             # write the input file
             inputname = "control"
@@ -166,41 +133,41 @@ class Turbomole(QMMethod):
                               and the return code
         """
         try:
-            sp.run(
+            tm_out = sp.run(
                 arguments,
                 cwd=temp_path,
                 capture_output=True,
                 check=True,
                 shell=True,
             )
+
+            # get the output of the turbomole calculation (of both stdout and stderr)
             if "PARNODES=1 ridft > ridft.out" in arguments[0]:
                 with open(temp_path / "ridft.out", encoding="utf-8") as file:
-                    ridft_file = file.read()
-                    turbomole_log_out = ridft_file
-                    turbomole_log_err = ""
+                    tm_log_out = file.read()
+                tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
             else:
                 # Read the job-last file to get the output of the calculation
                 output_file = temp_path / "job.last"
                 if output_file.exists():
                     with open(output_file, encoding="utf-8") as file:
-                        file_content = file.read()
-                        turbomole_log_out = file_content
-                        turbomole_log_err = ""
+                        tm_log_out = file.read()
+                    tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
                 else:
                     raise FileNotFoundError(f"Output file {output_file} not found.")
 
-            if "ridft : all done" not in turbomole_log_out:
+            if "ridft : all done" not in tm_log_out:
                 raise sp.CalledProcessError(
                     1,
                     str(output_file),
-                    turbomole_log_out.encode("utf8"),
-                    turbomole_log_err.encode("utf8"),
+                    tm_log_out.encode("utf8"),
+                    tm_log_err.encode("utf8"),
                 )
-            return turbomole_log_out, turbomole_log_err, 0
+            return tm_log_out, tm_log_err, 0
         except sp.CalledProcessError as e:
-            turbomole_log_out = e.stdout.decode("utf8", errors="replace")
-            turbomole_log_err = e.stderr.decode("utf8", errors="replace")
-            return turbomole_log_out, turbomole_log_err, e.returncode
+            tm_log_out = e.stdout.decode("utf8", errors="replace")
+            tm_log_err = e.stderr.decode("utf8", errors="replace")
+            return tm_log_out, tm_log_err, e.returncode
 
     def _gen_input(
         self,
@@ -231,10 +198,17 @@ class Turbomole(QMMethod):
 #          and remove the boiler plate code to make it more general.
 def get_turbomole_path(binary_name: str | Path | None = None) -> Path:
     """
-    Get the path to the turbomole binary based on different possible names
-    that are searched for in the PATH.
+    Retrieve the path to the Turbomole 'ridft' binary.
+
+    This function searches for the 'ridft' script in the system PATH and returns
+    its absolute path. It is assumed that other Turbomole binaries, such as 'jobex',
+    are located in the same directory as 'ridft'. The path to 'ridft' will be used
+    as the reference point for accessing other Turbomole binaries.
+
+    Returns:
+    Path: The absolute path to the 'ridft' binary.
     """
-    default_turbomole_names: list[str | Path] = ["ridft", "jobex"]
+    default_turbomole_names: list[str | Path] = ["ridft"]
     # put binary name at the beginning of the lixt to prioritize it
     if binary_name is not None:
         binary_names = [binary_name] + default_turbomole_names

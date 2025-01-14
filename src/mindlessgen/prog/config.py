@@ -1182,9 +1182,6 @@ class ConfigManager:
             "orca": {
                 "orca_option": "opt"
             },
-            "turbomole": {
-                "turbomole_option": "opt"
-            }
         }
 
         Arguments:
