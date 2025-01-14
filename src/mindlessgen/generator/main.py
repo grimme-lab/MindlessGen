@@ -5,9 +5,13 @@ Main driver of MindlessGen.
 from __future__ import annotations
 
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor, as_completed, wait
+from multiprocessing.managers import ValueProxy
 from pathlib import Path
 import multiprocessing as mp
+from threading import Condition, Event
 import warnings
+from dataclasses import dataclass
 
 from ..molecules import generate_random_molecule, Molecule
 from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GXTB, get_gxtb_path
@@ -17,6 +21,12 @@ from ..prog import ConfigManager
 from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
+
+
+@dataclass
+class Block:
+    num_molecules: int
+    ncores: int
 
 
 def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
@@ -72,45 +82,146 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     if Path(MINDLESS_MOLECULES_FILE).is_file():
         if config.general.verbosity > 0:
             print(f"\n--- Appending to existing file '{MINDLESS_MOLECULES_FILE}'. ---")
+
+    backup_verbosity: int | None = None
+    if num_cores > 1 and config.general.verbosity > 0:
+        backup_verbosity = config.general.verbosity  # Save verbosity level for later
+        config.general.verbosity = 0  # Disable verbosity if parallel
+
     exitcode = 0
     optimized_molecules: list[Molecule] = []
-    for molcount in range(config.general.num_molecules):
-        # print a decent header for each molecule iteration
-        if config.general.verbosity > 0:
-            print(f"\n{'='*80}")
-            print(
-                f"{'='*22} Generating molecule {molcount + 1:<4} of "
-                + f"{config.general.num_molecules:<4} {'='*24}"
-            )
-            print(f"{'='*80}")
-        manager = mp.Manager()
-        stop_event = manager.Event()
-        cycles = range(config.general.max_cycles)
-        backup_verbosity: int | None = None
-        if num_cores > 1 and config.general.verbosity > 0:
-            backup_verbosity = (
-                config.general.verbosity
-            )  # Save verbosity level for later
-            config.general.verbosity = 0  # Disable verbosity if parallel
 
-        if config.general.verbosity == 0:
-            print("Cycle... ", end="", flush=True)
-        with mp.Pool(processes=num_cores) as pool:
-            results = pool.starmap(
-                single_molecule_generator,
-                [
-                    (config, refine_engine, postprocess_engine, cycle, stop_event)
-                    for cycle in cycles
-                ],
-            )
-        if config.general.verbosity == 0:
-            print("")
+    # Initialize parallel blocks here
+    blocks = setup_blocks(num_cores, config.general.num_molecules)
+    blocks.sort(key=lambda x: x.ncores)
+
+    # Set up parallel blocks environment
+    with mp.Manager() as manager:
+        stop_event = manager.Event()
+        free_cores = manager.Value(int, num_cores)
+        enough_cores = manager.Condition()
+
+        with ProcessPoolExecutor(max_workers=num_cores // 4) as executor:
+            # NOTE: The following creates a queue of futures which acquire the enough_cores lock successively.
+            # By using notify instead of notify_all in increase_cores we make sure that only the next future in
+            # order of submission is notified and the rest remain waiting.
+            tasks = []
+            for block in blocks:
+                for _ in range(block.num_molecules):
+                    tasks.append(
+                        executor.submit(
+                            single_molecule_generator,
+                            len(tasks) + 1,
+                            config,
+                            refine_engine,
+                            postprocess_engine,
+                            block.ncores,
+                            stop_event,
+                        )
+                    )
+                    tasks[-1].add_done_callback(
+                        lambda _, ncores=block.ncores: increase_cores(
+                            ncores, free_cores, enough_cores
+                        )
+                    )
+
+            # Collect results of all tries to create a molecule
+            results: list[Molecule | None] = [
+                task.result() for task in as_completed(tasks)
+            ]
 
         # Restore verbosity level if it was changed
         if backup_verbosity is not None:
             config.general.verbosity = backup_verbosity
 
-        # Filter out None values and return the first successful molecule
+        for molcount, optimized_molecule in enumerate(results):
+            if optimized_molecule is None:
+                # TODO: molcount might not align with the number of the molecule that actually failed, look into this
+                warnings.warn(
+                    "Molecule generation including optimization (and postprocessing) "
+                    + f"failed for all cycles for molecule {molcount + 1}."
+                )
+                exitcode = 1
+                continue
+
+            # if config.general.verbosity > 0:
+            #     print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
+            #     print(optimized_molecule)
+
+            if config.general.write_xyz:
+                optimized_molecule.write_xyz_to_file()
+                if config.general.verbosity > 0:
+                    print(
+                        f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n"
+                    )
+                with open("mindless.molecules", "a", encoding="utf8") as f:
+                    f.write(f"mlm_{optimized_molecule.name}\n")
+
+            optimized_molecules.append(optimized_molecule)
+
+    return optimized_molecules, exitcode
+
+
+def single_molecule_generator(
+    molcount: int,
+    config: ConfigManager,
+    refine_engine: QMMethod,
+    postprocess_engine: QMMethod | None,
+    ncores: int,
+    free_cores: ValueProxy[int],
+    enough_cores: Condition,
+) -> Molecule | None:
+    """
+    Generate a single molecule (from start to finish).
+    """
+
+    # Wait for enough cores
+    decrease_cores(ncores, free_cores, enough_cores)
+
+    # print a decent header for each molecule iteration
+    # if config.general.verbosity > 0:
+    #     print(f"\n{'='*80}")
+    #     print(
+    #         f"{'='*22} Generating molecule {molcount + 1:<4} of "
+    #         + f"{config.general.num_molecules:<4} {'='*24}"
+    #     )
+    #     print(f"{'='*80}")
+
+    with mp.Manager() as manager:
+        stop_event = manager.Event()
+        free_cores = manager.Value(int, ncores)
+        enough_cores = manager.Condition()
+
+        # Launch worker processes to find molecule
+        # if config.general.verbosity == 0:
+        #     print("Cycle... ", end="", flush=True)
+        with ProcessPoolExecutor(ncores // 4) as executor:
+            cycles = range(config.general.max_cycles)
+            tasks = [
+                executor.submit(
+                    single_molecule_step,
+                    config,
+                    refine_engine,
+                    postprocess_engine,
+                    cycle,
+                    stop_event,
+                    free_cores,
+                    enough_cores,
+                )
+                for cycle in cycles
+            ]
+
+            # Finally, add a future to set the stop_event if all jobs are completed
+            executor.submit(lambda: stop_event.set() if wait(tasks) else None)
+
+            stop_event.wait()
+            # TODO: kill all workers on receiving stop signal instead of waiting
+
+            results = [task.result() for task in as_completed(tasks)]
+
+        # if config.general.verbosity == 0:
+        #     print("")
+
         optimized_molecule: Molecule | None = None
         for i, result in enumerate(results):
             if result is not None:
@@ -118,45 +229,33 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
                 optimized_molecule = result
                 break
 
-        if optimized_molecule is None:
-            warnings.warn(
-                "Molecule generation including optimization (and postprocessing) "
-                + f"failed for all cycles for molecule {molcount + 1}."
-            )
-            exitcode = 1
-            continue
-        if config.general.verbosity > 0:
-            print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
-            print(optimized_molecule)
-        if config.general.write_xyz:
-            optimized_molecule.write_xyz_to_file()
-            if config.general.verbosity > 0:
-                print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
-            with open("mindless.molecules", "a", encoding="utf8") as f:
-                f.write(f"mlm_{optimized_molecule.name}\n")
-        optimized_molecules.append(optimized_molecule)
+        # if config.general.verbosity > 0:
+        #     print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
+        #     print(optimized_molecule)
 
-    return optimized_molecules, exitcode
+        return optimized_molecule
 
 
-def single_molecule_generator(
+def single_molecule_step(
     config: ConfigManager,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
     cycle: int,
-    stop_event,
+    stop_event: Event,
+    free_cores: ValueProxy[int],
+    enough_cores: Condition,
 ) -> Molecule | None:
-    """
-    Generate a single molecule.
-    """
+    """Execute one step in a single molecule generation"""
+
     if stop_event.is_set():
         return None  # Exit early if a molecule has already been found
 
-    if config.general.verbosity == 0:
-        # print the cycle in one line, not starting a new line
-        print("✔", end="", flush=True)
-    elif config.general.verbosity > 0:
-        print(f"Cycle {cycle + 1}:")
+    # if config.general.verbosity == 0:
+    #     # print the cycle in one line, not starting a new line
+    #     print("✔", end="", flush=True)
+    # elif config.general.verbosity > 0:
+    #     print(f"Cycle {cycle + 1}:")
+
     #   _____                           _
     #  / ____|                         | |
     # | |  __  ___ _ __   ___ _ __ __ _| |_ ___  _ __
@@ -171,17 +270,17 @@ def single_molecule_generator(
     except (
         SystemExit
     ) as e:  # debug functionality: raise SystemExit to stop the whole execution
-        if config.general.verbosity > 0:
-            print(f"Generation aborted for cycle {cycle + 1}.")
-            if config.general.verbosity > 1:
-                print(e)
+        # if config.general.verbosity > 0:
+        #     print(f"Generation aborted for cycle {cycle + 1}.")
+        #     if config.general.verbosity > 1:
+        #         print(e)
         stop_event.set()
         return None
     except RuntimeError as e:
-        if config.general.verbosity > 0:
-            print(f"Generation failed for cycle {cycle + 1}.")
-            if config.general.verbosity > 1:
-                print(e)
+        # if config.general.verbosity > 0:
+        #     print(f"Generation failed for cycle {cycle + 1}.")
+        #     if config.general.verbosity > 1:
+        #         print(e)
         return None
 
     try:
@@ -194,17 +293,19 @@ def single_molecule_generator(
         #         | |
         #         |_|
         optimized_molecule = iterative_optimization(
-            mol=mol,
-            engine=refine_engine,
-            config_generate=config.generate,
-            config_refine=config.refine,
+            mol,
+            refine_engine,
+            config.generate,
+            config.refine,
+            free_cores,
+            enough_cores,
             verbosity=config.general.verbosity,
         )
     except RuntimeError as e:
-        if config.general.verbosity > 0:
-            print(f"Refinement failed for cycle {cycle + 1}.")
-            if config.general.verbosity > 1 or config.refine.debug:
-                print(e)
+        # if config.general.verbosity > 0:
+        #     print(f"Refinement failed for cycle {cycle + 1}.")
+        #     if config.general.verbosity > 1 or config.refine.debug:
+        #         print(e)
         return None
     finally:
         if config.refine.debug:
@@ -216,19 +317,21 @@ def single_molecule_generator(
                 optimized_molecule,
                 postprocess_engine,  # type: ignore
                 config.postprocess,
-                config.general.verbosity,
+                free_cores,
+                enough_cores,
+                verbosity=config.general.verbosity,
             )
         except RuntimeError as e:
-            if config.general.verbosity > 0:
-                print(f"Postprocessing failed for cycle {cycle + 1}.")
-                if config.general.verbosity > 1 or config.postprocess.debug:
-                    print(e)
+            # if config.general.verbosity > 0:
+            #     print(f"Postprocessing failed for cycle {cycle + 1}.")
+            #     if config.general.verbosity > 1 or config.postprocess.debug:
+            #         print(e)
             return None
         finally:
             if config.postprocess.debug:
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
-        if config.general.verbosity > 1:
-            print("Postprocessing successful.")
+        # if config.general.verbosity > 1:
+        #     print("Postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
@@ -300,3 +403,45 @@ def setup_engines(
         return GXTB(path)
     else:
         raise NotImplementedError("Engine not implemented.")
+
+
+def setup_blocks(ncores: int, num_molecules: int) -> list[Block]:
+    blocks: list[Block] = []
+
+    # Maximum and minimum number of parallel processes possible
+    maxcores = ncores
+    mincores = 4  # TODO: 4 as a placeholder for an actual setting
+    maxprocs = ncores // mincores
+    minprocs = ncores // maxcores
+
+    # Distribute number of molecules among blocks
+    # First (if possible) create the maximum number of parallel blocks (maxprocs) and distribute as many molecules as possible
+    molecules_left = num_molecules
+    if molecules_left >= maxprocs:
+        p = maxprocs
+        molecules_per_block = molecules_left // p
+        for _ in range(p):
+            blocks.append(Block(molecules_per_block, ncores // p))
+        molecules_left -= molecules_per_block * p
+
+    # While there are more than minprocs (1) molecules left find the optimal number of parallel blocks
+    # Again distribute as many molecules per block as possible
+    while molecules_left >= minprocs:
+        p = max(
+            [
+                j
+                for j in range(minprocs, maxprocs)
+                if ncores % j == 0 and j <= molecules_left
+            ]
+        )
+        molecules_per_block = molecules_left // p
+        for _ in range(p):
+            blocks.append(Block(molecules_per_block, ncores // p))
+        molecules_left -= molecules_per_block * p
+
+    # NOTE: using minprocs = 1 this is probably never true
+    if molecules_left > 0:
+        blocks.append(Block(molecules_left, maxcores))
+        molecules_left -= molecules_left
+
+    return blocks

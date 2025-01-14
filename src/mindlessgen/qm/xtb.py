@@ -204,6 +204,7 @@ class XTB(QMMethod):
         tuple[str, str, int]: The output of the xtb calculation (stdout and stderr)
                               and the return code
         """
+        # TODO: variable number of threads
         non_parallel = ["-P", "1"]
         arguments += non_parallel
         try:

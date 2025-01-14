@@ -30,6 +30,8 @@ def iterative_optimization(
     engine: QMMethod,
     config_generate: GenerateConfig,
     config_refine: RefineConfig,
+    free_cores,
+    enough_cores,
     verbosity: int = 1,
 ) -> Molecule:
     """
@@ -44,6 +46,7 @@ def iterative_optimization(
     for cycle in range(config_refine.max_frag_cycles):
         # Optimize the current molecule
         try:
+            # TODO: run single points first, start optimization if scf converges
             rev_mol = engine.optimize(rev_mol, None, verbosity)
         except RuntimeError as e:
             raise RuntimeError(

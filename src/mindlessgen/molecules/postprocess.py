@@ -8,7 +8,12 @@ from ..prog import PostProcessConfig
 
 
 def postprocess_mol(
-    mol: Molecule, engine: QMMethod, config: PostProcessConfig, verbosity: int = 1
+    mol: Molecule,
+    engine: QMMethod,
+    config: PostProcessConfig,
+    free_cores,
+    enough_cores,
+    verbosity: int = 1,
 ) -> Molecule:
     """
     Postprocess the generated molecule.
