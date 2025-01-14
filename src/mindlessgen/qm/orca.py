@@ -175,6 +175,7 @@ class ORCA(QMMethod):
         orca_input += (
             f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n\tConvergence Medium\nend\n"
         )
+        # TODO: variable number of threads
         orca_input += "%pal nprocs 1 end\n\n"
         orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
         return orca_input
