@@ -344,7 +344,6 @@ def single_molecule_step(
                 _gxtb_scf_check(
                     optimized_molecule,
                     gxtb,
-                    config.general.gxtb_scf_cycles,
                     config.general.verbosity,
                 )
             except (RuntimeError, ValueError) as e:
@@ -362,7 +361,6 @@ def single_molecule_step(
                 _gxtb_ipea_check(
                     optimized_molecule,
                     gxtb,
-                    config.general.gxtb_scf_cycles,
                     config.general.verbosity,
                 )
             except (RuntimeError, ValueError) as e:
@@ -493,8 +491,8 @@ def _gxtb_ipea_check(
             break
     if scf_iterations == 0:
         raise ValueError("SCF iterations not found in GP3 output.")
-    if scf_iterations > scf_iter_limit:
-        raise ValueError(f"SCF iterations exceeded limit of {scf_iter_limit}.")
+    if scf_iterations > gxtb.cfg.scf_cycles:
+        raise ValueError(f"SCF iterations exceeded limit of {gxtb.cfg.scf_cycles}.")
 
     # 2) Single point calculation with g-xTB for the anion
     tmp_mol = mol.copy()
@@ -515,13 +513,11 @@ def _gxtb_ipea_check(
             break
     if scf_iterations == 0:
         raise ValueError("SCF iterations not found in GP3 output.")
-    if scf_iterations > scf_iter_limit:
-        raise ValueError(f"SCF iterations exceeded limit of {scf_iter_limit}.")
+    if scf_iterations > gxtb.cfg.scf_cycles:
+        raise ValueError(f"SCF iterations exceeded limit of {gxtb.cfg.scf_cycles}.")
 
 
-def _gxtb_scf_check(
-    mol: Molecule, gxtb: GXTB, scf_iter_limit: int, verbosity: int = 0
-) -> None:
+def _gxtb_scf_check(mol: Molecule, gxtb: GXTB, verbosity: int = 0) -> None:
     """
     ONLY FOR IN-HOUSE g-xTB DEVELOPMENT PURPOSES: Check the SCF iterations with g-xTB.
     """
@@ -541,5 +537,5 @@ def _gxtb_scf_check(
             break
     if scf_iterations == 0:
         raise ValueError("SCF iterations not found in GP3 output.")
-    if scf_iterations > scf_iter_limit:
-        raise ValueError(f"SCF iterations exceeded limit of {scf_iter_limit}.")
+    if scf_iterations > gxtb.cfg.scf_cycles:
+        raise ValueError(f"SCF iterations exceeded limit of {gxtb.cfg.scf_cycles}.")
