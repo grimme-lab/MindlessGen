@@ -1,5 +1,6 @@
 """
-This module contains the classes and functions for all configuration-related tasks.
+This module contains the classes and functions for all configuration-related tasks,
+as well as utilities concerned with parallelization.
 """
 
 from .config import (
@@ -12,6 +13,8 @@ from .config import (
     PostProcessConfig,
 )
 
+from .parallel import ParallelManager
+
 __all__ = [
     "ConfigManager",
     "GeneralConfig",
@@ -20,4 +23,5 @@ __all__ = [
     "GenerateConfig",
     "RefineConfig",
     "PostProcessConfig",
+    "ParallelManager",
 ]
