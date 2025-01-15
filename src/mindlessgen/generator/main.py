@@ -338,24 +338,25 @@ def single_molecule_step(
 
     if config.general.gxtb_development:
         # additional g-xTB engine after refinement and postprocessing for development purposes
-        gxtb = GXTB(get_gxtb_path())
-        try:
-            _gxtb_scf_check(
-                optimized_molecule,
-                gxtb,
-                config.general.gxtb_scf_cycles,
-                config.general.verbosity,
-            )
-        except (RuntimeError, ValueError) as e:
-            if config.general.verbosity > 0:
-                print(
-                    f"g-xTB postprocessing (SCF cycles check) failed for cycle {cycle + 1}."
+        gxtb = GXTB(get_gxtb_path(), config.gxtb)
+        if not config.general.postprocess and config.postprocess.engine == "gxtb":
+            try:
+                _gxtb_scf_check(
+                    optimized_molecule,
+                    gxtb,
+                    config.general.gxtb_scf_cycles,
+                    config.general.verbosity,
                 )
-                if config.general.verbosity > 1:
-                    print(e)
-            return None
-        if config.general.verbosity > 1:
-            print("g-xTB postprocessing (SCF cycles check) successful.")
+            except (RuntimeError, ValueError) as e:
+                if config.general.verbosity > 0:
+                    print(
+                        f"g-xTB postprocessing (SCF cycles check) failed for cycle {cycle + 1}."
+                    )
+                    if config.general.verbosity > 1:
+                        print(e)
+                return None
+            if config.general.verbosity > 1:
+                print("g-xTB postprocessing (SCF cycles check) successful.")
         if config.general.gxtb_ipea:
             try:
                 _gxtb_ipea_check(
