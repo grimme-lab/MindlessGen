@@ -198,11 +198,11 @@ def single_molecule_generator(
             )
 
         # Finally, add a future to set the stop_event if all jobs are completed
-        parallel_local.executor.submit(
-            lambda: stop_event.set() if wait(tasks) else None
-        )
-
-        stop_event.wait()
+        # parallel_local.executor.submit(
+        #     lambda: stop_event.set() if wait(tasks) else None
+        # )
+        #
+        # stop_event.wait()
 
         results = [task.result() for task in as_completed(tasks)]
 
