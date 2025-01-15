@@ -5,11 +5,10 @@ Main driver of MindlessGen.
 from __future__ import annotations
 
 from collections.abc import Callable
-from concurrent.futures import Future, ProcessPoolExecutor, as_completed, wait
-from multiprocessing.managers import ValueProxy
+from concurrent.futures import Future, as_completed, wait
 from pathlib import Path
 import multiprocessing as mp
-from threading import Condition, Event
+from threading import Event
 import warnings
 from dataclasses import dataclass
 
@@ -30,7 +29,7 @@ class Block:
     ncores: int
 
 
-def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
+def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     """
     Generate a molecule.
     """
@@ -49,7 +48,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
 
     if config.general.print_config:
         print(config)
-        return None, 0
+        return [], 0
 
     # Import and set up required engines
     refine_engine: QMMethod = setup_engines(
@@ -184,18 +183,19 @@ def single_molecule_generator(
         # if config.general.verbosity == 0:
         #     print("Cycle... ", end="", flush=True)
         cycles = range(config.general.max_cycles)
-        tasks = [
-            parallel_local.executor.submit(
-                single_molecule_step,
-                config,
-                parallel_local,
-                refine_engine,
-                postprocess_engine,
-                cycle,
-                stop_event,
+        tasks: list[Future[Molecule | None]] = []
+        for cycle in cycles:
+            tasks.append(
+                parallel_local.executor.submit(
+                    single_molecule_step,
+                    config,
+                    parallel_local,
+                    refine_engine,
+                    postprocess_engine,
+                    cycle,
+                    stop_event,
+                )
             )
-            for cycle in cycles
-        ]
 
         # Finally, add a future to set the stop_event if all jobs are completed
         parallel_local.executor.submit(
@@ -203,7 +203,6 @@ def single_molecule_generator(
         )
 
         stop_event.wait()
-        # TODO: kill all workers and cancel futures on receiving stop signal instead of waiting
 
         results = [task.result() for task in as_completed(tasks)]
 
@@ -237,7 +236,7 @@ def single_molecule_step(
 ) -> Molecule | None:
     """Execute one step in a single molecule generation"""
 
-    # TODO: this might not be necessary anymore but could still be included as fallback
+    # NOTE: this might not be necessary anymore but could still be included as fallback
     if stop_event.is_set():
         return None  # Exit early if a molecule has already been found
 
@@ -400,8 +399,8 @@ def setup_blocks(ncores: int, num_molecules: int) -> list[Block]:
     # Maximum and minimum number of parallel processes possible
     maxcores = ncores
     mincores = MINCORES_PLACEHOLDER
-    maxprocs = ncores // mincores
-    minprocs = ncores // maxcores
+    maxprocs = max(1, ncores // mincores)
+    minprocs = max(1, ncores // maxcores)
 
     # Distribute number of molecules among blocks
     # First (if possible) create the maximum number of parallel blocks (maxprocs) and distribute as many molecules as possible
