@@ -16,6 +16,8 @@ from mindlessgen.molecules.molecule import PSE_SYMBOLS
 
 from ..molecules import PSE_NUMBERS
 
+MINCORES_PLACEHOLDER = 4
+
 
 # abstract base class for configuration
 class BaseConfig(ABC):
