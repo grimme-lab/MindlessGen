@@ -105,6 +105,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         tasks: list[Future[Molecule | None]] = []
         for block in blocks:
             for _ in range(block.num_molecules):
+                # TODO: remove objects from future call that cannot be pickled (basically everything that doesn't consist only of primitives)
                 tasks.append(
                     parallel.executor.submit(
                         single_molecule_generator,
@@ -185,6 +186,7 @@ def single_molecule_generator(
         cycles = range(config.general.max_cycles)
         tasks: list[Future[Molecule | None]] = []
         for cycle in cycles:
+            # TODO: remove objects from future call that cannot be pickled (basically everything that doesn't consist only of primitives)
             tasks.append(
                 parallel_local.executor.submit(
                     single_molecule_step,
@@ -236,7 +238,6 @@ def single_molecule_step(
 ) -> Molecule | None:
     """Execute one step in a single molecule generation"""
 
-    # NOTE: this might not be necessary anymore but could still be included as fallback
     if stop_event.is_set():
         return None  # Exit early if a molecule has already been found
 
