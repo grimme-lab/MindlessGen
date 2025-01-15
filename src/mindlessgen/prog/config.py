@@ -213,24 +213,6 @@ class GeneralConfig(BaseConfig):
             raise TypeError("gxtb_ipea should be a boolean.")
         self._gxtb_ipea = gxtb_ipea
 
-    @property
-    def gxtb_scf_cycles(self):
-        """
-        Get the maximum number of SCF cycles for g-xTB.
-        """
-        return self._gxtb_scf_cycles
-
-    @gxtb_scf_cycles.setter
-    def gxtb_scf_cycles(self, gxtb_scf_cycles: int):
-        """
-        Set the maximum number of SCF cycles for g-xTB.
-        """
-        if not isinstance(gxtb_scf_cycles, int):
-            raise TypeError("Max SCF cycles for g-xTB should be an integer.")
-        if gxtb_scf_cycles < 1:
-            raise ValueError("Max SCF cycles for g-xTB should be greater than 0.")
-        self._gxtb_scf_cycles = gxtb_scf_cycles
-
     ### End of g-xTB-specific settings #########################
     ############################################################
 
