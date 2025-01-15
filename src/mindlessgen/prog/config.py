@@ -52,7 +52,6 @@ class GeneralConfig(BaseConfig):
         ## g-xTB-specific settings not intended for general use ####
         self._gxtb_development: bool = False
         self._gxtb_ipea: bool = False
-        self._gxtb_scf_cycles: int = 100
         ### End of g-xTB-specific settings #########################
         ############################################################
 
