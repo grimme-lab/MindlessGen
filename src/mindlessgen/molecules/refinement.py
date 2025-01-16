@@ -6,8 +6,9 @@ to obtain finally a valid molecule.
 from pathlib import Path
 import networkx as nx  # type: ignore
 import numpy as np
+
 from ..qm.base import QMMethod
-from ..prog import GenerateConfig, RefineConfig, ParallelManager
+from ..prog import GenerateConfig, RefineConfig, ResourceMonitor
 from .molecule import Molecule
 from .miscellaneous import (
     set_random_charge,
@@ -31,7 +32,7 @@ def iterative_optimization(
     engine: QMMethod,
     config_generate: GenerateConfig,
     config_refine: RefineConfig,
-    parallel: ParallelManager,
+    resources_local: ResourceMonitor,
     verbosity: int = 1,
 ) -> Molecule:
     """
@@ -46,25 +47,21 @@ def iterative_optimization(
     for cycle in range(config_refine.max_frag_cycles):
         # Run single points first, start optimization if scf converges
         try:
-            parallel.occupy_cores(1)
-            _ = engine.singlepoint(rev_mol, verbosity)
+            with resources_local.occupy_cores(1):
+                _ = engine.singlepoint(rev_mol, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
                 f"Single-point calculation failed at fragmentation cycle {cycle}: {e}"
             ) from e
-        finally:
-            parallel.free_cores(1)
 
         # Optimize the current molecule
         try:
-            parallel.occupy_cores(MINCORES_PLACEHOLDER)
-            rev_mol = engine.optimize(rev_mol, None, verbosity)
+            with resources_local.occupy_cores(MINCORES_PLACEHOLDER):
+                rev_mol = engine.optimize(rev_mol, None, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
                 f"Optimization failed at fragmentation cycle {cycle}: {e}"
             ) from e
-        finally:
-            parallel.free_cores(MINCORES_PLACEHOLDER)
 
         if verbosity > 2:
             # Print coordinates of optimized molecule
