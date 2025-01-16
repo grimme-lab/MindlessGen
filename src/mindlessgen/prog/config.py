@@ -1173,9 +1173,6 @@ class ConfigManager:
         [orca]
         orca_option = "opt"
 
-        [turbomole]
-        turbomole_option = "opt"
-
         Arguments:
             config_file (str): Path to the configuration file
 

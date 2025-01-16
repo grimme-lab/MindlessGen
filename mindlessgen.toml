@@ -51,7 +51,7 @@ molecular_charge = "none"
 [refine]
 # > Maximum number of fragment optimization cycles. Options: <int>
 max_frag_cycles = 10
-# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
+# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'. 'turbomole'
 engine = "xtb"
 # > HOMO-LUMO gap threshold applied at the end of the refinement step
 hlgap = 0.5

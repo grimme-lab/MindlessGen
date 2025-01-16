@@ -17,16 +17,28 @@ class Turbomole(QMMethod):
     This class handles all interaction with the turbomole external dependency.
     """
 
-    def __init__(self, path: str | Path, turbomolecfg: TURBOMOLEConfig) -> None:
+    def __init__(
+        self,
+        jobex_path: str | Path,
+        ridft_path: str | Path,
+        turbomolecfg: TURBOMOLEConfig,
+    ) -> None:
         """
         Initialize the turbomole class.
         """
-        if isinstance(path, str):
-            self.path: Path = Path(path).resolve()
-        elif isinstance(path, Path):
-            self.path = path
+        if isinstance(jobex_path, str):
+            self.jobex_path: Path = Path(jobex_path).resolve()
+        elif isinstance(jobex_path, Path):
+            self.jobex_path = jobex_path
         else:
-            raise TypeError("turbomole_path should be a string or a Path object.")
+            raise TypeError("jobex_path should be a string or a Path object.")
+
+        if isinstance(ridft_path, str):
+            self.ridft_path: Path = Path(ridft_path).resolve()
+        elif isinstance(ridft_path, Path):
+            self.ridft_path = ridft_path
+        else:
+            raise TypeError("ridft_path should be a string or a Path object.")
         self.cfg = turbomolecfg
 
     def optimize(
@@ -55,7 +67,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # Setup the turbomole optimization command including the max number of optimization cycles
-            arguments = [f"PARNODES=1 {self.path} -ri -c {max_cycles}"]
+            arguments = [f"PARNODES=1 {self.jobex_path} -c {max_cycles}"]
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
@@ -97,7 +109,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # set up the turbomole single point calculation command
-            run_tm = [f"PARNODES=1 {self.path} -ri"]
+            run_tm = [f"PARNODES=1 {self.ridft_path}"]
             if verbosity > 2:
                 print(f"Running command: {' '.join(run_tm)}")
 
@@ -147,7 +159,7 @@ class Turbomole(QMMethod):
             if "ridft : all done" not in tm_log_out:
                 raise sp.CalledProcessError(
                     1,
-                    str(self.path),
+                    str(self.ridft_path),
                     tm_log_out.encode("utf8"),
                     tm_log_err.encode("utf8"),
                 )
@@ -188,8 +200,8 @@ class Turbomole(QMMethod):
             if "ridft : all done" not in tm_log_out:
                 raise sp.CalledProcessError(
                     1,
-                    str(self.path),
-                    tm_log_out.encode("utf8"),
+                    str(self.jobex_path),
+                    tm_log_out,
                     tm_log_err.encode("utf8"),
                 )
             return tm_log_out, tm_log_err, 0
