@@ -12,10 +12,11 @@ from threading import Event
 import warnings
 from dataclasses import dataclass
 
+
 from ..molecules import generate_random_molecule, Molecule
 from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GXTB, get_gxtb_path
 from ..molecules import iterative_optimization, postprocess_mol
-from ..prog import ConfigManager, ParallelManager
+from ..prog import ConfigManager, setup_managers, ResourceMonitor
 from ..prog.config import MINCORES_PLACEHOLDER
 
 from ..__version__ import __version__
@@ -96,7 +97,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     blocks.sort(key=lambda x: x.ncores)
 
     # Set up parallel blocks environment
-    with ParallelManager(num_cores // MINCORES_PLACEHOLDER, num_cores) as parallel:
+    with setup_managers(num_cores // MINCORES_PLACEHOLDER, num_cores) as (
+        executor,
+        _,
+        resources,
+    ):
         # The following creates a queue of futures which occupy a certain number of cores each
         # as defined by each block
         # Each future represents the generation of one molecule
@@ -107,11 +112,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
             for _ in range(block.num_molecules):
                 # TODO: remove objects from future call that cannot be pickled (basically everything that doesn't consist only of primitives)
                 tasks.append(
-                    parallel.executor.submit(
+                    executor.submit(
                         single_molecule_generator,
                         len(tasks) + 1,
                         config,
-                        parallel,
+                        resources,
                         refine_engine,
                         postprocess_engine,
                         block.ncores,
@@ -156,7 +161,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
 def single_molecule_generator(
     molcount: int,
     config: ConfigManager,
-    parallel: ParallelManager,
+    resources: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
     ncores: int,
@@ -165,48 +170,45 @@ def single_molecule_generator(
     Generate a single molecule (from start to finish).
     """
 
-    # Wait for enough cores
-    parallel.occupy_cores(ncores)
+    # Wait for enough cores (cores freed automatically upon leaving managed context)
+    with resources.occupy_cores(ncores):
+        # print a decent header for each molecule iteration
+        # if config.general.verbosity > 0:
+        #     print(f"\n{'='*80}")
+        #     print(
+        #         f"{'='*22} Generating molecule {molcount + 1:<4} of "
+        #         + f"{config.general.num_molecules:<4} {'='*24}"
+        #     )
+        #     print(f"{'='*80}")
 
-    # print a decent header for each molecule iteration
-    # if config.general.verbosity > 0:
-    #     print(f"\n{'='*80}")
-    #     print(
-    #         f"{'='*22} Generating molecule {molcount + 1:<4} of "
-    #         + f"{config.general.num_molecules:<4} {'='*24}"
-    #     )
-    #     print(f"{'='*80}")
-
-    with ParallelManager(ncores, ncores) as parallel_local:
-        stop_event = parallel_local.manager.Event()
-
-        # Launch worker processes to find molecule
-        # if config.general.verbosity == 0:
-        #     print("Cycle... ", end="", flush=True)
-        cycles = range(config.general.max_cycles)
-        tasks: list[Future[Molecule | None]] = []
-        for cycle in cycles:
-            # TODO: remove objects from future call that cannot be pickled (basically everything that doesn't consist only of primitives)
-            tasks.append(
-                parallel_local.executor.submit(
-                    single_molecule_step,
-                    config,
-                    parallel_local,
-                    refine_engine,
-                    postprocess_engine,
-                    cycle,
-                    stop_event,
+        with setup_managers(ncores, ncores) as (executor, manager, resources_local):
+            stop_event = manager.Event()
+            # Launch worker processes to find molecule
+            # if config.general.verbosity == 0:
+            #     print("Cycle... ", end="", flush=True)
+            cycles = range(config.general.max_cycles)
+            tasks: list[Future[Molecule | None]] = []
+            for cycle in cycles:
+                tasks.append(
+                    executor.submit(
+                        single_molecule_step,
+                        config,
+                        resources_local,
+                        refine_engine,
+                        postprocess_engine,
+                        cycle,
+                        stop_event,
+                    )
                 )
-            )
 
-        # Finally, add a future to set the stop_event if all jobs are completed
-        # parallel_local.executor.submit(
-        #     lambda: stop_event.set() if wait(tasks) else None
-        # )
-        #
-        # stop_event.wait()
+            # Finally, add a future to set the stop_event if all jobs are completed
+            # parallel_local.executor.submit(
+            #     lambda: stop_event.set() if wait(tasks) else None
+            # )
+            #
+            # stop_event.wait()
 
-        results = [task.result() for task in as_completed(tasks)]
+            results = [task.result() for task in as_completed(tasks)]
 
     # if config.general.verbosity == 0:
     #     print("")
@@ -222,15 +224,12 @@ def single_molecule_generator(
     #     print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
     #     print(optimized_molecule)
 
-    # Free up the cores
-    parallel.free_cores(ncores)
-
     return optimized_molecule
 
 
 def single_molecule_step(
     config: ConfigManager,
-    parallel: ParallelManager,
+    resources_local: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
     cycle: int,
@@ -288,7 +287,7 @@ def single_molecule_step(
             refine_engine,
             config.generate,
             config.refine,
-            parallel,
+            resources_local,
             verbosity=config.general.verbosity,
         )
     except RuntimeError as e:
@@ -307,7 +306,7 @@ def single_molecule_step(
                 optimized_molecule,
                 postprocess_engine,  # type: ignore
                 config.postprocess,
-                parallel,
+                resources_local,
                 verbosity=config.general.verbosity,
             )
         except RuntimeError as e:

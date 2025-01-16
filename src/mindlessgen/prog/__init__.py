@@ -13,7 +13,7 @@ from .config import (
     PostProcessConfig,
 )
 
-from .parallel import ParallelManager
+from .parallel import setup_managers, ResourceMonitor
 
 __all__ = [
     "ConfigManager",
@@ -23,5 +23,6 @@ __all__ = [
     "GenerateConfig",
     "RefineConfig",
     "PostProcessConfig",
-    "ParallelManager",
+    "setup_managers",
+    "ResourceMonitor",
 ]
