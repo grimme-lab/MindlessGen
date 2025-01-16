@@ -8,7 +8,8 @@ from collections.abc import Callable
 from concurrent.futures import Future, as_completed, wait
 from pathlib import Path
 import multiprocessing as mp
-from threading import Event
+from threading import Event, Thread
+from queue import Queue, Empty
 import warnings
 from dataclasses import dataclass
 
@@ -28,6 +29,15 @@ MINDLESS_MOLECULES_FILE = "mindless.molecules"
 class Block:
     num_molecules: int
     ncores: int
+
+
+def printer_thread(msg_queue: Queue[str], stop_event: Event):
+    while not stop_event.is_set() or not msg_queue.empty():
+        try:
+            msg = msg_queue.get(timeout=0.1)
+            print(msg)
+        except Empty:
+            continue
 
 
 def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
@@ -84,11 +94,6 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         if config.general.verbosity > 0:
             print(f"\n--- Appending to existing file '{MINDLESS_MOLECULES_FILE}'. ---")
 
-    backup_verbosity: int | None = None
-    if num_cores > 1 and config.general.verbosity > 0:
-        backup_verbosity = config.general.verbosity  # Save verbosity level for later
-        config.general.verbosity = 0  # Disable verbosity if parallel
-
     exitcode = 0
     optimized_molecules: list[Molecule] = []
 
@@ -96,12 +101,24 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     blocks = setup_blocks(num_cores, config.general.num_molecules)
     blocks.sort(key=lambda x: x.ncores)
 
+    backup_verbosity: int | None = None
+    if len(blocks) > 1 and config.general.verbosity > 0:
+        backup_verbosity = config.general.verbosity  # Save verbosity level for later
+        config.general.verbosity = 0  # Disable verbosity if parallel
+        # NOTE: basically no messages will be printed if generation is run in parallel
+
     # Set up parallel blocks environment
     with setup_managers(num_cores // MINCORES_PLACEHOLDER, num_cores) as (
         executor,
-        _,
+        manager,
         resources,
     ):
+        # Prepare a message queue and printer thread
+        # msg_queue = Queue()
+        # stop_event = manager.Event()
+        # printer = Thread(target=printer_thread, args=(msg_queue, stop_event))
+        # printer.start()
+
         # The following creates a queue of futures which occupy a certain number of cores each
         # as defined by each block
         # Each future represents the generation of one molecule
@@ -110,11 +127,10 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         tasks: list[Future[Molecule | None]] = []
         for block in blocks:
             for _ in range(block.num_molecules):
-                # TODO: remove objects from future call that cannot be pickled (basically everything that doesn't consist only of primitives)
                 tasks.append(
                     executor.submit(
                         single_molecule_generator,
-                        len(tasks) + 1,
+                        len(tasks),
                         config,
                         resources,
                         refine_engine,
@@ -126,34 +142,36 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         # Collect results of all tries to create a molecule
         results: list[Molecule | None] = [task.result() for task in as_completed(tasks)]
 
-        # Restore verbosity level if it was changed
-        if backup_verbosity is not None:
-            config.general.verbosity = backup_verbosity
+        # Stop the printer thread if necessary
+        # stop_event.set()
+        # printer.join()
 
-        for molcount, optimized_molecule in enumerate(results):
-            if optimized_molecule is None:
-                # TODO: molcount might not align with the number of the molecule that actually failed, look into this
-                warnings.warn(
-                    "Molecule generation including optimization (and postprocessing) "
-                    + f"failed for all cycles for molecule {molcount + 1}."
-                )
-                exitcode = 1
-                continue
+    # Restore verbosity level if it was changed
+    if backup_verbosity is not None:
+        config.general.verbosity = backup_verbosity
 
-            # if config.general.verbosity > 0:
-            #     print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
-            #     print(optimized_molecule)
+    for molcount, optimized_molecule in enumerate(results):
+        if optimized_molecule is None:
+            # TODO: molcount might not align with the number of the molecule that actually failed, look into this
+            warnings.warn(
+                "Molecule generation including optimization (and postprocessing) "
+                + f"failed for all cycles for molecule {molcount + 1}."
+            )
+            exitcode = 1
+            continue
 
-            if config.general.write_xyz:
-                optimized_molecule.write_xyz_to_file()
-                if config.general.verbosity > 0:
-                    print(
-                        f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n"
-                    )
-                with open("mindless.molecules", "a", encoding="utf8") as f:
-                    f.write(f"mlm_{optimized_molecule.name}\n")
+        # if config.general.verbosity > 0:
+        #     print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
+        #     print(optimized_molecule)
 
-            optimized_molecules.append(optimized_molecule)
+        if config.general.write_xyz:
+            optimized_molecule.write_xyz_to_file()
+            if config.general.verbosity > 0:
+                print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
+            with open("mindless.molecules", "a", encoding="utf8") as f:
+                f.write(f"mlm_{optimized_molecule.name}\n")
+
+        optimized_molecules.append(optimized_molecule)
 
     return optimized_molecules, exitcode
 
@@ -173,13 +191,13 @@ def single_molecule_generator(
     # Wait for enough cores (cores freed automatically upon leaving managed context)
     with resources.occupy_cores(ncores):
         # print a decent header for each molecule iteration
-        # if config.general.verbosity > 0:
-        #     print(f"\n{'='*80}")
-        #     print(
-        #         f"{'='*22} Generating molecule {molcount + 1:<4} of "
-        #         + f"{config.general.num_molecules:<4} {'='*24}"
-        #     )
-        #     print(f"{'='*80}")
+        if config.general.verbosity > 0:
+            print(f"\n{'='*80}")
+            print(
+                f"{'='*22} Generating molecule {molcount + 1:<4} of "
+                + f"{config.general.num_molecules:<4} {'='*24}"
+            )
+            print(f"{'='*80}")
 
         with setup_managers(ncores, ncores) as (executor, manager, resources_local):
             stop_event = manager.Event()
@@ -220,9 +238,9 @@ def single_molecule_generator(
             optimized_molecule = result
             break
 
-    # if config.general.verbosity > 0:
-    #     print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
-    #     print(optimized_molecule)
+    if config.general.verbosity > 0:
+        print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
+        print(optimized_molecule)
 
     return optimized_molecule
 
@@ -243,8 +261,8 @@ def single_molecule_step(
     # if config.general.verbosity == 0:
     #     # print the cycle in one line, not starting a new line
     #     print("✔", end="", flush=True)
-    # elif config.general.verbosity > 0:
-    #     print(f"Cycle {cycle + 1}:")
+    if config.general.verbosity > 0:
+        print(f"Cycle {cycle + 1}:")
 
     #   _____                           _
     #  / ____|                         | |
@@ -260,17 +278,17 @@ def single_molecule_step(
     except (
         SystemExit
     ) as e:  # debug functionality: raise SystemExit to stop the whole execution
-        # if config.general.verbosity > 0:
-        #     print(f"Generation aborted for cycle {cycle + 1}.")
-        #     if config.general.verbosity > 1:
-        #         print(e)
+        if config.general.verbosity > 0:
+            print(f"Generation aborted for cycle {cycle + 1}.")
+            if config.general.verbosity > 1:
+                print(e)
         stop_event.set()
         return None
     except RuntimeError as e:
-        # if config.general.verbosity > 0:
-        #     print(f"Generation failed for cycle {cycle + 1}.")
-        #     if config.general.verbosity > 1:
-        #         print(e)
+        if config.general.verbosity > 0:
+            print(f"Generation failed for cycle {cycle + 1}.")
+            if config.general.verbosity > 1:
+                print(e)
         return None
 
     try:
@@ -291,10 +309,10 @@ def single_molecule_step(
             verbosity=config.general.verbosity,
         )
     except RuntimeError as e:
-        # if config.general.verbosity > 0:
-        #     print(f"Refinement failed for cycle {cycle + 1}.")
-        #     if config.general.verbosity > 1 or config.refine.debug:
-        #         print(e)
+        if config.general.verbosity > 0:
+            print(f"Refinement failed for cycle {cycle + 1}.")
+            if config.general.verbosity > 1 or config.refine.debug:
+                print(e)
         return None
     finally:
         if config.refine.debug:
@@ -310,16 +328,16 @@ def single_molecule_step(
                 verbosity=config.general.verbosity,
             )
         except RuntimeError as e:
-            # if config.general.verbosity > 0:
-            #     print(f"Postprocessing failed for cycle {cycle + 1}.")
-            #     if config.general.verbosity > 1 or config.postprocess.debug:
-            #         print(e)
+            if config.general.verbosity > 0:
+                print(f"Postprocessing failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1 or config.postprocess.debug:
+                    print(e)
             return None
         finally:
             if config.postprocess.debug:
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
-        # if config.general.verbosity > 1:
-        #     print("Postprocessing successful.")
+        if config.general.verbosity > 1:
+            print("Postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop

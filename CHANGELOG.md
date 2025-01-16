@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `GXTBConfig` class for the g-xTB method, supporting SCF cycles check
+- updated the parallelization to work over the number of molecules
 
 ### Fixed
 - version string is now correctly formatted and printed
