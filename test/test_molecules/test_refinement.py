@@ -12,7 +12,7 @@ from mindlessgen.molecules import detect_fragments  # type: ignore
 from mindlessgen.molecules import Molecule  # type: ignore
 from mindlessgen.molecules import iterative_optimization  # type: ignore
 from mindlessgen.prog.config import MINCORES_PLACEHOLDER
-from mindlessgen.prog.parallel import ParallelManager
+from mindlessgen.prog.parallel import setup_managers
 from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 
 TESTSDIR = Path(__file__).resolve().parents[1]
@@ -144,13 +144,13 @@ def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> Non
     else:
         raise NotImplementedError("Engine not implemented.")
     mol = mol_C13H14
-    with ParallelManager(1, MINCORES_PLACEHOLDER) as parallel:
+    with setup_managers(1, MINCORES_PLACEHOLDER) as (_, _, resources):
         mol_opt = iterative_optimization(
             mol,
             engine,
             config.generate,
             config.refine,
-            parallel,
+            resources,
             verbosity=2,
         )
     mol_ref = mol_C7H8
