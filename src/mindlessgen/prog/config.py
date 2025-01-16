@@ -931,7 +931,8 @@ class TURBOMOLEConfig(BaseConfig):
     """
 
     def __init__(self: TURBOMOLEConfig) -> None:
-        self._turbomole_path: str | Path = "turbomole"
+        self._ridft_path: str | Path = "ridft"
+        self._jobex_path: str | Path = "jobex"
         self._functional: str = "pbe"
         self._basis: str = "def2-SVP"
         self._scf_cycles: int = 100
@@ -940,20 +941,36 @@ class TURBOMOLEConfig(BaseConfig):
         return "turbomole"
 
     @property
-    def turbomole_path(self):
+    def ridft_path(self):
         """
-        Get the turbomole path.
+        Get the ridft path.
         """
-        return self._turbomole_path
+        return self._ridft_path
 
-    @turbomole_path.setter
-    def turbomole_path(self, turbomole_path: str | Path):
+    @ridft_path.setter
+    def ridft_path(self, ridft_path: str | Path):
         """
-        Set the turbomole path.
+        Set the ridft path.
         """
-        if not isinstance(turbomole_path, str | Path):
-            raise TypeError("turbomole_path should be a string or Path.")
-        self._turbomole_path = turbomole_path
+        if not isinstance(ridft_path, str | Path):
+            raise TypeError("ridft_path should be a string or Path.")
+        self._ridft_path = ridft_path
+
+    @property
+    def jobex_path(self):
+        """
+        Get the jobex path.
+        """
+        return self._jobex_path
+
+    @jobex_path.setter
+    def jobex_path(self, jobex_path: str | Path):
+        """
+        Set the jobex path.
+        """
+        if not isinstance(jobex_path, str | Path):
+            raise TypeError("jobex_path should be a string or Path.")
+        self._jobex_path = jobex_path
 
     @property
     def functional(self):

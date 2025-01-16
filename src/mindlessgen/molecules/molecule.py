@@ -294,16 +294,15 @@ class Molecule:
         else:
             raise TypeError("String or Path expected.")
         molecule.read_xyz_from_coord(file_path)
-        uhf_path = file_path.parent / ".UHF"
-        if uhf_path.exists():
-            molecule.read_uhf_from_file(uhf_path)
-        else:
-            molecule.uhf = 0
-        chrg_path = file_path.parent / ".CHRG"
-        if chrg_path.exists():
-            molecule.read_charge_from_file(chrg_path)
+        if file_path.with_suffix(".CHRG").exists():
+            molecule.read_charge_from_file(file_path.with_suffix(".CHRG"))
         else:
             molecule.charge = 0
+        if file_path.with_suffix(".UHF").exists():
+            molecule.read_uhf_from_file(file_path.with_suffix(".UHF"))
+        else:
+            molecule.uhf = 0
+        molecule.name = file_path.stem
         return molecule
 
     @property
@@ -607,10 +606,10 @@ class Molecule:
         coord_str = "$coord\n"
         for i in range(self.num_atoms):
             coord_str += (
-                f"{self.xyz[i, 0] / BOHR2AA:>20.14f} "
-                + f"{self.xyz[i, 1] / BOHR2AA:>20.14f} "
-                + f"{self.xyz[i, 2] / BOHR2AA:>20.14f} "
-                + f"{PSE[self.ati[i] + 1]}\n"
+                f"{self.xyz[i, 0] / BOHR2AA:>12.7f} "
+                + f"{self.xyz[i, 1] / BOHR2AA:>12.7f} "
+                + f"{self.xyz[i, 2] / BOHR2AA:>12.7f} "
+                + f"{PSE[self.ati[i] + 1]:>5}\n"
             )
         coord_str += "$end\n"
         return coord_str
@@ -648,13 +647,11 @@ class Molecule:
             f.write(self.get_coord_str())
         # if the charge is set, write it to a '.CHRG' file
         if self._charge is not None and self._charge != 0:
-            chrg_filename = filename.parent / ".CHRG"
-            with open(chrg_filename, "w", encoding="utf8") as f:
+            with open(filename.with_suffix(".CHRG"), "w", encoding="utf8") as f:
                 f.write(f"{self.charge}\n")
         # if the UHF is set, write it to a '.UHF' file
         if self._uhf is not None and self._uhf > 0:
-            uhf_filename = filename.parent / ".UHF"
-            with open(uhf_filename, "w", encoding="utf8") as f:
+            with open(filename.with_suffix(".UHF"), "w", encoding="utf8") as f:
                 f.write(f"{self.uhf}\n")
 
     def read_xyz_from_coord(self, filename: str | Path) -> None:
@@ -666,12 +663,6 @@ class Molecule:
         $coord
          0.00000000000000      0.00000000000000      3.60590687077610     u
          0.00000000000000      0.00000000000000     -3.60590687077610     u
-         0.00000000000000      2.74684941070244      0.00000000000000     F
-         3.72662552762076      0.00000000000000      5.36334486193405     F
-        -3.72662552762076      0.00000000000000      5.36334486193405     F
-         3.72662552762076      0.00000000000000     -5.36334486193405     F
-         0.00000000000000     -2.74684941070244      0.00000000000000     F
-        -3.72662552762076      0.00000000000000     -5.36334486193405     F
         $end
         ... or ...
         $coord
@@ -693,6 +684,8 @@ class Molecule:
         """
         with open(filename, encoding="utf8") as f:
             lines = f.readlines()
+            if lines[0] != "$coord\n":
+                raise ValueError("File does not start with '$coord'.")
             # number of atoms
             num_atoms = 0
             for line in lines:

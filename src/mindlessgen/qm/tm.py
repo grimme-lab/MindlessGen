@@ -36,9 +36,8 @@ class Turbomole(QMMethod):
         verbosity: int = 1,
     ) -> Molecule:
         """
-        Optimize a molecule using ORCA.
+        Optimize a molecule using Turbomole.
         """
-
         # Create a unique temporary directory using TemporaryDirectory context manager
         with TemporaryDirectory(prefix="turbomole_") as temp_dir:
             temp_path = Path(temp_dir).resolve()
@@ -56,11 +55,11 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # Setup the turbomole optimization command including the max number of optimization cycles
-            arguments = [f"PARNODES=1 jobex -ri -c {max_cycles}"]
+            arguments = [f"PARNODES=1 {self.path} -ri -c {max_cycles}"]
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
-            tm_log_out, tm_log_err, return_code = self._run(
+            tm_log_out, tm_log_err, return_code = self._run_opt(
                 temp_path=temp_path, arguments=arguments
             )
             if verbosity > 2:
@@ -71,9 +70,9 @@ class Turbomole(QMMethod):
                 )
 
             # # revert the coord file to xyz file
-            xyzfile = Path(temp_path / "coord").resolve()
+            coordfile = Path(temp_path / "coord").resolve()
             optimized_molecule = molecule.copy()
-            optimized_molecule.read_xyz_from_coord(xyzfile)
+            optimized_molecule.read_xyz_from_coord(coordfile)
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
@@ -86,7 +85,6 @@ class Turbomole(QMMethod):
             # write the molecule to a temporary file
             molfile = "coord"
             molecule.write_coord_to_file(temp_path / molfile)
-            print(temp_path / molfile)
 
             # write the input file
             inputname = "control"
@@ -99,7 +97,9 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # set up the turbomole single point calculation command
-            run_tm = ["PARNODES=1 ridft > ridft.out"]
+            run_tm = [f"PARNODES=1 {self.path} -ri"]
+            if verbosity > 2:
+                print(f"Running command: {' '.join(run_tm)}")
 
             tm_log_out, tm_log_err, return_code = self._run(
                 temp_path=temp_path, arguments=run_tm
@@ -138,28 +138,57 @@ class Turbomole(QMMethod):
                 cwd=temp_path,
                 capture_output=True,
                 check=True,
-                shell=True,
+                shell=True,  # shell=True is necessary for inserting the `PARNODES=xx` command, unfortunately.
             )
-
             # get the output of the turbomole calculation (of both stdout and stderr)
-            if "PARNODES=1 ridft > ridft.out" in arguments[0]:
-                with open(temp_path / "ridft.out", encoding="utf-8") as file:
-                    tm_log_out = file.read()
-                tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
-            else:
-                # Read the job-last file to get the output of the calculation
-                output_file = temp_path / "job.last"
-                if output_file.exists():
-                    with open(output_file, encoding="utf-8") as file:
-                        tm_log_out = file.read()
-                    tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
-                else:
-                    raise FileNotFoundError(f"Output file {output_file} not found.")
+            tm_log_out = tm_out.stdout.decode("utf8", errors="replace")
+            tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
 
             if "ridft : all done" not in tm_log_out:
                 raise sp.CalledProcessError(
                     1,
-                    str(output_file),
+                    str(self.path),
+                    tm_log_out.encode("utf8"),
+                    tm_log_err.encode("utf8"),
+                )
+            return tm_log_out, tm_log_err, 0
+        except sp.CalledProcessError as e:
+            tm_log_out = e.stdout.decode("utf8", errors="replace")
+            tm_log_err = e.stderr.decode("utf8", errors="replace")
+            return tm_log_out, tm_log_err, e.returncode
+
+    def _run_opt(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
+        """
+        Run turbomole optimization with the given arguments.
+
+        Arguments:
+        arguments (list[str]): The arguments to pass to turbomole.
+
+        Returns:
+        tuple[str, str, int]: The output of the turbomole calculation (stdout and stderr)
+                              and the return code
+        """
+        try:
+            tm_out = sp.run(
+                arguments,
+                cwd=temp_path,
+                capture_output=True,
+                check=True,
+                shell=True,  # shell=True is necessary for inserting the `PARNODES=xx` command, unfortunately.
+            )
+            # Read the job-last file to get the output of the calculation
+            output_file = temp_path / "job.last"
+            if output_file.exists():
+                with open(output_file, encoding="utf-8") as file:
+                    tm_log_out = file.read()
+                tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
+            else:
+                raise FileNotFoundError(f"Output file {output_file} not found.")
+
+            if "ridft : all done" not in tm_log_out:
+                raise sp.CalledProcessError(
+                    1,
+                    str(self.path),
                     tm_log_out.encode("utf8"),
                     tm_log_err.encode("utf8"),
                 )
@@ -196,28 +225,45 @@ class Turbomole(QMMethod):
 #       3. Add the renamed method to the ABC `QMMethod`
 #       4. In `main.py`: Remove the passing of the path finder functions as arguments
 #          and remove the boiler plate code to make it more general.
-def get_turbomole_path(binary_name: str | Path | None = None) -> Path:
+def get_ridft_path(binary_name: str | Path | None = None) -> Path:
     """
     Retrieve the path to the Turbomole 'ridft' binary.
-
-    This function searches for the 'ridft' script in the system PATH and returns
-    its absolute path. It is assumed that other Turbomole binaries, such as 'jobex',
-    are located in the same directory as 'ridft'. The path to 'ridft' will be used
-    as the reference point for accessing other Turbomole binaries.
 
     Returns:
     Path: The absolute path to the 'ridft' binary.
     """
-    default_turbomole_names: list[str | Path] = ["ridft"]
-    # put binary name at the beginning of the lixt to prioritize it
+    default_ridft_names: list[str | Path] = ["ridft"]
+    # put binary name at the beginning of the list to prioritize it
     if binary_name is not None:
-        binary_names = [binary_name] + default_turbomole_names
+        binary_names = [binary_name] + default_ridft_names
     else:
-        binary_names = default_turbomole_names
+        binary_names = default_ridft_names
     # Get turbomole path from 'which ridft' command
     for binpath in binary_names:
         which_ridft = shutil.which(binpath)
         if which_ridft:
-            ridft_path = Path(which_ridft).resolve()
+            ridft_path = Path(which_ridft)
             return ridft_path
-    raise ImportError("'turbomole' binary could not be found.")
+    raise ImportError("'ridft' (TURBOMOLE DFT) binary could not be found.")
+
+
+def get_jobex_path(binary_name: str | Path | None = None) -> Path:
+    """
+    Retrieve the path to the Turbomole 'jobex' binary.
+
+    Returns:
+    Path: The absolute path to the 'jobex' binary.
+    """
+    default_jobex_names: list[str | Path] = ["jobex"]
+    # put binary name at the beginning of the list to prioritize it
+    if binary_name is not None:
+        binary_names = [binary_name] + default_jobex_names
+    else:
+        binary_names = default_jobex_names
+    # Get turbomole path from 'which jobex' command
+    for binpath in binary_names:
+        which_jobex = shutil.which(binpath)
+        if which_jobex:
+            jobex_path = Path(which_jobex).resolve()
+            return jobex_path
+    raise ImportError("'jobex' (TURBOMOLE) binary could not be found.")

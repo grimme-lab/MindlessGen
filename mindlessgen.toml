@@ -90,8 +90,10 @@ gridsize = 1
 scf_cycles = 100
 
 [turbomole]
-# > Path to the turbomole executable. The names `ridft` and `jobex` are automatically searched for. Options: <str | Path>
-turbomole_path = "/path/to/turbomole"
+# > Path to the ridft executable. The name `ridft` is automatically searched for. Options: <str | Path>
+ridft_path = "/path/to/ridft"
+# > Path to the jobex executable. The name `jobex` is automatically searched for. Options: <str | Path>
+jobex_path = "/path/to/jobex"
 # > Functional/Method: Options: <str>
 functional = "PBE"
 # > Basis set: Options: <str>

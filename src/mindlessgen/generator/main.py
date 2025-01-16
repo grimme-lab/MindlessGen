@@ -17,8 +17,10 @@ from ..qm import (
     ORCA,
     get_orca_path,
     Turbomole,
-    get_turbomole_path,
+    get_ridft_path,
+    get_jobex_path,
     GXTB,
+    get_gxtb_path,
 )
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
@@ -55,7 +57,6 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         config,
         get_xtb_path,
         get_orca_path,  # g-xTB cannot be used anyway
-        get_turbomole_path,
     )
 
     if config.general.postprocess:
@@ -64,7 +65,9 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             config,
             get_xtb_path,
             get_orca_path,
-            get_turbomole_path,
+            get_ridft_path,
+            get_jobex_path,
+            get_gxtb_path,
         )
     else:
         postprocess_engine = None
@@ -280,7 +283,8 @@ def setup_engines(
     cfg: ConfigManager,
     xtb_path_func: Callable,
     orca_path_func: Callable,
-    turbomole_path_func: Callable,
+    ridft_path_func: Callable | None = None,
+    jobex_path_func: Callable | None = None,
     gxtb_path_func: Callable | None = None,
 ):
     """
@@ -303,13 +307,26 @@ def setup_engines(
             raise ImportError("orca not found.") from e
         return ORCA(path, cfg.orca)
     elif engine_type == "turbomole":
-        try:
-            path = turbomole_path_func(cfg.turbomole.turbomole_path)
-            if not path:
-                raise ImportError("turbomole not found.")
-        except ImportError as e:
-            raise ImportError("turbomole not found.") from e
-        return Turbomole(path, cfg.turbomole)
+        if ridft_path_func is None or jobex_path_func is None:
+            raise ImportError(
+                "No callable functions for determining the ridft and jobex paths."
+            )
+        if cfg.postprocess.optimize:
+            try:
+                path = jobex_path_func(cfg.turbomole.jobex_path)
+                if not path:
+                    raise ImportError("jobex not found.")
+            except ImportError as e:
+                raise ImportError("jobex not found.") from e
+            return Turbomole(path, cfg.turbomole)
+        else:
+            try:
+                path = ridft_path_func(cfg.turbomole.ridft_path)
+                if not path:
+                    raise ImportError("turbomole not found.")
+            except ImportError as e:
+                raise ImportError("turbomole not found.") from e
+            return Turbomole(path, cfg.turbomole)
     elif engine_type == "gxtb":
         if gxtb_path_func is None:
             raise ImportError("No callable function for determining the g-xTB path.")
