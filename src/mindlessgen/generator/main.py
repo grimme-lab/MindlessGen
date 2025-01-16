@@ -5,10 +5,10 @@ Main driver of MindlessGen.
 from __future__ import annotations
 
 from collections.abc import Callable
-from concurrent.futures import Future, as_completed, wait
+from concurrent.futures import Future, as_completed
 from pathlib import Path
 import multiprocessing as mp
-from threading import Event, Thread
+from threading import Event
 from queue import Queue, Empty
 import warnings
 from dataclasses import dataclass
