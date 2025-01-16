@@ -223,14 +223,14 @@ class Turbomole(QMMethod):
         tm_input += f"   basis={self.cfg.basis}\n"
         tm_input += "$dft\n"
         tm_input += f"   functional {self.cfg.functional}\n"
-        tm_input += f"   gridsize m4\n"
+        tm_input += "   gridsize m4\n"
         tm_input += "$rij\n"
         if self.cfg.functional.endswith("-v"):
             tm_input += "$doscnl\n"
         else:
             tm_input += "$disp4\n"
         tm_input += f"$scfiterlimit {self.cfg.scf_cycles}\n"
-        tm_input += f"$scfconv 7\n"
+        tm_input += "$scfconv 7\n"
         tm_input += "$energy file=energy\n"
         tm_input += "$grad file=gradient\n"
         tm_input += "$end"
