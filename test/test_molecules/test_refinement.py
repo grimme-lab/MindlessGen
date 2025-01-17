@@ -132,6 +132,7 @@ def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> Non
     # fragment charge is not completely random anymore. Currently, that's the
     # reason for a virtually switched off HL gap check (fragment can be -2, 0, 2)
     config.refine.max_frag_cycles = 1
+    config.refine.ncores = 1
     if config.refine.engine == "xtb":
         try:
             xtb_path = get_xtb_path()
