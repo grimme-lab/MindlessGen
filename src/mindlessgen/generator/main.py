@@ -18,7 +18,6 @@ from ..molecules import generate_random_molecule, Molecule
 from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GXTB, get_gxtb_path
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager, setup_managers, ResourceMonitor
-from ..prog.config import MINCORES_PLACEHOLDER
 
 from ..__version__ import __version__
 
@@ -98,7 +97,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     optimized_molecules: list[Molecule] = []
 
     # Initialize parallel blocks here
-    blocks = setup_blocks(num_cores, config.general.num_molecules)
+    blocks = setup_blocks(num_cores, config.general.num_molecules, min(config.refine.ncores, config.postprocess.ncores))
     blocks.sort(key=lambda x: x.ncores)
 
     backup_verbosity: int | None = None
@@ -108,7 +107,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         # NOTE: basically no messages will be printed if generation is run in parallel
 
     # Set up parallel blocks environment
-    with setup_managers(num_cores // MINCORES_PLACEHOLDER, num_cores) as (
+    with setup_managers(num_cores // blocks[0].ncores, num_cores) as (
         executor,
         manager,
         resources,
@@ -411,12 +410,11 @@ def setup_engines(
         raise NotImplementedError("Engine not implemented.")
 
 
-def setup_blocks(ncores: int, num_molecules: int) -> list[Block]:
+def setup_blocks(ncores: int, num_molecules: int, mincores: int) -> list[Block]:
     blocks: list[Block] = []
 
     # Maximum and minimum number of parallel processes possible
     maxcores = ncores
-    mincores = MINCORES_PLACEHOLDER
     maxprocs = max(1, ncores // mincores)
     minprocs = max(1, ncores // maxcores)
 

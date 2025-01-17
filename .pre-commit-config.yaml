@@ -34,4 +34,4 @@ repos:
       - id: mypy
         additional_dependencies: [types-toml]
 default_language_version:
-  python: python3.13
+  python: python3.12

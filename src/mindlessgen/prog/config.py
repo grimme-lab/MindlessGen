@@ -16,8 +16,6 @@ from mindlessgen.molecules.molecule import PSE_SYMBOLS
 
 from ..molecules import PSE_NUMBERS
 
-MINCORES_PLACEHOLDER = 4
-
 
 # abstract base class for configuration
 class BaseConfig(ABC):
@@ -622,6 +620,7 @@ class RefineConfig(BaseConfig):
         self._engine: str = "xtb"
         self._hlgap: float = 0.5
         self._debug: bool = False
+        self._ncores: int = 4
 
     def get_identifier(self) -> str:
         return "refine"
@@ -696,6 +695,22 @@ class RefineConfig(BaseConfig):
             raise TypeError("Debug should be a boolean.")
         self._debug = debug
 
+    @property
+    def ncores(self):
+        """
+        Get the number of cores to be used for geometry optimizations in refinement. 
+        """
+        return self._ncores
+
+    @ncores.setter
+    def ncores(self, ncores: int):
+        """
+        Set the number of cores to be used for geometry optimizations in refinement. 
+        """
+        if not isinstance(ncores, int):
+            raise TypeError("Number of cores should be an integer.")
+        self._ncores = ncores
+
 
 class PostProcessConfig(BaseConfig):
     """
@@ -707,6 +722,7 @@ class PostProcessConfig(BaseConfig):
         self._opt_cycles: int | None = 5
         self._optimize: bool = True
         self._debug: bool = False
+        self._ncores: int = 4
 
     def get_identifier(self) -> str:
         return "postprocess"
@@ -778,6 +794,22 @@ class PostProcessConfig(BaseConfig):
         if not isinstance(debug, bool):
             raise TypeError("Debug should be a boolean.")
         self._debug = debug
+
+    @property
+    def ncores(self):
+        """
+        Get the number of cores to be used in post-processing. 
+        """
+        return self._ncores
+
+    @ncores.setter
+    def ncores(self, ncores: int):
+        """
+        Set the number of cores to be used in post-processing. 
+        """
+        if not isinstance(ncores, int):
+            raise TypeError("Number of cores should be an integer.")
+        self._ncores = ncores
 
 
 class XTBConfig(BaseConfig):

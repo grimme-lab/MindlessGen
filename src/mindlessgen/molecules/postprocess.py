@@ -5,7 +5,6 @@ Postprocess the generated molecules.
 from .molecule import Molecule
 from ..qm import QMMethod
 from ..prog import PostProcessConfig, ResourceMonitor
-from ..prog.config import MINCORES_PLACEHOLDER
 
 
 def postprocess_mol(
@@ -31,16 +30,16 @@ def postprocess_mol(
         print("Postprocessing molecule...")
     if config.optimize:
         try:
-            with resources_local.occupy_cores(MINCORES_PLACEHOLDER):
+            with resources_local.occupy_cores(config.ncores):
                 postprocmol = engine.optimize(
-                    mol, max_cycles=config.opt_cycles, verbosity=verbosity
+                    mol, max_cycles=config.opt_cycles, ncores=config.ncores, verbosity=verbosity
                 )
         except RuntimeError as e:
             raise RuntimeError("Optimization in postprocessing failed.") from e
     else:
         try:
-            with resources_local.occupy_cores(MINCORES_PLACEHOLDER):
-                engine.singlepoint(mol, verbosity=verbosity)
+            with resources_local.occupy_cores(config.ncores):
+                engine.singlepoint(mol, config.ncores, verbosity=verbosity)
             postprocmol = mol
         except RuntimeError as e:
             raise RuntimeError(

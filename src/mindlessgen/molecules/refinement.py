@@ -18,7 +18,6 @@ from .miscellaneous import (
     get_lanthanides,
     get_actinides,
 )
-from ..prog.config import MINCORES_PLACEHOLDER
 
 COV_RADII = "pyykko"
 BOHR2AA = (
@@ -48,7 +47,7 @@ def iterative_optimization(
         # Run single points first, start optimization if scf converges
         try:
             with resources_local.occupy_cores(1):
-                _ = engine.singlepoint(rev_mol, verbosity)
+                _ = engine.singlepoint(rev_mol, 1, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
                 f"Single-point calculation failed at fragmentation cycle {cycle}: {e}"
@@ -56,8 +55,8 @@ def iterative_optimization(
 
         # Optimize the current molecule
         try:
-            with resources_local.occupy_cores(MINCORES_PLACEHOLDER):
-                rev_mol = engine.optimize(rev_mol, None, verbosity)
+            with resources_local.occupy_cores(config_refine.ncores):
+                rev_mol = engine.optimize(rev_mol, config_refine.ncores, None, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
                 f"Optimization failed at fragmentation cycle {cycle}: {e}"
@@ -161,9 +160,10 @@ def iterative_optimization(
         )
 
     try:
-        gap_sufficient = engine.check_gap(
-            molecule=rev_mol, threshold=config_refine.hlgap, verbosity=verbosity
-        )
+        with resources_local.occupy_cores(1):
+            gap_sufficient = engine.check_gap(
+                molecule=rev_mol, threshold=config_refine.hlgap, ncores=1, verbosity=verbosity
+            )
     except RuntimeError as e:
         raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
     if not gap_sufficient:

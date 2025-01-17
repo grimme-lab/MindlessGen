@@ -30,7 +30,7 @@ class ORCA(QMMethod):
         self.cfg = orcacfg
 
     def optimize(
-        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
     ) -> Molecule:
         """
         Optimize a molecule using ORCA.
@@ -43,7 +43,7 @@ class ORCA(QMMethod):
             molecule.write_xyz_to_file(temp_path / "molecule.xyz")
 
             inputname = "orca_opt.inp"
-            orca_input = self._gen_input(molecule, "molecule.xyz", True, max_cycles)
+            orca_input = self._gen_input(molecule, "molecule.xyz", ncores, True, max_cycles)
             if verbosity > 1:
                 print("ORCA input file:\n##################")
                 print(orca_input)
@@ -72,7 +72,7 @@ class ORCA(QMMethod):
             optimized_molecule.read_xyz_from_file(xyzfile)
             return optimized_molecule
 
-    def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
+    def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
         """
         Perform a single point calculation using ORCA.
         """
@@ -85,10 +85,10 @@ class ORCA(QMMethod):
 
             # write the input file
             inputname = "orca.inp"
-            orca_input = self._gen_input(molecule, molfile)
+            orca_input = self._gen_input(molecule, molfile, ncores)
             if verbosity > 1:
                 print("ORCA input file:\n##################")
-                print(self._gen_input(molecule, molfile))
+                print(self._gen_input(molecule, molfile, ncores))
                 print("##################")
             with open(temp_path / inputname, "w", encoding="utf8") as f:
                 f.write(orca_input)
@@ -110,7 +110,7 @@ class ORCA(QMMethod):
             return orca_log_out
 
     def check_gap(
-        self, molecule: Molecule, threshold: float, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, threshold: float, verbosity: int = 1
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.
@@ -156,6 +156,7 @@ class ORCA(QMMethod):
         self,
         molecule: Molecule,
         xyzfile: str,
+        ncores: int,
         optimization: bool = False,
         opt_cycles: int | None = None,
     ) -> str:
@@ -175,8 +176,7 @@ class ORCA(QMMethod):
         orca_input += (
             f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n\tConvergence Medium\nend\n"
         )
-        # TODO: variable number of threads
-        orca_input += "%pal nprocs 1 end\n\n"
+        orca_input += f"%pal nprocs {ncores} end\n\n"
         orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
         return orca_input
 

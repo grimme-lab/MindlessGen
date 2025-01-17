@@ -34,7 +34,7 @@ class XTB(QMMethod):
         self.cfg = xtb_config
 
     def optimize(
-        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
     ) -> Molecule:
         """
         Optimize a molecule using xtb.
@@ -64,6 +64,8 @@ class XTB(QMMethod):
                 "--opt",
                 "--gfn",
                 f"{self.cfg.level}",
+                "-P",
+                f"{ncores}",
             ]
             if molecule.charge != 0:
                 arguments += ["--chrg", str(molecule.charge)]
@@ -99,7 +101,7 @@ class XTB(QMMethod):
                 optimized_molecule.atlist = molecule.atlist
             return optimized_molecule
 
-    def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
+    def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
         """
         Perform a single-point calculation using xtb.
         """
@@ -128,6 +130,8 @@ class XTB(QMMethod):
                 "molecule.xyz",
                 "--gfn",
                 f"{self.cfg.level}",
+                "-P",
+                f"{ncores}",
             ]
             if molecule.charge != 0:
                 arguments += ["--chrg", str(molecule.charge)]
@@ -157,13 +161,14 @@ class XTB(QMMethod):
             return xtb_log_out
 
     def check_gap(
-        self, molecule: Molecule, threshold: float = 0.5, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, threshold: float = 0.5, verbosity: int = 1
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.
 
         Arguments:
         molecule (Molecule): Molecule to check
+        ncores (int): Number of cores to use
         threshold (float): Threshold for the gap
 
         Returns:
@@ -172,7 +177,7 @@ class XTB(QMMethod):
 
         # Perform a single point calculation
         try:
-            xtb_out = self.singlepoint(molecule)
+            xtb_out = self.singlepoint(molecule, ncores)
         except RuntimeError as e:
             raise RuntimeError("Single point calculation failed.") from e
 
@@ -204,9 +209,6 @@ class XTB(QMMethod):
         tuple[str, str, int]: The output of the xtb calculation (stdout and stderr)
                               and the return code
         """
-        # TODO: variable number of threads
-        non_parallel = ["-P", "1"]
-        arguments += non_parallel
         try:
             xtb_out = sp.run(
                 [str(self.path)] + arguments,

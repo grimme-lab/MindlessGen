@@ -21,36 +21,39 @@ class QMMethod(ABC):
 
     @abstractmethod
     def optimize(
-        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
     ) -> Molecule:
         """
         Define the optimization process.
 
         Arguments:
         molecule (Molecule): Molecule to optimize
+        ncores (int): Number of cores to use
 
         Returns:
         Molecule: Optimized molecule
         """
 
     @abstractmethod
-    def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
+    def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
         """
         Define the single point calculation process.
 
         Arguments:
         molecule (Molecule): Molecule to calculate
+        ncores (int): Number of cores to use
         """
 
     @abstractmethod
     def check_gap(
-        self, molecule: Molecule, threshold: float, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, threshold: float, verbosity: int = 1
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.
 
         Arguments:
         molecule (Molecule): Molecule to check
+        ncores (int): Number of cores to use
         threshold (float): Threshold for the gap
         """
 
