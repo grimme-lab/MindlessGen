@@ -96,11 +96,15 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     exitcode = 0
     optimized_molecules: list[Molecule] = []
 
-    # Assert that parallel configuration is valid 
+    # Assert that parallel configuration is valid
     if num_cores < config.refine.ncores:
-        raise RuntimeError(f"Number of cores ({num_cores}) is too low to run refinement using {config.refine.ncores}.")
+        raise RuntimeError(
+            f"Number of cores ({num_cores}) is too low to run refinement using {config.refine.ncores}."
+        )
     if config.general.postprocess and num_cores < config.postprocess.ncores:
-        raise RuntimeError(f"Number of cores ({num_cores}) is too low to run post-processing using {config.postprocess.ncores}.")
+        raise RuntimeError(
+            f"Number of cores ({num_cores}) is too low to run post-processing using {config.postprocess.ncores}."
+        )
 
     # Initialize parallel blocks here
     blocks = setup_blocks(
