@@ -168,7 +168,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     if time.days:
         hours += time.days * 24
 
-    print(f"\nRan MindlessGen in {hours:02d}:{minutes:02d}:{seconds:02d}")
+    print(f"\nRan MindlessGen in {hours:02d}:{minutes:02d}:{seconds:02d} (HH:MM:SS)")
 
     return optimized_molecules, exitcode
 
