@@ -158,7 +158,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     end = perf_counter()
     runtime = end - start
 
-    print(f"Successfully generated {len(optimized_molecules)} molecules:")
+    print(f"\nSuccessfully generated {len(optimized_molecules)} molecules:")
     for optimized_molecule in optimized_molecules:
         print(optimized_molecule.name)
 
