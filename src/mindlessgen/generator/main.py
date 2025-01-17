@@ -208,12 +208,6 @@ def single_molecule_generator(
         print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
         print(optimized_molecule)
 
-    # TODO: will this conflict with progress bar?
-    warnings.warn(
-        "Molecule generation including optimization (and postprocessing) "
-        + f"failed for all cycles for molecule {molcount + 1}."
-    )
-
     # Write out molecule if requested
     if optimized_molecule is not None and config.general.write_xyz:
         optimized_molecule.write_xyz_to_file()
@@ -221,6 +215,12 @@ def single_molecule_generator(
             f.write(f"mlm_{optimized_molecule.name}\n")
         if config.general.verbosity > 0:
             print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
+    elif optimized_molecule is None:
+        # TODO: will this conflict with progress bar?
+        warnings.warn(
+            "Molecule generation including optimization (and postprocessing) "
+            + f"failed for all cycles for molecule {molcount + 1}."
+        )
 
     return optimized_molecule
 
