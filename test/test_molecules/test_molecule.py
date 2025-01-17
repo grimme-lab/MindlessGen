@@ -248,6 +248,32 @@ def test_read_xyz_from_coord(tmp_path, filename, num_atoms, charge, expected_exc
         )
 
 
+def test_write_coord_to_file(tmp_path):
+    mol = Molecule(name="test")
+    mol.num_atoms = 2
+    mol.ati = np.array([0, 8], dtype=int)
+    mol.xyz = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+
+    expected_content = """$coord
+0.0000000 0.0000000 0.0000000 H
+1.8897261 0.0000000 0.0000000 F
+$end
+"""
+
+    mol.write_coord_to_file(str(tmp_path / "test.coord"))
+
+    assert (tmp_path / "test.coord").exists()
+
+    # Lese den Inhalt der Datei und entferne überflüssige Leerzeichen für den Vergleich
+    actual_content = (tmp_path / "test.coord").read_text().strip()
+    normalized_actual = " ".join(actual_content.split())
+    normalized_expected = " ".join(expected_content.split())
+
+    assert (
+        normalized_actual == normalized_expected
+    ), f"Actual content:\n{actual_content}\nExpected content:\n{expected_content}"
+
+
 def test_copy_method():
     mol = Molecule(name="original")
     mol.num_atoms = 2
