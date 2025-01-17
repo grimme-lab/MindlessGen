@@ -51,7 +51,7 @@ molecular_charge = "none"
 [refine]
 # > Maximum number of fragment optimization cycles. Options: <int>
 max_frag_cycles = 10
-# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
+# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'. 'turbomole'
 engine = "xtb"
 # > HOMO-LUMO gap threshold applied at the end of the refinement step
 hlgap = 0.5
@@ -60,7 +60,7 @@ hlgap = 0.5
 debug = false
 
 [postprocess]
-# > Engine for the post-processing part. Options: 'xtb', 'orca'
+# > Engine for the post-processing part. Options: 'xtb', 'orca', 'turbomole'
 engine = "orca"
 # > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
 optimize = true
@@ -86,5 +86,17 @@ functional = "PBE"
 basis = "def2-SVP"
 # > Gridsize for the numerical integration (corresponds to `DEFGRID<gridsize>`: Options: <int => 1> = coarse, <int = 2> => medium, <int = 3> => fine
 gridsize = 1
+# > Maximum number of SCF cycles: Options: <int>
+scf_cycles = 100
+
+[turbomole]
+# > Path to the ridft executable. The name `ridft` is automatically searched for. Options: <str | Path>
+ridft_path = "/path/to/ridft"
+# > Path to the jobex executable. The name `jobex` is automatically searched for. Options: <str | Path>
+jobex_path = "/path/to/jobex"
+# > Functional/Method: Options: <str>
+functional = "PBE"
+# > Basis set: Options: <str>
+basis = "def2-SVP"
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100

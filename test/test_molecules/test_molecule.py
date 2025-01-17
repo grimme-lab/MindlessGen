@@ -198,6 +198,82 @@ def test_read_mol_from_file(tmp_path, filename, num_atoms, charge, expected_exce
         )
 
 
+@pytest.mark.parametrize(
+    "filename, num_atoms, charge, expected_exception",
+    [
+        ("test_molecule", 2, 1, None),  # Valid file and data
+        ("invalid_molecule", None, None, FileNotFoundError),  # Missing file
+        ("corrupted_molecule", None, None, ValueError),  # Invalid data
+    ],
+)
+def test_read_xyz_from_coord(tmp_path, filename, num_atoms, charge, expected_exception):
+    if filename == "test_molecule":
+        # Create valid XYZ and CHRG files for testing
+        coord_content = "$coord\n0.0 0.0 0.0 H\n1.8897261259077822 0.0 0.0 O\n$end\n"
+        chrg_content = "1\n"
+    elif filename == "corrupted_molecule":
+        # Create an invalid XYZ file
+        coord_content = "Invalid content\n"
+        chrg_content = "invalid\n"
+    else:
+        # Simulate missing file by skipping file creation
+        coord_content = None
+        chrg_content = None
+
+    if coord_content and chrg_content:
+        coord_file = tmp_path / f"{filename}"
+        chrg_file = tmp_path / f"{filename}.CHRG"
+        coord_file.write_text(coord_content)
+        chrg_file.write_text(chrg_content)
+
+    if filename == "corrupted_molecule":
+        print(f"expected_exception: {expected_exception}")
+        with pytest.raises(expected_exception):
+            Molecule.read_mol_from_coord(str(tmp_path / coord_file))
+    elif filename == "invalid_molecule":
+        print(f"expected_exception: {expected_exception}")
+        with pytest.raises(expected_exception):
+            # load from "filename", which does not exist -> FileNotFoundError
+            Molecule.read_mol_from_coord(str(tmp_path / filename))
+    else:
+        mol = Molecule.read_mol_from_coord(str(tmp_path / coord_file))
+        assert mol.num_atoms == num_atoms
+        assert mol.charge == charge
+        assert mol.uhf == 0
+        np.testing.assert_array_equal(mol.ati, np.array([0, 7]))
+        assert mol.atlist[0] == 1
+        assert mol.atlist[7] == 1
+        np.testing.assert_array_equal(
+            mol.xyz, np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+        )
+
+
+def test_write_coord_to_file(tmp_path):
+    mol = Molecule(name="test")
+    mol.num_atoms = 2
+    mol.ati = np.array([0, 8], dtype=int)
+    mol.xyz = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+
+    expected_content = """$coord
+0.0000000 0.0000000 0.0000000 H
+1.8897261 0.0000000 0.0000000 F
+$end
+"""
+
+    mol.write_coord_to_file(str(tmp_path / "test.coord"))
+
+    assert (tmp_path / "test.coord").exists()
+
+    # Lese den Inhalt der Datei und entferne überflüssige Leerzeichen für den Vergleich
+    actual_content = (tmp_path / "test.coord").read_text().strip()
+    normalized_actual = " ".join(actual_content.split())
+    normalized_expected = " ".join(expected_content.split())
+
+    assert (
+        normalized_actual == normalized_expected
+    ), f"Actual content:\n{actual_content}\nExpected content:\n{expected_content}"
+
+
 def test_copy_method():
     mol = Molecule(name="original")
     mol.num_atoms = 2

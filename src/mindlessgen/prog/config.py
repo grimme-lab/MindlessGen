@@ -347,7 +347,7 @@ class GenerateConfig(BaseConfig):
                         tmp[key] = composition[key]
                     else:
                         raise KeyError(
-                            f"Element with atomic number {key+1} (provided key: {key}) not found in the periodic table."
+                            f"Element with atomic number {key + 1} (provided key: {key}) not found in the periodic table."
                         )
             self._element_composition = tmp
             return
@@ -656,8 +656,8 @@ class RefineConfig(BaseConfig):
         """
         if not isinstance(engine, str):
             raise TypeError("Refinement engine should be a string.")
-        if engine not in ["xtb", "orca"]:
-            raise ValueError("Refinement engine can only be xtb or orca.")
+        if engine not in ["xtb", "orca", "turbomole"]:
+            raise ValueError("Refinement engine can only be xtb, orca or turbomole.")
         self._engine = engine
 
     @property
@@ -723,8 +723,8 @@ class PostProcessConfig(BaseConfig):
         """
         if not isinstance(engine, str):
             raise TypeError("Postprocess engine should be a string.")
-        if engine not in ["xtb", "orca", "gxtb"]:
-            raise ValueError("Postprocess engine can only be xtb or orca.")
+        if engine not in ["xtb", "orca", "gxtb", "turbomole"]:
+            raise ValueError("Postprocess engine can only be xtb, orca or turbomole.")
         self._engine = engine
 
     @property
@@ -925,6 +925,104 @@ class ORCAConfig(BaseConfig):
         self._scf_cycles = max_scf_cycles
 
 
+class TURBOMOLEConfig(BaseConfig):
+    """
+    Configuration class for TURBOMOLE.
+    """
+
+    def __init__(self: TURBOMOLEConfig) -> None:
+        self._ridft_path: str | Path = "ridft"
+        self._jobex_path: str | Path = "jobex"
+        self._functional: str = "pbe"
+        self._basis: str = "def2-SVP"
+        self._scf_cycles: int = 100
+
+    def get_identifier(self) -> str:
+        return "turbomole"
+
+    @property
+    def ridft_path(self):
+        """
+        Get the ridft path.
+        """
+        return self._ridft_path
+
+    @ridft_path.setter
+    def ridft_path(self, ridft_path: str | Path):
+        """
+        Set the ridft path.
+        """
+        if not isinstance(ridft_path, str | Path):
+            raise TypeError("ridft_path should be a string or Path.")
+        self._ridft_path = ridft_path
+
+    @property
+    def jobex_path(self):
+        """
+        Get the jobex path.
+        """
+        return self._jobex_path
+
+    @jobex_path.setter
+    def jobex_path(self, jobex_path: str | Path):
+        """
+        Set the jobex path.
+        """
+        if not isinstance(jobex_path, str | Path):
+            raise TypeError("jobex_path should be a string or Path.")
+        self._jobex_path = jobex_path
+
+    @property
+    def functional(self):
+        """
+        Get the TURBOMOLE functional/method.
+        """
+        return self._functional
+
+    @functional.setter
+    def functional(self, functional: str):
+        """
+        Set the TURBOMOLE functional/method.
+        """
+        if not isinstance(functional, str):
+            raise TypeError("Functional should be a string.")
+        self._functional = functional
+
+    @property
+    def basis(self):
+        """
+        Get the TURBOMOLE basis set.
+        """
+        return self._basis
+
+    @basis.setter
+    def basis(self, basis: str):
+        """
+        Set the TURBOMOLE basis set.
+        """
+        if not isinstance(basis, str):
+            raise TypeError("Basis should be a string.")
+        self._basis = basis
+
+    @property
+    def scf_cycles(self):
+        """
+        Get the maximum number of SCF cycles.
+        """
+        return self._scf_cycles
+
+    @scf_cycles.setter
+    def scf_cycles(self, max_scf_cycles: int):
+        """
+        Set the maximum number of SCF cycles.
+        """
+        if not isinstance(max_scf_cycles, int):
+            raise TypeError("Max SCF cycles should be an integer.")
+        if max_scf_cycles < 1:
+            raise ValueError("Max SCF cycles should be greater than 0.")
+        self._scf_cycles = max_scf_cycles
+
+
 class GXTBConfig(BaseConfig):
     """
     Configuration class for g-xTB.
@@ -984,6 +1082,7 @@ class ConfigManager:
         self.general = GeneralConfig()
         self.xtb = XTBConfig()
         self.orca = ORCAConfig()
+        self.turbomole = TURBOMOLEConfig()
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
@@ -1096,7 +1195,7 @@ class ConfigManager:
             },
             "orca": {
                 "orca_option": "opt"
-            }
+            },
         }
 
         Arguments:

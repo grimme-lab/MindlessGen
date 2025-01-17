@@ -10,7 +10,18 @@ import multiprocessing as mp
 import warnings
 
 from ..molecules import generate_random_molecule, Molecule
-from ..qm import XTB, get_xtb_path, QMMethod, ORCA, get_orca_path, GXTB, get_gxtb_path
+from ..qm import (
+    XTB,
+    get_xtb_path,
+    QMMethod,
+    ORCA,
+    get_orca_path,
+    Turbomole,
+    get_ridft_path,
+    get_jobex_path,
+    GXTB,
+    get_gxtb_path,
+)
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager
 
@@ -46,6 +57,8 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
         config,
         get_xtb_path,
         get_orca_path,  # g-xTB cannot be used anyway
+        get_ridft_path,
+        get_jobex_path,
     )
 
     if config.general.postprocess:
@@ -54,6 +67,8 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
             config,
             get_xtb_path,
             get_orca_path,
+            get_ridft_path,
+            get_jobex_path,
             get_gxtb_path,
         )
     else:
@@ -77,12 +92,12 @@ def generator(config: ConfigManager) -> tuple[list[Molecule] | None, int]:
     for molcount in range(config.general.num_molecules):
         # print a decent header for each molecule iteration
         if config.general.verbosity > 0:
-            print(f"\n{'='*80}")
+            print(f"\n{'=' * 80}")
             print(
-                f"{'='*22} Generating molecule {molcount + 1:<4} of "
-                + f"{config.general.num_molecules:<4} {'='*24}"
+                f"{'=' * 22} Generating molecule {molcount + 1:<4} of "
+                + f"{config.general.num_molecules:<4} {'=' * 24}"
             )
-            print(f"{'='*80}")
+            print(f"{'=' * 80}")
         manager = mp.Manager()
         stop_event = manager.Event()
         cycles = range(config.general.max_cycles)
@@ -270,6 +285,8 @@ def setup_engines(
     cfg: ConfigManager,
     xtb_path_func: Callable,
     orca_path_func: Callable,
+    ridft_path_func: Callable,
+    jobex_path_func: Callable,
     gxtb_path_func: Callable | None = None,
 ):
     """
@@ -291,6 +308,20 @@ def setup_engines(
         except ImportError as e:
             raise ImportError("orca not found.") from e
         return ORCA(path, cfg.orca)
+    elif engine_type == "turbomole":
+        try:
+            jobex_path = jobex_path_func(cfg.turbomole.jobex_path)
+            if not jobex_path:
+                raise ImportError("jobex not found.")
+        except ImportError as e:
+            raise ImportError("jobex not found.") from e
+        try:
+            ridft_path = ridft_path_func(cfg.turbomole.ridft_path)
+            if not ridft_path:
+                raise ImportError("ridft not found.")
+        except ImportError as e:
+            raise ImportError("ridft not found.") from e
+        return Turbomole(jobex_path, ridft_path, cfg.turbomole)
     elif engine_type == "gxtb":
         if gxtb_path_func is None:
             raise ImportError("No callable function for determining the g-xTB path.")
