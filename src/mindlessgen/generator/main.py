@@ -97,7 +97,11 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     optimized_molecules: list[Molecule] = []
 
     # Initialize parallel blocks here
-    blocks = setup_blocks(num_cores, config.general.num_molecules, min(config.refine.ncores, config.postprocess.ncores))
+    blocks = setup_blocks(
+        num_cores,
+        config.general.num_molecules,
+        min(config.refine.ncores, config.postprocess.ncores),
+    )
     blocks.sort(key=lambda x: x.ncores)
 
     backup_verbosity: int | None = None

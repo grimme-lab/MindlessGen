@@ -88,7 +88,11 @@ class GXTB(QMMethod):
             return gxtb_log_out
 
     def check_gap(
-        self, molecule: Molecule, ncores: int, threshold: float = 0.5, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        threshold: float = 0.5,
+        verbosity: int = 1,
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.
@@ -130,7 +134,11 @@ class GXTB(QMMethod):
         return hlgap > threshold
 
     def optimize(
-        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
     ) -> Molecule:
         """
         Optimize a molecule using g-xTB.

@@ -34,7 +34,11 @@ class XTB(QMMethod):
         self.cfg = xtb_config
 
     def optimize(
-        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
     ) -> Molecule:
         """
         Optimize a molecule using xtb.
@@ -161,7 +165,11 @@ class XTB(QMMethod):
             return xtb_log_out
 
     def check_gap(
-        self, molecule: Molecule, ncores: int, threshold: float = 0.5, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        threshold: float = 0.5,
+        verbosity: int = 1,
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.

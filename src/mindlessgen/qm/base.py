@@ -21,7 +21,11 @@ class QMMethod(ABC):
 
     @abstractmethod
     def optimize(
-        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
     ) -> Molecule:
         """
         Define the optimization process.

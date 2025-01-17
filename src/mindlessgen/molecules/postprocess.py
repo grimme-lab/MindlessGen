@@ -32,7 +32,10 @@ def postprocess_mol(
         try:
             with resources_local.occupy_cores(config.ncores):
                 postprocmol = engine.optimize(
-                    mol, max_cycles=config.opt_cycles, ncores=config.ncores, verbosity=verbosity
+                    mol,
+                    max_cycles=config.opt_cycles,
+                    ncores=config.ncores,
+                    verbosity=verbosity,
                 )
         except RuntimeError as e:
             raise RuntimeError("Optimization in postprocessing failed.") from e

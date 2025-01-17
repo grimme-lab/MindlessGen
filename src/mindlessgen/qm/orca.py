@@ -30,7 +30,11 @@ class ORCA(QMMethod):
         self.cfg = orcacfg
 
     def optimize(
-        self, molecule: Molecule, ncores: int, max_cycles: int | None = None, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
     ) -> Molecule:
         """
         Optimize a molecule using ORCA.
@@ -43,7 +47,9 @@ class ORCA(QMMethod):
             molecule.write_xyz_to_file(temp_path / "molecule.xyz")
 
             inputname = "orca_opt.inp"
-            orca_input = self._gen_input(molecule, "molecule.xyz", ncores, True, max_cycles)
+            orca_input = self._gen_input(
+                molecule, "molecule.xyz", ncores, True, max_cycles
+            )
             if verbosity > 1:
                 print("ORCA input file:\n##################")
                 print(orca_input)

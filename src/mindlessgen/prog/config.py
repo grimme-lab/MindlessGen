@@ -698,14 +698,14 @@ class RefineConfig(BaseConfig):
     @property
     def ncores(self):
         """
-        Get the number of cores to be used for geometry optimizations in refinement. 
+        Get the number of cores to be used for geometry optimizations in refinement.
         """
         return self._ncores
 
     @ncores.setter
     def ncores(self, ncores: int):
         """
-        Set the number of cores to be used for geometry optimizations in refinement. 
+        Set the number of cores to be used for geometry optimizations in refinement.
         """
         if not isinstance(ncores, int):
             raise TypeError("Number of cores should be an integer.")
@@ -798,14 +798,14 @@ class PostProcessConfig(BaseConfig):
     @property
     def ncores(self):
         """
-        Get the number of cores to be used in post-processing. 
+        Get the number of cores to be used in post-processing.
         """
         return self._ncores
 
     @ncores.setter
     def ncores(self, ncores: int):
         """
-        Set the number of cores to be used in post-processing. 
+        Set the number of cores to be used in post-processing.
         """
         if not isinstance(ncores, int):
             raise TypeError("Number of cores should be an integer.")

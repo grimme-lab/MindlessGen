@@ -56,7 +56,9 @@ def iterative_optimization(
         # Optimize the current molecule
         try:
             with resources_local.occupy_cores(config_refine.ncores):
-                rev_mol = engine.optimize(rev_mol, config_refine.ncores, None, verbosity)
+                rev_mol = engine.optimize(
+                    rev_mol, config_refine.ncores, None, verbosity
+                )
         except RuntimeError as e:
             raise RuntimeError(
                 f"Optimization failed at fragmentation cycle {cycle}: {e}"
@@ -162,7 +164,10 @@ def iterative_optimization(
     try:
         with resources_local.occupy_cores(1):
             gap_sufficient = engine.check_gap(
-                molecule=rev_mol, threshold=config_refine.hlgap, ncores=1, verbosity=verbosity
+                molecule=rev_mol,
+                threshold=config_refine.hlgap,
+                ncores=1,
+                verbosity=verbosity,
             )
     except RuntimeError as e:
         raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
