@@ -1146,6 +1146,17 @@ class ConfigManager:
                 + "with possibly similar errors in parallel mode. "
                 + "Don't be confused!"
             )
+
+        # Assert that parallel configuration is valid
+        if num_cores < self.refine.ncores:
+            raise RuntimeError(
+                f"Number of cores ({num_cores}) is too low to run refinement using {self.refine.ncores}."
+            )
+        if self.general.postprocess and num_cores < self.postprocess.ncores:
+            raise RuntimeError(
+                f"Number of cores ({num_cores}) is too low to run post-processing using {self.postprocess.ncores}."
+            )
+
         if self.refine.engine == "xtb":
             # Check for f-block elements in forbidden elements
             if self.generate.forbidden_elements:
