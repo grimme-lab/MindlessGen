@@ -41,6 +41,7 @@ dev = [
     "tox",
     "setuptools_scm>=8",
     "types-toml",
+    "types-tqdm",
 ]
 
 [project.scripts]
