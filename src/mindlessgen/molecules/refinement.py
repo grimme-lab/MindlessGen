@@ -3,6 +3,7 @@ This module handles all optimization and fragment detection steps
 to obtain finally a valid molecule.
 """
 
+import warnings
 from pathlib import Path
 import networkx as nx  # type: ignore
 import numpy as np
@@ -169,6 +170,8 @@ def iterative_optimization(
                 ncores=1,
                 verbosity=verbosity,
             )
+    except NotImplementedError:
+        warnings.warn("HOMO-LUMO gap check not implemented with this engine.")
     except RuntimeError as e:
         raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
     if not gap_sufficient:
