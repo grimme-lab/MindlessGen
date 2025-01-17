@@ -156,7 +156,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         config.general.verbosity = backup_verbosity
 
     end = perf_counter()
-    runtime = start - end
+    runtime = end - start
 
     print(f"Successfully generated {len(optimized_molecules)} molecules:")
     for optimized_molecule in optimized_molecules:
