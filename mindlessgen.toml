@@ -17,6 +17,9 @@ num_molecules = 1
 postprocess = false
 # > Switch molecule structure XYZ writing on and off. Default: true. Options: <bool>
 write_xyz = true
+# > Switch structure modification on and off. Defaul: false. Options: <bool>
+# > postprocess has to be turned on and the postprocess engine has to be turbomole.
+structure_mod = false
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>
@@ -100,3 +103,14 @@ functional = "PBE"
 basis = "def2-SVP"
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
+
+[modification]
+# > Move the molecule. Has to be turned on.
+translation = true
+# > mirror the molecule along the y,z plane.
+mirroring = false
+# > rotate the molecule around the z axis. n is the Cn rotaion. Options: rotation: <bool>, n: <int> (2, 3, 4...)
+rotation = false
+n = 2
+# > inverts the molecule through the origin.
+inversion = false

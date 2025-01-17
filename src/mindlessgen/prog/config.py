@@ -47,6 +47,7 @@ class GeneralConfig(BaseConfig):
         self._num_molecules: int = 1
         self._postprocess: bool = False
         self._write_xyz: bool = True
+        self._structure_mod: bool = False
 
     def get_identifier(self) -> str:
         return "general"
@@ -188,6 +189,22 @@ class GeneralConfig(BaseConfig):
                 "Parallelization will disable verbosity during iterative search. "
                 + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
             )
+
+    @property
+    def structure_mod(self):
+        """
+        Get the structure_mod flag.
+        """
+        return self._structure_mod
+
+    @structure_mod.setter
+    def structure_mod(self, structure_mod: bool):
+        """
+        Set the structure_mod flag.
+        """
+        if not isinstance(structure_mod, bool):
+            raise TypeError("Structure modification should be a boolean.")
+        self._structure_mod = structure_mod
 
 
 class GenerateConfig(BaseConfig):
@@ -658,6 +675,8 @@ class RefineConfig(BaseConfig):
             raise TypeError("Refinement engine should be a string.")
         if engine not in ["xtb", "orca", "turbomole"]:
             raise ValueError("Refinement engine can only be xtb, orca or turbomole.")
+        if engine not in ["xtb", "orca", "turbomole"]:
+            raise ValueError("Refinement engine can only be xtb, orca or turbomole.")
         self._engine = engine
 
     @property
@@ -1070,6 +1089,104 @@ class GXTBConfig(BaseConfig):
         self._scf_cycles = max_scf_cycles
 
 
+class StructureModConfig(BaseConfig):
+    """
+    Configuration class for structure modification settings.
+    """
+
+    def __init__(self: StructureModConfig) -> None:
+        self._translation: bool = True
+        self._rotation: bool = False
+        self._n: int = 2
+        self._mirror: bool = False
+        self._inversion: bool = False
+
+    def get_identifier(self) -> str:
+        return "modification"
+
+    @property
+    def translation(self):
+        """
+        Get the translations flag.
+        """
+        return self._translation
+
+    @translation.setter
+    def translation(self, translation: bool):
+        """
+        Set the translations flag.
+        """
+        if not isinstance(translation, bool):
+            raise TypeError("Translations should be a boolean.")
+        self._translation = translation
+
+    @property
+    def rotation(self):
+        """
+        Get the rotations flag.
+        """
+        return self._rotation
+
+    @rotation.setter
+    def rotation(self, rotation: bool):
+        """
+        Set the rotations flag.
+        """
+        if not isinstance(rotation, bool):
+            raise TypeError("Rotations should be a boolean.")
+        self._rotation = rotation
+
+    @property
+    def n(self):
+        """
+        Get the number of rotations.
+        """
+        return self._n
+
+    @n.setter
+    def n(self, n: int):
+        """
+        Set the number of rotations.
+        """
+        if not isinstance(n, int):
+            raise TypeError("Number of rotations should be an integer.")
+        if n < 1:
+            raise ValueError("Number of rotations should be greater than 0.")
+        self._n = n
+
+    @property
+    def mirror(self):
+        """
+        Get the mirror flag.
+        """
+        return self._mirror
+
+    @mirror.setter
+    def mirror(self, mirror: bool):
+        """
+        Set the mirror flag.
+        """
+        if not isinstance(mirror, bool):
+            raise TypeError("Mirror should be a boolean.")
+        self._mirror = mirror
+
+    @property
+    def inversion(self):
+        """
+        Get the inversion flag.
+        """
+        return self._inversion
+
+    @inversion.setter
+    def inversion(self, inversion: bool):
+        """
+        Set the inversion flag.
+        """
+        if not isinstance(inversion, bool):
+            raise TypeError("Inversion should be a boolean.")
+        self._inversion = inversion
+
+
 class ConfigManager:
     """
     Overall configuration manager for the program.
@@ -1083,10 +1200,12 @@ class ConfigManager:
         self.xtb = XTBConfig()
         self.orca = ORCAConfig()
         self.turbomole = TURBOMOLEConfig()
+        self.turbomole = TURBOMOLEConfig()
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
         self.gxtb = GXTBConfig()
+        self.modification = StructureModConfig()
 
         if config_file:
             self.load_from_toml(config_file)
@@ -1172,6 +1291,9 @@ class ConfigManager:
 
         [orca]
         orca_option = "opt"
+
+        [turbomole]
+        turbomole_option = "opt"
 
         Arguments:
             config_file (str): Path to the configuration file

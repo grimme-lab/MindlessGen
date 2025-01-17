@@ -9,7 +9,7 @@ from pathlib import Path
 import multiprocessing as mp
 import warnings
 
-from ..molecules import generate_random_molecule, Molecule
+from ..molecules import generate_random_molecule, Molecule, structure_modification_mol
 from ..qm import (
     XTB,
     get_xtb_path,
@@ -224,6 +224,21 @@ def single_molecule_generator(
     finally:
         if config.refine.debug:
             stop_event.set()
+
+    if config.general.structure_mod:
+        # raise SystemExit("Structure modification is not implemented yet.")
+        try:
+            optimized_molecule = structure_modification_mol(
+                optimized_molecule, config.modification, config.general.verbosity
+            )
+        except RuntimeError as e:
+            if config.general.verbosity > 0:
+                print(f"Structure modification failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1:
+                    print(e)
+            return None
+        if config.general.verbosity > 1:
+            print("Structure modification successful.")
 
     if config.general.postprocess:
         try:
