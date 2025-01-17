@@ -58,6 +58,8 @@ hlgap = 0.5
 # > Debug this step. Leads to more verbose output as soon as the refinement part is reached. Options: <bool>
 # > If `debug` is true, the process is terminated after the first (successful or not) refinement step.
 debug = false
+# > Number of cores to be used for geometry optimizations. Single-points will continue to use one core each.
+ncores = 4
 
 [postprocess]
 # > Engine for the post-processing part. Options: 'xtb', 'orca', 'turbomole'
@@ -70,6 +72,8 @@ opt_cycles = 5
 # > If `debug` is true, the process is terminated after the first (successful or not) post-processing step.
 # > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
 debug = false
+# > Number of cores to be used for both single-point calculations and geometry optimizations.
+ncores = 4
 
 [xtb]
 # > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
