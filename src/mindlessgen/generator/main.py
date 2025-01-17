@@ -11,6 +11,8 @@ import multiprocessing as mp
 from threading import Event
 import warnings
 from dataclasses import dataclass
+from time import perf_counter
+from datetime import timedelta
 from tqdm import tqdm
 
 from ..molecules import generate_random_molecule, Molecule
@@ -47,6 +49,8 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     # |______|_| |_|\__, |_|_| |_|\___|
     #                __/ |
     #               |___/
+
+    start = perf_counter()
 
     if config.general.verbosity > 0:
         print(header(str(__version__)))
@@ -150,6 +154,21 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     # Restore verbosity level if it was changed
     if backup_verbosity is not None:
         config.general.verbosity = backup_verbosity
+
+    end = perf_counter()
+    runtime = start - end
+
+    print(f"Successfully generated {len(optimized_molecules)} molecules:")
+    for optimized_molecule in optimized_molecules:
+        print(optimized_molecule.name)
+
+    time = timedelta(seconds=int(runtime))
+    hours, r = divmod(time.seconds, 3600)
+    minutes, seconds = divmod(r, 60)
+    if time.days:
+        hours += time.days * 24
+
+    print(f"\nRan MindlessGen in {hours:02d}:{minutes:02d}:{seconds:02d}")
 
     return optimized_molecules, exitcode
 
