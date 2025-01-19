@@ -220,11 +220,10 @@ def single_molecule_generator(
         if result is not None:
             cycles_needed = i + 1
             optimized_molecule = result
+            if config.general.verbosity > 0:
+                print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
+                print(optimized_molecule)
             break
-
-    if config.general.verbosity > 0:
-        print(f"Optimized mindless molecule found in {cycles_needed} cycles.")
-        print(optimized_molecule)
 
     # Write out molecule if requested
     if optimized_molecule is not None and config.general.write_xyz:
