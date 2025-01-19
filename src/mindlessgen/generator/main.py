@@ -4,6 +4,7 @@ Main driver of MindlessGen.
 
 from __future__ import annotations
 
+# Python standard library
 from collections.abc import Callable
 from concurrent.futures import Future, as_completed
 from pathlib import Path
@@ -12,8 +13,11 @@ from threading import Event
 import warnings
 from time import perf_counter
 from datetime import timedelta
+
+# External packages
 from tqdm import tqdm
 
+# Internal modules
 from ..molecules import generate_random_molecule, Molecule
 from ..qm import (
     XTB,
@@ -29,7 +33,6 @@ from ..qm import (
 )
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager, setup_managers, ResourceMonitor, setup_blocks
-
 from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
@@ -90,7 +93,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     if config.general.verbosity > 0:
         print(f"Running with {num_cores} cores.")
 
-    # Check if the file "mindless.molecules" exists. If yes, append to it.
+    # Check if the file {MINDLESS_MOLECULES_FILE} exists. If yes, append to it.
     if Path(MINDLESS_MOLECULES_FILE).is_file():
         if config.general.verbosity > 0:
             print(f"\n--- Appending to existing file '{MINDLESS_MOLECULES_FILE}'. ---")
@@ -228,7 +231,7 @@ def single_molecule_generator(
     # Write out molecule if requested
     if optimized_molecule is not None and config.general.write_xyz:
         optimized_molecule.write_xyz_to_file()
-        with open("mindless.molecules", "a", encoding="utf8") as f:
+        with open(MINDLESS_MOLECULES_FILE, "a", encoding="utf8") as f:
             f.write(f"mlm_{optimized_molecule.name}\n")
         if config.general.verbosity > 0:
             print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
@@ -256,7 +259,7 @@ def single_molecule_step(
         return None  # Exit early if a molecule has already been found
 
     if config.general.verbosity > 0:
-        print(f"Cycle {cycle + 1}:")
+        print(f"Starting cycle {cycle + 1:<3}...")
 
     #   _____                           _
     #  / ____|                         | |
