@@ -14,8 +14,7 @@ from .config import (
     RefineConfig,
     PostProcessConfig,
 )
-
-from .parallel import setup_managers, ResourceMonitor
+from .parallel import setup_managers, ResourceMonitor, setup_blocks
 
 __all__ = [
     "ConfigManager",
@@ -29,4 +28,5 @@ __all__ = [
     "PostProcessConfig",
     "setup_managers",
     "ResourceMonitor",
+    "setup_blocks",
 ]
