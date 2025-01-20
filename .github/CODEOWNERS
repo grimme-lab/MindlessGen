@@ -1,12 +1,12 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence,
-# @marcelmbn and @thfroitzheim will be requested for
+# the names mentioned after the '*' will be requested for
 # review when someone opens a pull request.
 *  @marcelmbn @jonathan-schoeps
 
 # These parts are specifically owned by some people
 /src/mindlessgen/cli @marcelmbn
-/src/mindlessgen/generator @marcelmbn
+/src/mindlessgen/generator @marcelmbn @lmseidler
 /src/mindlessgen/molecules @marcelmbn @jonathan-schoeps
-/src/mindlessgen/prog @marcelmbn @jonathan-schoeps
-/src/mindlessgen/qm @marcelmbn
+/src/mindlessgen/prog @marcelmbn @jonathan-schoeps @lmseidler
+/src/mindlessgen/qm @marcelmbn @jonathan-schoeps

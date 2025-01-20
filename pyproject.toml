@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
-dependencies = ["numpy", "networkx", "toml"]
+dependencies = ["numpy", "networkx", "toml", "tqdm"]
 dynamic = ["version"]
 
 [project.urls]
@@ -41,6 +41,7 @@ dev = [
     "tox",
     "setuptools_scm>=8",
     "types-toml",
+    "types-tqdm",
 ]
 
 [project.scripts]

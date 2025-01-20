@@ -30,7 +30,7 @@ class GXTB(QMMethod):
             raise TypeError("gxtb_path should be a string or a Path object.")
         self.cfg = gxtbcfg
 
-    def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
+    def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
         """
         Perform a single-point calculation using g-xTB.
         """
@@ -88,7 +88,11 @@ class GXTB(QMMethod):
             return gxtb_log_out
 
     def check_gap(
-        self, molecule: Molecule, threshold: float = 0.5, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        threshold: float = 0.5,
+        verbosity: int = 1,
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.
@@ -103,7 +107,7 @@ class GXTB(QMMethod):
 
         # Perform a single point calculation
         try:
-            gxtb_out = self.singlepoint(molecule)
+            gxtb_out = self.singlepoint(molecule, ncores)
         except RuntimeError as e:
             raise RuntimeError("Single point calculation failed.") from e
 
@@ -130,7 +134,11 @@ class GXTB(QMMethod):
         return hlgap > threshold
 
     def optimize(
-        self, molecule: Molecule, max_cycles: int | None = None, verbosity: int = 1
+        self,
+        molecule: Molecule,
+        ncores: int,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
     ) -> Molecule:
         """
         Optimize a molecule using g-xTB.
