@@ -3,11 +3,13 @@ This module handles all optimization and fragment detection steps
 to obtain finally a valid molecule.
 """
 
+import warnings
 from pathlib import Path
 import networkx as nx  # type: ignore
 import numpy as np
+
 from ..qm.base import QMMethod
-from ..prog import GenerateConfig, RefineConfig
+from ..prog import GenerateConfig, RefineConfig, ResourceMonitor
 from .molecule import Molecule
 from .miscellaneous import (
     set_random_charge,
@@ -30,6 +32,7 @@ def iterative_optimization(
     engine: QMMethod,
     config_generate: GenerateConfig,
     config_refine: RefineConfig,
+    resources_local: ResourceMonitor,
     verbosity: int = 1,
 ) -> Molecule:
     """
@@ -42,9 +45,21 @@ def iterative_optimization(
         verbosity = 3
 
     for cycle in range(config_refine.max_frag_cycles):
+        # Run single points first, start optimization if scf converges
+        try:
+            with resources_local.occupy_cores(1):
+                _ = engine.singlepoint(rev_mol, 1, verbosity)
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Single-point calculation failed at fragmentation cycle {cycle}: {e}"
+            ) from e
+
         # Optimize the current molecule
         try:
-            rev_mol = engine.optimize(rev_mol, None, verbosity)
+            with resources_local.occupy_cores(config_refine.ncores):
+                rev_mol = engine.optimize(
+                    rev_mol, config_refine.ncores, None, verbosity
+                )
         except RuntimeError as e:
             raise RuntimeError(
                 f"Optimization failed at fragmentation cycle {cycle}: {e}"
@@ -148,9 +163,15 @@ def iterative_optimization(
         )
 
     try:
-        gap_sufficient = engine.check_gap(
-            molecule=rev_mol, threshold=config_refine.hlgap, verbosity=verbosity
-        )
+        with resources_local.occupy_cores(1):
+            gap_sufficient = engine.check_gap(
+                molecule=rev_mol,
+                threshold=config_refine.hlgap,
+                ncores=1,
+                verbosity=verbosity,
+            )
+    except NotImplementedError:
+        warnings.warn("HOMO-LUMO gap check not implemented with this engine.")
     except RuntimeError as e:
         raise RuntimeError("HOMO-LUMO gap could not be checked.") from e
     if not gap_sufficient:

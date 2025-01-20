@@ -31,7 +31,7 @@ def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:
     mol.uhf = 0
     mol.num_atoms = 9
 
-    optimized_molecule = xtb.optimize(mol)
+    optimized_molecule = xtb.optimize(mol, 1)
 
     print(optimized_molecule)
 
@@ -126,9 +126,9 @@ def test_check_gap_low_gap(mol_C2H4N1O1Au1: Molecule, mol_H3B4Pd1Rn1: Molecule):
         raise ImportError("xtb not found.") from e
     engine = XTB(xtb_path, cfg)
     # Test for molecule with low gap
-    result_low_gap = engine.check_gap(mol_H3B4Pd1Rn1, threshold=0.5)
+    result_low_gap = engine.check_gap(mol_H3B4Pd1Rn1, 1, threshold=0.5)
     assert result_low_gap is False
 
     # Test for molecule with high gap
-    result_high_gap = engine.check_gap(mol_C2H4N1O1Au1, threshold=0.5)
+    result_high_gap = engine.check_gap(mol_C2H4N1O1Au1, 1, threshold=0.5)
     assert result_high_gap is True

@@ -11,6 +11,7 @@ from mindlessgen.prog import ConfigManager, GenerateConfig  # type: ignore
 from mindlessgen.molecules import detect_fragments  # type: ignore
 from mindlessgen.molecules import Molecule  # type: ignore
 from mindlessgen.molecules import iterative_optimization  # type: ignore
+from mindlessgen.prog.parallel import setup_managers
 from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 
 TESTSDIR = Path(__file__).resolve().parents[1]
@@ -131,6 +132,7 @@ def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> Non
     # fragment charge is not completely random anymore. Currently, that's the
     # reason for a virtually switched off HL gap check (fragment can be -2, 0, 2)
     config.refine.max_frag_cycles = 1
+    config.refine.ncores = 1
     if config.refine.engine == "xtb":
         try:
             xtb_path = get_xtb_path()
@@ -142,13 +144,15 @@ def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> Non
     else:
         raise NotImplementedError("Engine not implemented.")
     mol = mol_C13H14
-    mol_opt = iterative_optimization(
-        mol,
-        engine=engine,
-        config_generate=config.generate,
-        config_refine=config.refine,
-        verbosity=2,
-    )
+    with setup_managers(1, 1) as (_, _, resources):
+        mol_opt = iterative_optimization(
+            mol,
+            engine,
+            config.generate,
+            config.refine,
+            resources,
+            verbosity=2,
+        )
     mol_ref = mol_C7H8
 
     # assert number of atoms in mol_opt is equal to number of atoms in mol_ref
