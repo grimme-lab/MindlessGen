@@ -3,12 +3,21 @@ name: mindlessgen
 channels:
   - conda-forge
 dependencies:
-  - ruff
+  # runtime dependencies
+  - tqdm
+  - numpy>=2.0.0
+  - toml
+  - networkx
+  # development dependencies
+  - ruff==0.5.7
   - coverage
-  - numpy
   - pre-commit
   - pytest
   - tox
-  - tqdm
+  - mypy
+  - covdefaults
+  - types-toml
+  - types-tqdm
+  - setuptools_scm>=8.0.0
   - pip:
-      - covdefaults
+      - build
