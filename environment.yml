@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   # runtime dependencies
+  - python>=3.12
   - tqdm
   - numpy>=2.0.0
   - toml
