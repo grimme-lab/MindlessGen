@@ -476,7 +476,7 @@ def _gxtb_ipea_check(
             + "For the g-xTB cationic calculation, we are increasing it by 1. "
             + "(Could be ill-defined.)"
         )
-    gxtb_output = gxtb.singlepoint(tmp_mol, verbosity=verbosity)
+    gxtb_output = gxtb.singlepoint(tmp_mol, 1, verbosity=verbosity)
     # gp3_output looks like this:
     # [...]
     #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
@@ -504,7 +504,7 @@ def _gxtb_ipea_check(
             + "For the g-xTB anionic calculation, we are increasing it by 1. "
             + "(Could be ill-defined.)"
         )
-    gxtb_output = gxtb.singlepoint(tmp_mol, verbosity=verbosity)
+    gxtb_output = gxtb.singlepoint(tmp_mol, 1, verbosity=verbosity)
     # Check for the number of scf iterations
     scf_iterations = 0
     for line in gxtb_output.split("\n"):
@@ -522,7 +522,7 @@ def _gxtb_scf_check(mol: Molecule, gxtb: GXTB, verbosity: int = 0) -> None:
     ONLY FOR IN-HOUSE g-xTB DEVELOPMENT PURPOSES: Check the SCF iterations with g-xTB.
     """
     # 1) Single point calculation with g-xTB for the cation
-    gxtb_output = gxtb.singlepoint(mol, verbosity=verbosity)
+    gxtb_output = gxtb.singlepoint(mol, 1, verbosity=verbosity)
     # gp3_output looks like this:
     # [...]
     #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
