@@ -461,7 +461,7 @@ def setup_engines(
 
 
 def _gxtb_ipea_check(
-    mol: Molecule, gxtb: GXTB, scf_iter_limit: int, verbosity: int = 0
+    mol: Molecule, gxtb: GXTB, verbosity: int = 0
 ) -> None:
     """
     ONLY FOR IN-HOUSE g-xTB DEVELOPMENT PURPOSES: Check the SCF iterations of the cation and anion.
@@ -477,6 +477,7 @@ def _gxtb_ipea_check(
             + "(Could be ill-defined.)"
         )
     gxtb_output = gxtb.singlepoint(tmp_mol, 1, verbosity=verbosity)
+
     # gp3_output looks like this:
     # [...]
     #   13     -155.03101038        0.00000000        0.00000001       16.45392733   8    F
@@ -505,6 +506,7 @@ def _gxtb_ipea_check(
             + "(Could be ill-defined.)"
         )
     gxtb_output = gxtb.singlepoint(tmp_mol, 1, verbosity=verbosity)
+    
     # Check for the number of scf iterations
     scf_iterations = 0
     for line in gxtb_output.split("\n"):
