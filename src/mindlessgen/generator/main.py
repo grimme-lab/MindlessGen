@@ -339,7 +339,7 @@ def single_molecule_step(
     if config.general.gxtb_development:
         # additional g-xTB engine after refinement and postprocessing for development purposes
         gxtb = GXTB(get_gxtb_path(), config.gxtb)
-        if not config.general.postprocess and config.postprocess.engine == "gxtb":
+        if not (config.general.postprocess and config.postprocess.engine == "gxtb"):
             try:
                 _gxtb_scf_check(
                     optimized_molecule,
@@ -365,12 +365,14 @@ def single_molecule_step(
                 )
             except (RuntimeError, ValueError) as e:
                 if config.general.verbosity > 0:
-                    print(f"g-xTB postprocessing failed for cycle {cycle + 1}.")
+                    print(
+                        f"g-xTB postprocessing (IP/EA check) failed for cycle {cycle + 1}."
+                    )
                     if config.general.verbosity > 1:
                         print(e)
                 return None
             if config.general.verbosity > 1:
-                print("g-xTB postprocessing successful.")
+                print("g-xTB postprocessing (IP/EA check) successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
@@ -460,9 +462,7 @@ def setup_engines(
         raise NotImplementedError("Engine not implemented.")
 
 
-def _gxtb_ipea_check(
-    mol: Molecule, gxtb: GXTB, verbosity: int = 0
-) -> None:
+def _gxtb_ipea_check(mol: Molecule, gxtb: GXTB, verbosity: int = 0) -> None:
     """
     ONLY FOR IN-HOUSE g-xTB DEVELOPMENT PURPOSES: Check the SCF iterations of the cation and anion.
     """
@@ -506,7 +506,7 @@ def _gxtb_ipea_check(
             + "(Could be ill-defined.)"
         )
     gxtb_output = gxtb.singlepoint(tmp_mol, 1, verbosity=verbosity)
-    
+
     # Check for the number of scf iterations
     scf_iterations = 0
     for line in gxtb_output.split("\n"):

@@ -233,43 +233,6 @@ class GeneralConfig(BaseConfig):
                 + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
             )
 
-    ############################################################
-    ### g-xTB-specific settings not intended for general use ###
-    @property
-    def gxtb_development(self):
-        """
-        Get the g-xTB development flag.
-        """
-        return self._gxtb_development
-
-    @gxtb_development.setter
-    def gxtb_development(self, gxtb_development: bool):
-        """
-        Set the g-xTB development flag.
-        """
-        if not isinstance(gxtb_development, bool):
-            raise TypeError("gxtb_development should be a boolean.")
-        self._gxtb_development = gxtb_development
-
-    @property
-    def gxtb_ipea(self):
-        """
-        Check for cation and anion with g-xTB.
-        """
-        return self._gxtb_ipea
-
-    @gxtb_ipea.setter
-    def gxtb_ipea(self, gxtb_ipea: bool):
-        """
-        Set the g-xTB IPEA flag.
-        """
-        if not isinstance(gxtb_ipea, bool):
-            raise TypeError("gxtb_ipea should be a boolean.")
-        self._gxtb_ipea = gxtb_ipea
-
-    ### End of g-xTB-specific settings #########################
-    ############################################################
-
 
 class GenerateConfig(BaseConfig):
     """
