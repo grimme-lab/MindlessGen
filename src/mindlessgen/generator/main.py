@@ -191,12 +191,12 @@ def single_molecule_generator(
     with resources.occupy_cores(ncores):
         # print a decent header for each molecule iteration
         if config.general.verbosity > 0:
-            print(f"\n{'='*80}")
+            print(f"\n{'=' * 80}")
             print(
-                f"{'='*22} Generating molecule {molcount + 1:<4} of "
-                + f"{config.general.num_molecules:<4} {'='*24}"
+                f"{'=' * 22} Generating molecule {molcount + 1:<4} of "
+                + f"{config.general.num_molecules:<4} {'=' * 24}"
             )
-            print(f"{'='*80}")
+            print(f"{'=' * 80}")
 
         with setup_managers(ncores, ncores) as (executor, manager, resources_local):
             stop_event = manager.Event()
