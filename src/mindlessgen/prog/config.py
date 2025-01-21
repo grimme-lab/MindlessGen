@@ -637,6 +637,7 @@ class RefineConfig(BaseConfig):
         self._engine: str = "xtb"
         self._hlgap: float = 0.5
         self._debug: bool = False
+        self._ncores: int = 4
 
     def get_identifier(self) -> str:
         return "refine"
@@ -713,6 +714,22 @@ class RefineConfig(BaseConfig):
             raise TypeError("Debug should be a boolean.")
         self._debug = debug
 
+    @property
+    def ncores(self):
+        """
+        Get the number of cores to be used for geometry optimizations in refinement.
+        """
+        return self._ncores
+
+    @ncores.setter
+    def ncores(self, ncores: int):
+        """
+        Set the number of cores to be used for geometry optimizations in refinement.
+        """
+        if not isinstance(ncores, int):
+            raise TypeError("Number of cores should be an integer.")
+        self._ncores = ncores
+
 
 class PostProcessConfig(BaseConfig):
     """
@@ -724,6 +741,7 @@ class PostProcessConfig(BaseConfig):
         self._opt_cycles: int | None = 5
         self._optimize: bool = True
         self._debug: bool = False
+        self._ncores: int = 4
 
     def get_identifier(self) -> str:
         return "postprocess"
@@ -795,6 +813,22 @@ class PostProcessConfig(BaseConfig):
         if not isinstance(debug, bool):
             raise TypeError("Debug should be a boolean.")
         self._debug = debug
+
+    @property
+    def ncores(self):
+        """
+        Get the number of cores to be used in post-processing.
+        """
+        return self._ncores
+
+    @ncores.setter
+    def ncores(self, ncores: int):
+        """
+        Set the number of cores to be used in post-processing.
+        """
+        if not isinstance(ncores, int):
+            raise TypeError("Number of cores should be an integer.")
+        self._ncores = ncores
 
 
 class XTBConfig(BaseConfig):
@@ -1231,6 +1265,17 @@ class ConfigManager:
                 + "with possibly similar errors in parallel mode. "
                 + "Don't be confused!"
             )
+
+        # Assert that parallel configuration is valid
+        if num_cores < self.refine.ncores:
+            raise RuntimeError(
+                f"Number of cores ({num_cores}) is too low to run refinement using {self.refine.ncores}."
+            )
+        if self.general.postprocess and num_cores < self.postprocess.ncores:
+            raise RuntimeError(
+                f"Number of cores ({num_cores}) is too low to run post-processing using {self.postprocess.ncores}."
+            )
+
         if self.refine.engine == "xtb":
             # Check for f-block elements in forbidden elements
             if self.generate.forbidden_elements:

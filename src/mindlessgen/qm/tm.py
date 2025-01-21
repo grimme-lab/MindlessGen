@@ -44,6 +44,7 @@ class Turbomole(QMMethod):
     def optimize(
         self,
         molecule: Molecule,
+        ncores: int,
         max_cycles: int | None = None,
         verbosity: int = 1,
     ) -> Molecule:
@@ -67,7 +68,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # Setup the turbomole optimization command including the max number of optimization cycles
-            arguments = [f"PARNODES=1 {self.jobex_path} -c {max_cycles}"]
+            arguments = [f"PARNODES={ncores} {self.jobex_path} -c {max_cycles}"]
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
 
@@ -87,7 +88,7 @@ class Turbomole(QMMethod):
             optimized_molecule.read_xyz_from_coord(coordfile)
             return optimized_molecule
 
-    def singlepoint(self, molecule: Molecule, verbosity: int = 1) -> str:
+    def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
         """
         Perform a single point calculation using Turbomole.
         """
@@ -109,7 +110,7 @@ class Turbomole(QMMethod):
                 f.write(tm_input)
 
             # set up the turbomole single point calculation command
-            run_tm = [f"PARNODES=1 {self.ridft_path}"]
+            run_tm = [f"PARNODES={ncores} {self.ridft_path}"]
             if verbosity > 2:
                 print(f"Running command: {' '.join(run_tm)}")
 
@@ -126,7 +127,7 @@ class Turbomole(QMMethod):
             return tm_log_out
 
     def check_gap(
-        self, molecule: Molecule, threshold: float, verbosity: int = 1
+        self, molecule: Molecule, ncores: int, threshold: float, verbosity: int = 1
     ) -> bool:
         """
         Check if the HL gap is larger than a given threshold.

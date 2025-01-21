@@ -4,11 +4,15 @@ Postprocess the generated molecules.
 
 from .molecule import Molecule
 from ..qm import QMMethod
-from ..prog import PostProcessConfig
+from ..prog import PostProcessConfig, ResourceMonitor
 
 
 def postprocess_mol(
-    mol: Molecule, engine: QMMethod, config: PostProcessConfig, verbosity: int = 1
+    mol: Molecule,
+    engine: QMMethod,
+    config: PostProcessConfig,
+    resources_local: ResourceMonitor,
+    verbosity: int = 1,
 ) -> Molecule:
     """
     Postprocess the generated molecule.
@@ -26,14 +30,19 @@ def postprocess_mol(
         print("Postprocessing molecule...")
     if config.optimize:
         try:
-            postprocmol = engine.optimize(
-                mol, max_cycles=config.opt_cycles, verbosity=verbosity
-            )
+            with resources_local.occupy_cores(config.ncores):
+                postprocmol = engine.optimize(
+                    mol,
+                    max_cycles=config.opt_cycles,
+                    ncores=config.ncores,
+                    verbosity=verbosity,
+                )
         except RuntimeError as e:
             raise RuntimeError("Optimization in postprocessing failed.") from e
     else:
         try:
-            engine.singlepoint(mol, verbosity=verbosity)
+            with resources_local.occupy_cores(config.ncores):
+                engine.singlepoint(mol, config.ncores, verbosity=verbosity)
             postprocmol = mol
         except RuntimeError as e:
             raise RuntimeError(

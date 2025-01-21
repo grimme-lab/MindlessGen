@@ -9,5 +9,6 @@ dependencies:
   - pre-commit
   - pytest
   - tox
+  - tqdm
   - pip:
       - covdefaults

@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - to set the elemental composition it is now possible to use dicts with not only int but also the element symbols (str)
 - dict keys for elemental compositions will now always be checked for validity
 - Renamed GP3-xTB to g-xTB
+- Nothing will be printed while multiple molecules are generated in parallel, tqdm-based progress bar instead
+- Some debugging statements from generate had to be removed (esp. w.r.t. early stopping)
 
 ### Added
 - `GXTBConfig` class for the g-xTB method, supporting SCF cycles check
+- support for TURBOMOLE as QM engine.
+- updated the parallelization to work over the number of molecules
 
 ### Fixed
 - version string is now correctly formatted and printed
@@ -45,7 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for `python-3.13`
 - option to set a fixed molecular charge, while ensuring `uhf = 0`
 - `element_composition` and `forbidden_elements` can now be directly set to a `dict` or `list`, respectively, via API access
-- support for TURBOMOLE as QM engine.
 
 ### Breaking Changes
 - Removal of the `dist_threshold` flag and in the `-toml` file.
