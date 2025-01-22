@@ -109,12 +109,13 @@ basis = "def2-SVP"
 scf_cycles = 100
 
 [modification]
-# > Move the molecule. Has to be turned on.
-translation = true
+# > There is only the posibillity to do one modification at one molecule.
+# > define the distance of the opposit NCI fragments. Options: <float>
+distance = 3.0
 # > mirror the molecule along the y,z plane.
-mirroring = false
-# > rotate the molecule around the z axis. n is the Cn rotaion. Options: rotation: <bool>, n: <int> (2, 3, 4...)
+mirror = false
+# > rotate the molecule around the z axis. n is the Cn rotaion. Options: rotation: <bool>, n_fold_rotation: <int> (2, 3, 4...)
 rotation = false
-n = 2
+n_fold_rotation = 2
 # > inverts the molecule through the origin.
 inversion = false

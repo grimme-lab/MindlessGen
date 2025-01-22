@@ -67,6 +67,10 @@ class Turbomole(QMMethod):
             with open(temp_path / inputname, "w", encoding="utf8") as f:
                 f.write(tm_input)
 
+            singlepoint_logout = self.singlepoint(molecule, ncores, verbosity)
+            if verbosity > 2:
+                print(singlepoint_logout)
+
             # Setup the turbomole optimization command including the max number of optimization cycles
             arguments = [f"PARNODES={ncores} {self.jobex_path} -c {max_cycles}"]
             if verbosity > 2:
@@ -75,7 +79,7 @@ class Turbomole(QMMethod):
             tm_log_out, tm_log_err, return_code = self._run_opt(
                 temp_path=temp_path, arguments=arguments
             )
-            if verbosity > 2:
+            if verbosity > -1:
                 print(tm_log_out)
             if return_code != 0:
                 raise RuntimeError(
@@ -207,7 +211,10 @@ class Turbomole(QMMethod):
                 )
             return tm_log_out, tm_log_err, 0
         except sp.CalledProcessError as e:
-            tm_log_out = e.stdout.decode("utf8", errors="replace")
+            output_file = temp_path / "job.last"
+            if output_file.exists():
+                with open(output_file, encoding="utf-8") as file:
+                    tm_log_out = file.read()
             tm_log_err = e.stderr.decode("utf8", errors="replace")
             return tm_log_out, tm_log_err, e.returncode
 

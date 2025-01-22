@@ -1129,9 +1129,9 @@ class StructureModConfig(BaseConfig):
     """
 
     def __init__(self: StructureModConfig) -> None:
-        self._translation: bool = True
+        self.distance: float = 3.0
         self._rotation: bool = False
-        self._n: int = 2
+        self._n_fold_rotation: int = 4
         self._mirror: bool = False
         self._inversion: bool = False
 
@@ -1139,20 +1139,22 @@ class StructureModConfig(BaseConfig):
         return "modification"
 
     @property
-    def translation(self):
+    def distance(self):
         """
-        Get the translations flag.
+        Get the distance.
         """
-        return self._translation
+        return self._distance
 
-    @translation.setter
-    def translation(self, translation: bool):
+    @distance.setter
+    def distance(self, distance: float):
         """
-        Set the translations flag.
+        Set the distance.
         """
-        if not isinstance(translation, bool):
-            raise TypeError("Translations should be a boolean.")
-        self._translation = translation
+        if not isinstance(distance, float):
+            raise TypeError("Distance should be a float.")
+        if distance <= 0:
+            raise ValueError("Distance should be greater than 0.")
+        self._distance = distance
 
     @property
     def rotation(self):
@@ -1164,29 +1166,29 @@ class StructureModConfig(BaseConfig):
     @rotation.setter
     def rotation(self, rotation: bool):
         """
-        Set the rotations flag.
+        Set the rotation flag.
         """
         if not isinstance(rotation, bool):
-            raise TypeError("Rotations should be a boolean.")
+            raise TypeError("Rotation should be a boolean.")
         self._rotation = rotation
 
     @property
-    def n(self):
+    def n_fold_rotation(self):
         """
-        Get the number of rotations.
+        Get the number of the rotation axis.
         """
-        return self._n
+        return self._n_fold_rotation
 
-    @n.setter
-    def n(self, n: int):
+    @n_fold_rotation.setter
+    def n_fold_rotation(self, n_fold_rotation: int):
         """
         Set the number of rotations.
         """
-        if not isinstance(n, int):
+        if not isinstance(n_fold_rotation, int):
             raise TypeError("Number of rotations should be an integer.")
-        if n < 1:
+        if n_fold_rotation < 1:
             raise ValueError("Number of rotations should be greater than 0.")
-        self._n = n
+        self._n_fold_rotation = n_fold_rotation
 
     @property
     def mirror(self):
