@@ -676,8 +676,6 @@ class RefineConfig(BaseConfig):
             raise TypeError("Refinement engine should be a string.")
         if engine not in ["xtb", "orca", "turbomole"]:
             raise ValueError("Refinement engine can only be xtb, orca or turbomole.")
-        if engine not in ["xtb", "orca", "turbomole"]:
-            raise ValueError("Refinement engine can only be xtb, orca or turbomole.")
         self._engine = engine
 
     @property
@@ -1236,7 +1234,6 @@ class ConfigManager:
         self.xtb = XTBConfig()
         self.orca = ORCAConfig()
         self.turbomole = TURBOMOLEConfig()
-        self.turbomole = TURBOMOLEConfig()
         self.refine = RefineConfig()
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
@@ -1338,9 +1335,6 @@ class ConfigManager:
 
         [orca]
         orca_option = "opt"
-
-        [turbomole]
-        turbomole_option = "opt"
 
         Arguments:
             config_file (str): Path to the configuration file

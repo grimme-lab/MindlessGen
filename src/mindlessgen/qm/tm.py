@@ -79,7 +79,7 @@ class Turbomole(QMMethod):
             tm_log_out, tm_log_err, return_code = self._run_opt(
                 temp_path=temp_path, arguments=arguments
             )
-            if verbosity > -1:
+            if verbosity > 2:
                 print(tm_log_out)
             if return_code != 0:
                 raise RuntimeError(
