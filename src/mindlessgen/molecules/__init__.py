@@ -2,7 +2,20 @@
 This module contains all molecule-related functionality.
 """
 
-from .molecule import Molecule, PSE_NUMBERS, PSE_SYMBOLS, ati_to_atlist, atlist_to_ati
+from mindlessgen.molecules.constants import (
+    PSE,
+    PSE_NUMBERS,
+    PSE_SYMBOLS,
+    BOHR2AA,
+    AA2BOHR,
+    COV_RADII,
+    MAX_ELEM,
+)
+from .molecule import (
+    Molecule,
+    ati_to_atlist,
+    atlist_to_ati,
+)
 from .generate_molecule import (
     generate_random_molecule,
     generate_coordinates,
@@ -38,9 +51,14 @@ __all__ = [
     "get_actinides",
     "get_alkali_metals",
     "get_alkaline_earth_metals",
-    "PSE_NUMBERS",
-    "PSE_SYMBOLS",
     "ati_to_atlist",
     "atlist_to_ati",
     "postprocess_mol",
+    "PSE",
+    "PSE_NUMBERS",
+    "PSE_SYMBOLS",
+    "BOHR2AA",
+    "AA2BOHR",
+    "COV_RADII",
+    "MAX_ELEM",
 ]

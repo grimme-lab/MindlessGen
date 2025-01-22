@@ -12,7 +12,7 @@ import multiprocessing as mp
 import numpy as np
 import toml
 
-from mindlessgen.molecules.molecule import PSE_SYMBOLS
+from mindlessgen.molecules.constants import PSE_SYMBOLS
 
 from ..molecules import PSE_NUMBERS
 

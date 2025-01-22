@@ -6,7 +6,8 @@ import copy
 import numpy as np
 from ..prog import GenerateConfig
 from .molecule import Molecule
-from .refinement import get_cov_radii, COV_RADII
+from .refinement import get_cov_radii
+from .constants import COV_RADII, MAX_ELEM
 from .miscellaneous import (
     set_random_charge,
     calculate_protons,
@@ -20,9 +21,6 @@ from .miscellaneous import (
     calculate_ligand_electrons,
     calculate_uhf,
 )
-
-
-MAX_ELEM = 86
 
 
 def generate_random_molecule(
