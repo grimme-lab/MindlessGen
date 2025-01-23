@@ -11,8 +11,8 @@ import numpy as np
 from ..qm.base import QMMethod
 from ..prog import GenerateConfig, RefineConfig, ResourceMonitor
 from .molecule import Molecule
-from ..data.parameters import COV_RADII_PYYKKO, COV_RADII_MLMGEN
 from .miscellaneous import (
+    get_cov_radii,
     set_random_charge,
     calculate_protons,
     calculate_ligand_electrons,
@@ -260,19 +260,3 @@ def detect_fragments(
         fragment_molecules.append(fragment_molecule)
 
     return fragment_molecules
-
-
-def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
-    """
-    Get the covalent radius of an atom in Angstrom, and scale it by a factor.
-    """
-    if vdw_radii == "mlmgen":
-        rcov = COV_RADII_MLMGEN
-    elif vdw_radii == "pyykko":
-        # Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197)
-        # Values for metals decreased by 10%
-        # D3 covalent radii used to construct the coordination number
-        rcov = COV_RADII_PYYKKO
-    else:
-        raise ValueError("Invalid vdw_radii argument.")
-    return rcov[at]

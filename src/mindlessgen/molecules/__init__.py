@@ -16,6 +16,7 @@ from .generate_molecule import (
 from .refinement import iterative_optimization, detect_fragments
 from .postprocess import postprocess_mol
 from .miscellaneous import (
+    get_cov_radii,
     set_random_charge,
     get_three_d_metals,
     get_four_d_metals,
@@ -33,6 +34,7 @@ __all__ = [
     "generate_atom_list",
     "iterative_optimization",
     "detect_fragments",
+    "get_cov_radii",
     "set_random_charge",
     "check_distances",
     "get_three_d_metals",

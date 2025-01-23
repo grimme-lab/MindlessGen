@@ -4,6 +4,9 @@ This module contains the parameters for the mindlessgen package.
 
 MAX_ELEM = 86
 
+# Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197)
+# Values for metals decreased by 10%
+# D3 covalent radii used to construct the coordination number
 COV_RADII_PYYKKO = [
     0.32,
     0.46,  # H, He

@@ -6,9 +6,9 @@ import copy
 import numpy as np
 from ..prog import GenerateConfig
 from .molecule import Molecule
-from .refinement import get_cov_radii, COV_RADII
 from ..data.parameters import MAX_ELEM
 from .miscellaneous import (
+    get_cov_radii,
     set_random_charge,
     calculate_protons,
     get_alkali_metals,
@@ -21,6 +21,8 @@ from .miscellaneous import (
     calculate_ligand_electrons,
     calculate_uhf,
 )
+
+COV_RADII = "pyykko"
 
 
 def generate_random_molecule(
