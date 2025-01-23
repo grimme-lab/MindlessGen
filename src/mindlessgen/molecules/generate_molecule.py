@@ -6,8 +6,8 @@ import copy
 import numpy as np
 from ..prog import GenerateConfig
 from .molecule import Molecule
-from .refinement import get_cov_radii
-from .constants import COV_RADII, MAX_ELEM
+from .refinement import get_cov_radii, COV_RADII
+from ..data.parameters import MAX_ELEM
 from .miscellaneous import (
     set_random_charge,
     calculate_protons,

@@ -2,15 +2,6 @@
 This module contains all molecule-related functionality.
 """
 
-from mindlessgen.molecules.constants import (
-    PSE,
-    PSE_NUMBERS,
-    PSE_SYMBOLS,
-    BOHR2AA,
-    AA2BOHR,
-    COV_RADII,
-    MAX_ELEM,
-)
 from .molecule import (
     Molecule,
     ati_to_atlist,
@@ -54,11 +45,4 @@ __all__ = [
     "ati_to_atlist",
     "atlist_to_ati",
     "postprocess_mol",
-    "PSE",
-    "PSE_NUMBERS",
-    "PSE_SYMBOLS",
-    "BOHR2AA",
-    "AA2BOHR",
-    "COV_RADII",
-    "MAX_ELEM",
 ]

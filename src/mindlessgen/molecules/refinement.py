@@ -11,7 +11,7 @@ import numpy as np
 from ..qm.base import QMMethod
 from ..prog import GenerateConfig, RefineConfig, ResourceMonitor
 from .molecule import Molecule
-from .constants import COV_RADII, BOHR2AA
+from ..data.constants import BOHR2AA
 from .miscellaneous import (
     set_random_charge,
     calculate_protons,
@@ -20,6 +20,8 @@ from .miscellaneous import (
     get_lanthanides,
     get_actinides,
 )
+
+COV_RADII = "pyykko"
 
 
 def iterative_optimization(

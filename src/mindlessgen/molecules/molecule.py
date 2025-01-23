@@ -8,7 +8,7 @@ from pathlib import Path
 import hashlib
 import numpy as np
 
-from mindlessgen.molecules.constants import BOHR2AA, PSE, PSE_NUMBERS
+from mindlessgen.data.constants import BOHR2AA, PSE, PSE_NUMBERS
 from ..__version__ import __version__
 
 

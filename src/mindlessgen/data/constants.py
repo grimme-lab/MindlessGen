@@ -130,7 +130,3 @@ BOHR2AA = (
     0.529177210544  # taken from https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
 )
 AA2BOHR = 1 / BOHR2AA
-
-COV_RADII = "pyykko"
-
-MAX_ELEM = 86
