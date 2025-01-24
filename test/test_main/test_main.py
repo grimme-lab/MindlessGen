@@ -11,6 +11,8 @@ def test_generator():
     config.refine.engine = "xtb"
     config.general.max_cycles = 10000
     config.general.parallel = 4
+    config.refine.ncores = 1
+    config.postprocess.ncores = 1
     config.general.verbosity = -1
     config.general.postprocess = False
     config.general.write_xyz = False

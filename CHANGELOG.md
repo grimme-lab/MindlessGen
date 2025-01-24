@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - to set the elemental composition it is now possible to use dicts with not only int but also the element symbols (str)
 - dict keys for elemental compositions will now always be checked for validity
 - Renamed GP3-xTB to g-xTB
+- Moved constants and (empirical) parameters to the `data` module
+
+### Deprecated
 - Nothing will be printed while multiple molecules are generated in parallel, tqdm-based progress bar instead
 - Some debugging statements from generate had to be removed (esp. w.r.t. early stopping)
 
