@@ -18,7 +18,7 @@ from datetime import timedelta
 from tqdm import tqdm
 
 # Internal modules
-from ..molecules import generate_random_molecule, Molecule, structure_modification_mol
+from ..molecules import generate_random_molecule, Molecule
 from ..qm import (
     XTB,
     get_xtb_path,
@@ -33,6 +33,7 @@ from ..qm import (
 )
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager, setup_managers, ResourceMonitor, setup_blocks
+from ..Structure_modification import StrucMod, CnRotation, Mirror, Inversion
 from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
@@ -70,6 +71,13 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         get_ridft_path,
         get_jobex_path,
     )
+
+    if config.general.structure_mod:
+        structure_mod_model: StrucMod | None = setup_structure_modification_model(
+            config.modification.operation,
+        )
+    else:
+        structure_mod_model = None
 
     if config.general.postprocess:
         postprocess_engine: QMMethod | None = setup_engines(
@@ -137,6 +145,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
                         resources,
                         refine_engine,
                         postprocess_engine,
+                        structure_mod_model,
                         block.ncores,
                     )
                 )
@@ -181,6 +190,7 @@ def single_molecule_generator(
     resources: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
+    structure_mod_model: Callable,
     ncores: int,
 ) -> Molecule | None:
     """
@@ -211,6 +221,7 @@ def single_molecule_generator(
                         resources_local,
                         refine_engine,
                         postprocess_engine,
+                        structure_mod_model,
                         cycle,
                         stop_event,
                     )
@@ -250,6 +261,7 @@ def single_molecule_step(
     resources_local: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
+    structure_mod_model: Callable,
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
@@ -316,19 +328,16 @@ def single_molecule_step(
             stop_event.set()
 
     if config.general.structure_mod:
-        # raise SystemExit("Structure modification is not implemented yet.")
         try:
-            optimized_molecule = structure_modification_mol(
-                optimized_molecule, config.modification, config.general.verbosity
+            optimized_molecule = structure_mod_model(
+                optimized_molecule,
             )
         except RuntimeError as e:
             if config.general.verbosity > 0:
                 print(f"Structure modification failed for cycle {cycle + 1}.")
-                if config.general.verbosity > 1:
-                    print(e)
+            if config.general.verbosity > 1:
+                print(e)
             return None
-        if config.general.verbosity > 1:
-            print("Structure modification successful.")
 
     if config.general.postprocess:
         try:
@@ -437,3 +446,19 @@ def setup_engines(
         return GXTB(path, cfg.gxtb)
     else:
         raise NotImplementedError("Engine not implemented.")
+
+
+def setup_structure_modification_model(
+    structure_mod_type: str,
+):
+    """
+    Set up the structure modification model.
+    """
+    if structure_mod_type == "c_n_rotation":
+        return CnRotation
+    elif structure_mod_type == "mirror":
+        return Mirror
+    elif structure_mod_type == "inversion":
+        return Inversion
+    else:
+        raise NotImplementedError("Structure modification not implemented.")

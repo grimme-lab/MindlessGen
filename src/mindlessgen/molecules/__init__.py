@@ -11,7 +11,6 @@ from .generate_molecule import (
 )
 from .refinement import iterative_optimization, detect_fragments
 from .postprocess import postprocess_mol
-from .structure_modification import structure_modification_mol
 from .miscellaneous import (
     set_random_charge,
     get_three_d_metals,
@@ -44,5 +43,4 @@ __all__ = [
     "ati_to_atlist",
     "atlist_to_ati",
     "postprocess_mol",
-    "structure_modification_mol",
 ]
