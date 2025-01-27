@@ -1,6 +1,6 @@
 import numpy as np
 
-from .StrucMod import StrucMod, Translation
+from .StrucMod import StrucMod
 from ..prog.config import StructureModConfig
 from ..molecules.molecule import Molecule
 
@@ -10,22 +10,15 @@ class Inversion(StrucMod):
     This class handles the Inversion structure modification.
     """
 
-    def __init__(self):
-        """
-        Initialize the inversion operation structure modification class.
-        """
-        self.cfg = StructureModConfig()
-
     def modify_structure(
         self,
         mol: Molecule,
-        translation: Translation,
         config: StructureModConfig,
     ) -> Molecule:
         """
         Invert the molecule.
         """
-        mol = translation.translation(mol, config)
+        mol = self.translation(mol, config)
         xyz = mol.xyz
         inversion_matrix = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, -1]])
         xyz_inversion = xyz.copy()

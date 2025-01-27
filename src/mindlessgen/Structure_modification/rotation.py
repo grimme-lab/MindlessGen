@@ -4,7 +4,7 @@ This class handles the rotation structure modification.
 
 import numpy as np
 
-from .StrucMod import StrucMod, Translation
+from .StrucMod import StrucMod
 from ..prog.config import StructureModConfig
 from ..molecules.molecule import Molecule
 
@@ -14,22 +14,15 @@ class CnRotation(StrucMod):
     This class handles the rotation structure modification.
     """
 
-    def __init__(self):
-        """
-        Initialize the symmetrie operation structure modification class.
-        """
-        self.cfg = StructureModConfig()
-
     def modify_structure(
         self,
         mol: Molecule,
-        translation: Translation,
         config: StructureModConfig,
     ) -> Molecule:
         """
         Rotate the molecule around the z-axis.
         """
-        mol = translation.translation(mol, config)
+        mol = self.translation(mol, config)
         xyz = mol.xyz
         n = config.rotation
         rotation_matrix = np.array(

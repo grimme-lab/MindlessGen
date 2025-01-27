@@ -17,9 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `GXTBConfig` class for the g-xTB method, supporting SCF cycles check
-- support for TURBOMOLE as QM engine.
+- support for TURBOMOLE as QM engine
 - updated the parallelization to work over the number of molecules
-- possibillity to generate NCI complexes with symmetrie as mindless molecules.
+- possibility to generate symmetrical molecules (choice from rotation, inversion, mirroring)
 
 ### Fixed
 - version string is now correctly formatted and printed

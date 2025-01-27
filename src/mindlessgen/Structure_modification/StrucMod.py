@@ -8,36 +8,11 @@ from mindlessgen.molecules.molecule import Molecule
 from mindlessgen.prog.config import StructureModConfig
 
 
-class Translation(ABC):
-    """
-    This class handles the translation structure modification.
-    """
-
-    def translation(
-        self,
-        mol: Molecule,
-        config: StructureModConfig,
-    ) -> Molecule:
-        """
-        Translate the molecule and add a little extra distance to the x axis.
-        """
-        xyz = mol.xyz
-        translation_vector = xyz.min()
-        for i in range(mol.num_atoms):
-            if translation_vector < 0:
-                xyz[i, 0] += (
-                    -translation_vector + config.distance / 2
-                )  # extra distance to avoid that an atom is at 0
-        mol.xyz = xyz
-        return mol
-
-
 class StrucMod(ABC):
     """
     This abstract base class defines the interface for all structure modification methods.
     """
 
-    @abstractmethod
     def __init__(self):
         """
         Initialize the structure modification class.
@@ -47,8 +22,7 @@ class StrucMod(ABC):
     @abstractmethod
     def modify_structure(
         self,
-        molecule: Molecule,
-        translation: Translation,
+        mol: Molecule,
         config: StructureModConfig,
     ) -> Molecule:
         """
@@ -61,3 +35,22 @@ class StrucMod(ABC):
         Returns:
         Molecule: Modified molecule
         """
+
+    # All structure modification methods should be able to translate the molecule
+    def translation(
+        self,
+        mol: Molecule,
+        config: StructureModConfig,
+    ) -> Molecule:
+        """
+        Translate the molecule and add a little extra distance to the x axis.
+        """
+        xyz = mol.xyz.copy()
+        translation_vector = xyz.min()
+        for i in range(mol.num_atoms):
+            if translation_vector < 0:
+                xyz[i, 0] += (
+                    -translation_vector + config.distance / 2
+                )  # extra distance to avoid that an atom is at 0
+        mol.xyz = xyz
+        return mol

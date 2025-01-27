@@ -38,7 +38,6 @@ from ..Structure_modification import (
     CnRotation,
     Mirror,
     Inversion,
-    Translation,
 )
 from ..__version__ import __version__
 
@@ -337,7 +336,6 @@ def single_molecule_step(
         try:
             optimized_molecule = structure_mod_model.modify_structure(
                 optimized_molecule,
-                Translation(),
                 config.modification,
             )
         except RuntimeError as e:
@@ -462,11 +460,11 @@ def setup_structure_modification_model(
     """
     Set up the structure modification model.
     """
+    # TODO: Enable the use of more than one structure modification model at a time
     if structure_mod_type.endswith("rotation"):
         return CnRotation()
-    elif structure_mod_type == "mirror":
+    if structure_mod_type == "mirror":
         return Mirror()
-    elif structure_mod_type == "inversion":
+    if structure_mod_type == "inversion":
         return Inversion()
-    else:
-        raise NotImplementedError("Structure modification not implemented.")
+    raise NotImplementedError("Structure modification not implemented.")

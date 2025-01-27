@@ -1,9 +1,8 @@
 import pytest
 import numpy as np
-from mindlessgen.Structure_modification.mirror import Mirror
-from mindlessgen.molecules.molecule import Molecule
-from mindlessgen.Structure_modification.StrucMod import Translation
-from mindlessgen.prog.config import StructureModConfig
+from mindlessgen.Structure_modification.mirror import Mirror  # type: ignore
+from mindlessgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.prog.config import StructureModConfig  # type: ignore
 
 
 @pytest.fixture
@@ -20,18 +19,13 @@ def molecule():
 
 
 @pytest.fixture
-def translation():
-    return Translation()
-
-
-@pytest.fixture
 def config():
     return StructureModConfig()
 
 
-def test_mirror_modify_structure(molecule, translation, config):
+def test_mirror_modify_structure(molecule, config):
     mirror = Mirror()
-    modified_molecule = mirror.modify_structure(molecule, translation, config)
+    modified_molecule = mirror.modify_structure(molecule, config)
 
     assert modified_molecule.num_atoms == 4
     assert modified_molecule.charge == molecule.charge * 2

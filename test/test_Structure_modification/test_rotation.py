@@ -1,8 +1,7 @@
 import numpy as np
-from mindlessgen.Structure_modification.rotation import CnRotation
-from mindlessgen.molecules.molecule import Molecule
-from mindlessgen.prog.config import StructureModConfig
-from mindlessgen.Structure_modification.StrucMod import Translation
+from mindlessgen.Structure_modification.rotation import CnRotation  # type: ignore
+from mindlessgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.prog.config import StructureModConfig  # type: ignore
 
 
 def test_modify_structure():
@@ -16,9 +15,6 @@ def test_modify_structure():
     mol.atlist = np.ndarray(103, dtype=int)
     mol.atlist[0] = 2
 
-    # Create a mock translation
-    translation = Translation()
-
     # Create a mock config
     config = StructureModConfig()
     config.rotation = 2
@@ -27,7 +23,7 @@ def test_modify_structure():
     rotation = CnRotation()
 
     # Modify the structure
-    modified_molecule = rotation.modify_structure(mol, translation, config)
+    modified_molecule = rotation.modify_structure(mol, config)
 
     # Check the modified molecule
     assert modified_molecule.num_atoms == 4

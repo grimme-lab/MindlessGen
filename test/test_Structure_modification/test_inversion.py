@@ -1,8 +1,7 @@
 import numpy as np
-from mindlessgen.Structure_modification.inversion import Inversion
-from mindlessgen.molecules.molecule import Molecule
-from mindlessgen.Structure_modification.StrucMod import Translation
-from mindlessgen.prog.config import StructureModConfig
+from mindlessgen.Structure_modification.inversion import Inversion  # type: ignore
+from mindlessgen.molecules.molecule import Molecule  # type: ignore
+from mindlessgen.prog.config import StructureModConfig  # type: ignore
 
 
 def test_inversion_modify_structure():
@@ -17,9 +16,6 @@ def test_inversion_modify_structure():
     mol.atlist[0] = 1
     mol.atlist[7] = 1
 
-    # Create a mock translation
-    translation = Translation()
-
     # Create a mock config
     config = StructureModConfig()
 
@@ -27,7 +23,7 @@ def test_inversion_modify_structure():
     inversion = Inversion()
 
     # Perform the inversion
-    modified_molecule = inversion.modify_structure(mol, translation, config)
+    modified_molecule = inversion.modify_structure(mol, config)
 
     # Check the modified molecule
     expected_xyz = np.array(
