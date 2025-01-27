@@ -1,7 +1,10 @@
+"""
+This class handles the inversion structure modification.
+"""
+
 import numpy as np
 
 from .StrucMod import StrucMod
-from ..prog.config import StructureModConfig
 from ..molecules.molecule import Molecule
 
 
@@ -13,13 +16,11 @@ class Mirror(StrucMod):
     def modify_structure(
         self,
         mol: Molecule,
-        config: StructureModConfig,
     ) -> Molecule:
         """
         Mirror the molecule.
         """
-
-        mol = self.translation(mol, config)
+        mol = self.translation(mol)
         xyz = mol.xyz
         mirror_matrix = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
         xyz_mirror = xyz.copy()

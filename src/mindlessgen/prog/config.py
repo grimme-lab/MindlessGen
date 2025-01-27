@@ -1126,7 +1126,7 @@ class StructureModConfig(BaseConfig):
 
     def __init__(self: StructureModConfig) -> None:
         self._distance: float = 3.0
-        self._operation: str = "translation"
+        self._operation: str = "mirror"
         self._rotation: int | None = None
 
     def get_identifier(self) -> str:

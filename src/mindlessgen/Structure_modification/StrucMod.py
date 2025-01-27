@@ -13,17 +13,16 @@ class StrucMod(ABC):
     This abstract base class defines the interface for all structure modification methods.
     """
 
-    def __init__(self):
+    def __init__(self, config: StructureModConfig):
         """
         Initialize the structure modification class.
         """
-        self.cfg = StructureModConfig()
+        self.cfg = config
 
     @abstractmethod
     def modify_structure(
         self,
         mol: Molecule,
-        config: StructureModConfig,
     ) -> Molecule:
         """
         Define the structure modification process.
@@ -40,17 +39,16 @@ class StrucMod(ABC):
     def translation(
         self,
         mol: Molecule,
-        config: StructureModConfig,
     ) -> Molecule:
         """
         Translate the molecule and add a little extra distance to the x axis.
         """
-        xyz = mol.xyz.copy()
-        translation_vector = xyz.min()
+        xyz = mol.xyz
+        # Find the translation vector in x direction
+        translation_vector = xyz.min(axis=0)[0]
+        # missing distance to reach minimum x value
+        xshift = self.cfg.distance / 2 - translation_vector
         for i in range(mol.num_atoms):
-            if translation_vector < 0:
-                xyz[i, 0] += (
-                    -translation_vector + config.distance / 2
-                )  # extra distance to avoid that an atom is at 0
+            xyz[i, 0] += xshift
         mol.xyz = xyz
         return mol

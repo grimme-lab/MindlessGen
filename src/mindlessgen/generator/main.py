@@ -32,7 +32,13 @@ from ..qm import (
     get_gxtb_path,
 )
 from ..molecules import iterative_optimization, postprocess_mol
-from ..prog import ConfigManager, setup_managers, ResourceMonitor, setup_blocks
+from ..prog import (
+    ConfigManager,
+    StructureModConfig,
+    setup_managers,
+    ResourceMonitor,
+    setup_blocks,
+)
 from ..Structure_modification import (
     StrucMod,
     CnRotation,
@@ -79,7 +85,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
 
     if config.general.structure_mod:
         structure_mod_model: StrucMod | None = setup_structure_modification_model(
-            config.modification.operation,
+            config.modification.operation, config.modification
         )
     else:
         structure_mod_model = None
@@ -336,7 +342,6 @@ def single_molecule_step(
         try:
             optimized_molecule = structure_mod_model.modify_structure(
                 optimized_molecule,
-                config.modification,
             )
         except RuntimeError as e:
             if config.general.verbosity > 0:
@@ -455,16 +460,16 @@ def setup_engines(
 
 
 def setup_structure_modification_model(
-    structure_mod_type: str,
+    structure_mod_type: str, config: StructureModConfig
 ) -> StrucMod:
     """
     Set up the structure modification model.
     """
     # TODO: Enable the use of more than one structure modification model at a time
     if structure_mod_type.endswith("rotation"):
-        return CnRotation()
+        return CnRotation(config)
     if structure_mod_type == "mirror":
-        return Mirror()
+        return Mirror(config)
     if structure_mod_type == "inversion":
-        return Inversion()
+        return Inversion(config)
     raise NotImplementedError("Structure modification not implemented.")
