@@ -1125,12 +1125,9 @@ class StructureModConfig(BaseConfig):
     """
 
     def __init__(self: StructureModConfig) -> None:
-        self.distance: float = 3.0
+        self._distance: float = 3.0
         self._operation: str = "translation"
-        # self._rotation: bool = False
-        # self._n_fold_rotation: int = 4
-        # self._mirror: bool = False
-        # self._inversion: bool = False
+        self._rotation: int | None = None
 
     def get_identifier(self) -> str:
         return "modification"
@@ -1167,84 +1164,39 @@ class StructureModConfig(BaseConfig):
         """
         if not isinstance(operation, str):
             raise TypeError("Operation should be a string.")
-        if operation not in [
-            "translation",
-            operation.endswith("rotation"),
-            "mirror",
-            "inversion",
-        ]:
+
+        if operation.endswith("rotation"):
+            parts = operation.split("_")
+            if len(parts) != 3 or not parts[1].isdigit():
+                raise ValueError(
+                    "Rotation operations should be in the format 'c_<n>_rotation' where <n> is an integer."
+                )
+            self._rotation = int(parts[1])
+        else:
+            self._rotation = None
+
+        if operation.split("_")[0] not in ["translation", "c", "mirror", "inversion"]:
             raise ValueError(
-                "Operation can only be translation, rotation, mirror or inversion."
+                "Operation can only be translation, c_<n>_rotation, mirror or inversion."
             )
+
         self._operation = operation
 
-    # @property
-    # def rotation(self):
-    #     """
-    #     Get the rotations flag.
-    #     """
-    #     return self._rotation
+    @property
+    def rotation(self):
+        """
+        Get the rotation value.
+        """
+        return self._rotation
 
-
-#
-# @rotation.setter
-# def rotation(self, rotation: bool):
-#     """
-#     Set the rotation flag.
-#     """
-#     if not isinstance(rotation, bool):
-#         raise TypeError("Rotation should be a boolean.")
-#     self._rotation = rotation
-#
-# @property
-# def n_fold_rotation(self):
-#     """
-#     Get the number of the rotation axis.
-#     """
-#     return self._n_fold_rotation
-#
-# @n_fold_rotation.setter
-# def n_fold_rotation(self, n_fold_rotation: int):
-#     """
-#     Set the number of rotations.
-#     """
-#     if not isinstance(n_fold_rotation, int):
-#         raise TypeError("Number of rotations should be an integer.")
-#     if n_fold_rotation < 1:
-#         raise ValueError("Number of rotations should be greater than 0.")
-#     self._n_fold_rotation = n_fold_rotation
-#
-# @property
-# def mirror(self):
-#     """
-#     Get the mirror flag.
-#     """
-#     return self._mirror
-#
-# @mirror.setter
-# def mirror(self, mirror: bool):
-#     """
-#     Set the mirror flag.
-#     """
-#     if not isinstance(mirror, bool):
-#         raise TypeError("Mirror should be a boolean.")
-#     self._mirror = mirror
-#
-# @property
-# def inversion(self):
-#     """
-#     Get the inversion flag.
-#     """
-#     return self._inversion
-#
-# @inversion.setter
-# def inversion(self, inversion: bool):
-#     """
-#     Set the inversion flag.
-#     """
-#     if not isinstance(inversion, bool):
-#         raise TypeError("Inversion should be a boolean.")
-#     self._inversion = inversion
+    @rotation.setter
+    def rotation(self, rotation: int | None):
+        """
+        Set the rotation value.
+        """
+        if not isinstance(rotation, int) and rotation is not None:
+            raise TypeError("Rotation should be an integer or None.")
+        self._rotation = rotation
 
 
 class ConfigManager:

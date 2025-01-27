@@ -33,7 +33,13 @@ from ..qm import (
 )
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import ConfigManager, setup_managers, ResourceMonitor, setup_blocks
-from ..Structure_modification import StrucMod, CnRotation, Mirror, Inversion
+from ..Structure_modification import (
+    StrucMod,
+    CnRotation,
+    Mirror,
+    Inversion,
+    Translation,
+)
 from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
@@ -190,7 +196,7 @@ def single_molecule_generator(
     resources: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
-    structure_mod_model: Callable,
+    structure_mod_model: StrucMod,
     ncores: int,
 ) -> Molecule | None:
     """
@@ -261,7 +267,7 @@ def single_molecule_step(
     resources_local: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
-    structure_mod_model: Callable,
+    structure_mod_model: StrucMod,
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
@@ -329,8 +335,10 @@ def single_molecule_step(
 
     if config.general.structure_mod:
         try:
-            optimized_molecule = structure_mod_model(
+            optimized_molecule = structure_mod_model.modify_structure(
                 optimized_molecule,
+                Translation(),
+                config.modification,
             )
         except RuntimeError as e:
             if config.general.verbosity > 0:
@@ -450,15 +458,15 @@ def setup_engines(
 
 def setup_structure_modification_model(
     structure_mod_type: str,
-):
+) -> StrucMod:
     """
     Set up the structure modification model.
     """
-    if structure_mod_type == "c_n_rotation":
-        return CnRotation
+    if structure_mod_type.endswith("rotation"):
+        return CnRotation()
     elif structure_mod_type == "mirror":
-        return Mirror
+        return Mirror()
     elif structure_mod_type == "inversion":
-        return Inversion
+        return Inversion()
     else:
         raise NotImplementedError("Structure modification not implemented.")

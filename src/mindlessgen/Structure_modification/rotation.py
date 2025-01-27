@@ -31,7 +31,7 @@ class CnRotation(StrucMod):
         """
         mol = translation.translation(mol, config)
         xyz = mol.xyz
-        n = 2
+        n = config.rotation
         rotation_matrix = np.array(
             [
                 [np.cos((2 * np.pi) / n), -np.sin((2 * np.pi) / n), 0],
