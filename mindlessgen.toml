@@ -112,5 +112,5 @@ scf_cycles = 100
 # > There is only the posibillity to do one modification at one molecule.
 # > define the distance of the opposit NCI fragments. Options: <float>
 distance = 3.0
-# > defines the symmetrie operation with which the NCI complex should be generated. Options: <mirror>, <inversion> and <c_n_rotation>. For n Options: <int>.
+# > defines the symmetrie operation with which the NCI complex should be generated. Options: <mirror>, <inversion> and <c_<n>_rotation>. For n Options: <int>.
 operation = "mirror"
