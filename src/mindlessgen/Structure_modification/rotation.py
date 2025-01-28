@@ -13,14 +13,15 @@ class CnRotation(StrucMod):
     This class handles the rotation structure modification.
     """
 
-    def modify_structure(
+    def _modify_structure(
         self,
         mol: Molecule,
+        translation_distance: float,
     ) -> Molecule:
         """
         Rotate the molecule around the z-axis.
         """
-        mol = self.translation(mol)
+        mol = self.translation(mol, translation_distance)
         xyz = mol.xyz
         n = self.cfg.rotation
         rotation_matrix = np.array(

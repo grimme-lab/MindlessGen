@@ -340,7 +340,7 @@ def single_molecule_step(
 
     if config.general.structure_mod:
         try:
-            optimized_molecule = structure_mod_model.modify_structure(
+            optimized_molecule = structure_mod_model.get_symmetric_structure(
                 optimized_molecule,
             )
         except RuntimeError as e:

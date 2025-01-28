@@ -22,7 +22,7 @@ def test_rotation_modify_structure():
     rotation = CnRotation(config)
 
     # Modify the structure
-    modified_molecule = rotation.modify_structure(mol)
+    modified_molecule = rotation.get_symmetric_structure(mol)
 
     # Check the modified molecule
     expected_xyz = np.array(

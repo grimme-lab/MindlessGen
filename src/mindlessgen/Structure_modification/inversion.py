@@ -13,14 +13,15 @@ class Inversion(StrucMod):
     This class handles the Inversion structure modification.
     """
 
-    def modify_structure(
+    def _modify_structure(
         self,
         mol: Molecule,
+        translation_distance: float,
     ) -> Molecule:
         """
         Invert the molecule.
         """
-        mol = self.translation(mol)
+        mol = self.translation(mol, translation_distance)
         xyz = mol.xyz
         inversion_matrix = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, -1]])
         xyz_inversion = xyz.copy()

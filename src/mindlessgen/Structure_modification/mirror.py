@@ -13,14 +13,15 @@ class Mirror(StrucMod):
     This class handles the translation structure modification.
     """
 
-    def modify_structure(
+    def _modify_structure(
         self,
         mol: Molecule,
+        translation_distance: float,
     ) -> Molecule:
         """
         Mirror the molecule.
         """
-        mol = self.translation(mol)
+        mol = self.translation(mol, translation_distance)
         xyz = mol.xyz
         mirror_matrix = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
         xyz_mirror = xyz.copy()

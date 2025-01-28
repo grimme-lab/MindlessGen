@@ -8,7 +8,7 @@ from mindlessgen.prog.config import StructureModConfig  # type: ignore
 @pytest.fixture
 def molecule():
     mol = Molecule()
-    mol.xyz = np.array([[0.0, 1.0, 2.0], [1.0, 1.0, 2.0]])
+    mol.xyz = np.array([[0.0, 4.0, 8.0], [2.0, 4.0, 8.0]])
     mol.num_atoms = 2
     mol.ati = np.array([1, 1])
     mol.charge = 0
@@ -20,9 +20,11 @@ def molecule():
 def test_mirror_modify_structure(molecule):
     # Create a mock config
     config = StructureModConfig()
-    config.distance = 3.0
+    config.distance = 4.0
     mirror = Mirror(config)
-    modified_molecule = mirror.modify_structure(molecule)
+    modified_molecule = mirror.get_symmetric_structure(molecule)
+    print(modified_molecule.xyz[:2])
+    print(modified_molecule.xyz[2:])
 
     assert modified_molecule.num_atoms == 4
     assert modified_molecule.charge == molecule.charge * 2
@@ -30,7 +32,9 @@ def test_mirror_modify_structure(molecule):
     assert np.array_equal(
         modified_molecule.ati, np.hstack((molecule.ati, molecule.ati))
     )
-    assert np.array_equal(modified_molecule.xyz[:2], molecule.xyz)
     assert np.array_equal(
-        modified_molecule.xyz[2:], np.array([[-1.5, 1.0, 2.0], [-2.5, 1.0, 2.0]])
+        modified_molecule.xyz[:2], np.array([[2.0, 4.0, 8.0], [4.0, 4.0, 8.0]])
+    )
+    assert np.array_equal(
+        modified_molecule.xyz[2:], np.array([[-2.0, 4.0, 8.0], [-4.0, 4.0, 8.0]])
     )
