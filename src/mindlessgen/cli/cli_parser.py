@@ -87,16 +87,11 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         help="Do not write the molecules to xyz files.",
     )
     parser.add_argument(
-        "--scale-fragment-detection",
-        type=float,
+        "--symmetrization",
+        action="store_true",
+        default=None,
         required=False,
-        help="Scaling factor for the fragment detection based on the van der Waals radii.",
-    )
-    parser.add_argument(
-        "--scale-minimal-distance",
-        type=float,
-        required=False,
-        help="Minimum atom distance scaling factor.",
+        help="Generate symmetric MLM complexes.",
     )
 
     ### Molecule generation arguments ###
@@ -124,6 +119,18 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Factor with which the coordinate scaling factor is increased "
         + "after a failed attempt.",
+    )
+    parser.add_argument(
+        "--scale-fragment-detection",
+        type=float,
+        required=False,
+        help="Scaling factor for the fragment detection based on the van der Waals radii.",
+    )
+    parser.add_argument(
+        "--scale-minimal-distance",
+        type=float,
+        required=False,
+        help="Minimum atom distance scaling factor.",
     )
     parser.add_argument(
         "--element-composition",
@@ -271,6 +278,22 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Maximum number of SCF cycles in g-xTB.",
     )
+
+    ### Symmetrization specific arguments ###
+    parser.add_argument(
+        "--symmetrization-distance",
+        type=float,
+        required=False,
+        help="Define the distance of the symmetric fragments.",
+    )
+    parser.add_argument(
+        "--symmetry-operation",
+        type=str,
+        required=False,
+        help="Define the symmetry operation to use.",
+    )
+
+    ### Parse arguments ###
     args = parser.parse_args(argv)
     args_dict = vars(args)
 
@@ -286,6 +309,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "num_molecules": args_dict["num_molecules"],
         "postprocess": args_dict["postprocess"],
         "write_xyz": args_dict["write_xyz"],
+        "symmetrization": args_dict["symmetrization"],
     }
     # Refinement arguments
     rev_args_dict["refine"] = {
@@ -309,8 +333,10 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "fixed_composition": args_dict["fixed_composition"],
     }
     # XTB specific arguments
-    rev_args_dict["xtb"] = {"xtb_path": args_dict["xtb_path"]}
-    rev_args_dict["xtb"]["level"] = args_dict["xtb_level"]
+    rev_args_dict["xtb"] = {
+        "xtb_path": args_dict["xtb_path"],
+        "level": args_dict["xtb_level"],
+    }
     # ORCA specific arguments
     rev_args_dict["orca"] = {
         "orca_path": args_dict["orca_path"],
@@ -330,6 +356,11 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "optimize": args_dict["postprocess_optimize"],
         "opt_cycles": args_dict["postprocess_opt_cycles"],
         "debug": args_dict["postprocess_debug"],
+    }
+    # Symmetrization specific arguments
+    rev_args_dict["symmetrization"] = {
+        "distance": args_dict["symmetrization_distance"],
+        "operation": args_dict["symmetry_operation"],
     }
 
     return rev_args_dict

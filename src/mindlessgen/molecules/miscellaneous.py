@@ -4,7 +4,21 @@ Molecule-related helper tools.
 
 import numpy as np
 
-from mindlessgen.molecules.molecule import ati_to_atlist
+from .molecule import ati_to_atlist
+from ..data.parameters import COV_RADII_PYYKKO, COV_RADII_MLMGEN
+
+
+def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
+    """
+    Get the covalent radius of an atom in Angstrom.
+    """
+    if vdw_radii == "mlmgen":
+        rcov = COV_RADII_MLMGEN
+    elif vdw_radii == "pyykko":
+        rcov = COV_RADII_PYYKKO
+    else:
+        raise ValueError("Invalid vdw_radii argument.")
+    return rcov[at]
 
 
 def set_random_charge(
@@ -34,29 +48,28 @@ def set_random_charge(
         else:
             charge = 1
         return charge, uhf
-    else:
-        ### Default mode
-        iseven = False
-        if nel % 2 == 0:
-            iseven = True
-        # if the number of electrons is even, the charge is -2, 0, or 2
-        # if the number of electrons is odd, the charge is -1, 1
-        rng = np.random.default_rng()
-        randint = rng.random()
-        if iseven:
-            if randint < 1 / 3:
-                charge = -2
-            elif randint < 2 / 3:
-                charge = 0
-            else:
-                charge = 2
+    ### Default mode
+    iseven = False
+    if nel % 2 == 0:
+        iseven = True
+    # if the number of electrons is even, the charge is -2, 0, or 2
+    # if the number of electrons is odd, the charge is -1, 1
+    rng = np.random.default_rng()
+    randint = rng.random()
+    if iseven:
+        if randint < 1 / 3:
+            charge = -2
+        elif randint < 2 / 3:
+            charge = 0
         else:
-            if randint < 0.5:
-                charge = -1
-            else:
-                charge = 1
-        uhf = 0
-        return charge, uhf
+            charge = 2
+    else:
+        if randint < 0.5:
+            charge = -1
+        else:
+            charge = 1
+    uhf = 0
+    return charge, uhf
 
 
 def calculate_protons(natoms: np.ndarray) -> int:
