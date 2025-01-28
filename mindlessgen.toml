@@ -8,7 +8,7 @@
 # > Verbosity level defining the printout: Options: -1 = super-silent, 0 = silent, 1 = default, 2 = verbose, 3 = debug
 verbosity = 1
 # > Number of parallel processes to use. Corresponds to the number of physical CPU cores used. Options: <int>
-parallel = 1
+parallel = 4
 # > Maximum number of generation & optimization try-and-error cycles per molecule. Options: <int>
 max_cycles = 200
 # > Number of molecules to generate. Options: <int>
@@ -17,9 +17,9 @@ num_molecules = 1
 postprocess = false
 # > Switch molecule structure XYZ writing on and off. Default: true. Options: <bool>
 write_xyz = true
-# > Switch structure modification on and off. Defaul: false. Options: <bool>
-# > postprocess has to be turned on and the postprocess engine has to be turbomole.
-structure_mod = false
+# > Switch generation of symmetrical molecules consisting of substructures on and off. Defaul: false. Options: <bool>
+# > Postprocessing is recommended. Choosing "TURBOMOLE" as postprocessing engine is recommended due to symmetry handling.
+symmetrization = false
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>
@@ -62,7 +62,7 @@ hlgap = 0.5
 # > If `debug` is true, the process is terminated after the first (successful or not) refinement step.
 debug = false
 # > Number of cores to be used for geometry optimizations. Single-points will continue to use one core each.
-ncores = 4
+ncores = 2
 
 [postprocess]
 # > Engine for the post-processing part. Options: 'xtb', 'orca', 'turbomole'
@@ -76,7 +76,7 @@ opt_cycles = 5
 # > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
 debug = false
 # > Number of cores to be used for both single-point calculations and geometry optimizations.
-ncores = 4
+ncores = 2
 
 [xtb]
 # > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
@@ -108,9 +108,8 @@ basis = "def2-SVP"
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
 
-[modification]
-# > There is only the posibillity to do one modification at one molecule.
-# > define the distance of the opposit NCI fragments. Options: <float>
+[symmetrization]
+# > Distance of the symmetric sub-structures on the translation axis (x). Options: <float>
 distance = 3.0
-# > defines the symmetrie operation with which the NCI complex should be generated. Options: <mirror>, <inversion> and <c_<n>_rotation>. For n Options: <int>.
+# > Only one symmetry operation at a time can be chosen. Options: <mirror>, <inversion> and <c_<n>_rotation>. For n Options: <int>.
 operation = "mirror"
