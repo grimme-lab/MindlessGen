@@ -210,7 +210,6 @@ class Turbomole(QMMethod):
                 )
             return tm_log_out, tm_log_err, 0
         except sp.CalledProcessError as e:
-            print(f"subprocess error: {e}")
             if output_file.exists():
                 with open(output_file, encoding="utf-8") as file:
                     tm_log_out = file.read()
