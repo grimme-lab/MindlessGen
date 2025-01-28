@@ -1,5 +1,5 @@
 import numpy as np
-from mindlessgen.Structure_modification.rotation import CnRotation  # type: ignore
+from mindlessgen.symmetrization.rotation import CnRotation  # type: ignore
 from mindlessgen.molecules.molecule import Molecule, ati_to_atlist  # type: ignore
 from mindlessgen.prog.config import StructureModConfig  # type: ignore
 

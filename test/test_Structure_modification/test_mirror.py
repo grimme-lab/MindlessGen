@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from mindlessgen.Structure_modification.mirror import Mirror  # type: ignore
+from mindlessgen.symmetrization.mirror import Mirror  # type: ignore
 from mindlessgen.molecules.molecule import Molecule, ati_to_atlist  # type: ignore
 from mindlessgen.prog.config import StructureModConfig  # type: ignore
 

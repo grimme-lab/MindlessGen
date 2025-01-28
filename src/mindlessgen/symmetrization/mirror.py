@@ -4,11 +4,11 @@ This class handles the inversion structure modification.
 
 import numpy as np
 
-from .StrucMod import StrucMod
+from .base import Symmetrizer
 from ..molecules.molecule import Molecule
 
 
-class Mirror(StrucMod):
+class Mirror(Symmetrizer):
     """
     This class handles the translation structure modification.
     """

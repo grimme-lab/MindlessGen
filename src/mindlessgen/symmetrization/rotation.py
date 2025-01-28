@@ -4,11 +4,11 @@ This class handles the rotation structure modification.
 
 import numpy as np
 
-from .StrucMod import StrucMod
+from .base import Symmetrizer
 from ..molecules.molecule import Molecule
 
 
-class CnRotation(StrucMod):
+class CnRotation(Symmetrizer):
     """
     This class handles the rotation structure modification.
     """

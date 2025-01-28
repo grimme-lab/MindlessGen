@@ -10,7 +10,7 @@ from ..prog.config import StructureModConfig
 from ..molecules import check_distances, Molecule
 
 
-class StrucMod(ABC):
+class Symmetrizer(ABC):
     """
     This abstract base class defines the interface for all structure modification methods.
     """

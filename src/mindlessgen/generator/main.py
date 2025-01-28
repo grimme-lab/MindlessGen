@@ -39,8 +39,8 @@ from ..prog import (
     ResourceMonitor,
     setup_blocks,
 )
-from ..Structure_modification import (
-    StrucMod,
+from ..symmetrization import (
+    Symmetrizer,
     CnRotation,
     Mirror,
     Inversion,
@@ -84,7 +84,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     )
 
     if config.general.structure_mod:
-        structure_mod_model: StrucMod | None = setup_structure_modification_model(
+        structure_mod_model: Symmetrizer | None = setup_structure_modification_model(
             config.modification.operation, config.modification
         )
     else:
@@ -201,7 +201,7 @@ def single_molecule_generator(
     resources: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
-    structure_mod_model: StrucMod,
+    structure_mod_model: Symmetrizer,
     ncores: int,
 ) -> Molecule | None:
     """
@@ -272,7 +272,7 @@ def single_molecule_step(
     resources_local: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
-    structure_mod_model: StrucMod,
+    structure_mod_model: Symmetrizer,
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
@@ -461,7 +461,7 @@ def setup_engines(
 
 def setup_structure_modification_model(
     structure_mod_type: str, config: StructureModConfig
-) -> StrucMod:
+) -> Symmetrizer:
     """
     Set up the structure modification model.
     """
