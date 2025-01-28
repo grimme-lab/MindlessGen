@@ -45,7 +45,7 @@ class GeneralConfig(BaseConfig):
         self._num_molecules: int = 1
         self._postprocess: bool = False
         self._write_xyz: bool = True
-        self._structure_mod: bool = False
+        self._symmetrization: bool = False
 
     def get_identifier(self) -> str:
         return "general"
@@ -170,6 +170,22 @@ class GeneralConfig(BaseConfig):
             raise TypeError("Write xyz should be a boolean.")
         self._write_xyz = write_xyz
 
+    @property
+    def symmetrization(self):
+        """
+        Get the structure_mod flag.
+        """
+        return self._symmetrization
+
+    @symmetrization.setter
+    def symmetrization(self, symmetrization: bool):
+        """
+        Set the structure_mod flag.
+        """
+        if not isinstance(symmetrization, bool):
+            raise TypeError("Symmetrization should be a boolean.")
+        self._symmetrization = symmetrization
+
     def check_config(self, verbosity: int = 1) -> None:
         ### GeneralConfig checks ###
         # lower number of the available cores and the configured parallelism
@@ -188,21 +204,12 @@ class GeneralConfig(BaseConfig):
                 + "Set '--verbosity 0' or '-P 1' to avoid this warning, or simply ignore it."
             )
 
-    @property
-    def structure_mod(self):
-        """
-        Get the structure_mod flag.
-        """
-        return self._structure_mod
-
-    @structure_mod.setter
-    def structure_mod(self, structure_mod: bool):
-        """
-        Set the structure_mod flag.
-        """
-        if not isinstance(structure_mod, bool):
-            raise TypeError("Structure modification should be a boolean.")
-        self._structure_mod = structure_mod
+        # Symmetrization without postprocessing
+        if self.symmetrization and not self.postprocess:
+            if verbosity > 0:
+                warnings.warn(
+                    "Postprocessing is turned off. The structure will not be relaxed."
+                )
 
 
 class GenerateConfig(BaseConfig):
@@ -869,6 +876,8 @@ class XTBConfig(BaseConfig):
         """
         if not isinstance(level, int):
             raise TypeError("xtb level should be an integer.")
+        if level < 0 or level > 2:
+            raise ValueError("xtb level should be 0, 1, or 2.")
         self._level = level
 
 
@@ -1130,7 +1139,7 @@ class SymmetrizationConfig(BaseConfig):
         self._rotation: int | None = None
 
     def get_identifier(self) -> str:
-        return "modification"
+        return "symmetrization"
 
     @property
     def distance(self):
@@ -1225,7 +1234,7 @@ class ConfigManager:
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
         self.gxtb = GXTBConfig()
-        self.modification = SymmetrizationConfig()
+        self.symmetrization = SymmetrizationConfig()
 
         if config_file:
             self.load_from_toml(config_file)
@@ -1236,6 +1245,7 @@ class ConfigManager:
         """
 
         ### Config-specific checks ###
+        ##############################
         for attr_name in dir(self):
             attr_value = getattr(self, attr_name)
             if isinstance(attr_value, BaseConfig):
@@ -1243,6 +1253,7 @@ class ConfigManager:
                     attr_value.check_config(verbosity)
 
         ### Overlapping checks ###
+        ##############################
         num_cores = min(mp.cpu_count(), self.general.parallel)
         if num_cores > 1 and self.postprocess.debug and verbosity > -1:
             # raise warning that debugging of postprocessing will disable parallelization
@@ -1262,6 +1273,7 @@ class ConfigManager:
                 f"Number of cores ({num_cores}) is too low to run post-processing using {self.postprocess.ncores}."
             )
 
+        # xtb-related checks
         if self.refine.engine == "xtb":
             # Check for f-block elements in forbidden elements
             if self.generate.forbidden_elements:

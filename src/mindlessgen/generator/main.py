@@ -83,9 +83,9 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         get_jobex_path,
     )
 
-    if config.general.structure_mod:
+    if config.general.symmetrization:
         structure_mod_model: Symmetrizer | None = setup_structure_modification_model(
-            config.modification.operation, config.modification
+            config.symmetrization.operation, config.symmetrization
         )
     else:
         structure_mod_model = None
@@ -338,7 +338,7 @@ def single_molecule_step(
         if config.refine.debug:
             stop_event.set()
 
-    if config.general.structure_mod:
+    if config.general.symmetrization:
         try:
             optimized_molecule = structure_mod_model.get_symmetric_structure(
                 optimized_molecule,
