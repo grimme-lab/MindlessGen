@@ -18,7 +18,7 @@ from datetime import timedelta
 from tqdm import tqdm
 
 # Internal modules
-from ..molecules import generate_random_molecule, Molecule
+from ..molecules import generate_random_molecule, Molecule, ati_to_atlist
 from ..qm import (
     XTB,
     get_xtb_path,
@@ -257,6 +257,16 @@ def single_molecule_generator(
             f.write(f"mlm_{optimized_molecule.name}\n")
         if config.general.verbosity > 0:
             print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
+        if config.general.symmetrization:
+            monomer = _get_monomer_from_cluster(
+                optimized_molecule, config.symmetrization
+            )
+            monomer.name = f"{optimized_molecule.name}_monomer"
+            monomer.write_xyz_to_file()
+            if config.general.verbosity > 0:
+                print(
+                    f"Written monomer file 'mlm_{optimized_molecule.name}_monomer.xyz'.\n"
+                )
     elif optimized_molecule is None:
         # TODO: will this conflict with progress bar?
         warnings.warn(
@@ -592,3 +602,26 @@ def _gxtb_scf_check(mol: Molecule, gxtb: GXTB, verbosity: int = 0) -> None:
         raise ValueError("SCF iterations not found in GP3 output.")
     if scf_iterations > gxtb.cfg.scf_cycles:
         raise ValueError(f"SCF iterations exceeded limit of {gxtb.cfg.scf_cycles}.")
+
+
+def _get_monomer_from_cluster(
+    cluster: Molecule, symmetry_config: SymmetrizationConfig
+) -> Molecule:
+    """
+    Get the monomer from the cluster.
+    """
+    monomer = Molecule()
+    if symmetry_config.operation in ["mirror", "inversion"]:
+        num_monomers = 2
+    elif symmetry_config.operation.endswith("rotation"):
+        num_monomers = symmetry_config.rotation
+    else:
+        raise NotImplementedError("Operation not implemented.")
+    monomer.num_atoms = cluster.num_atoms // num_monomers
+    monomer.xyz = cluster.xyz[: monomer.num_atoms]
+    monomer.ati = cluster.ati[: monomer.num_atoms]
+    monomer.charge = cluster.charge // num_monomers
+    monomer.uhf = cluster.uhf // num_monomers
+    monomer.atlist = ati_to_atlist(monomer.ati)
+    monomer.set_name_from_formula()
+    return monomer
