@@ -173,14 +173,14 @@ class GeneralConfig(BaseConfig):
     @property
     def symmetrization(self):
         """
-        Get the structure_mod flag.
+        Get the symmetrization flag.
         """
         return self._symmetrization
 
     @symmetrization.setter
     def symmetrization(self, symmetrization: bool):
         """
-        Set the structure_mod flag.
+        Set the symmetrization flag.
         """
         if not isinstance(symmetrization, bool):
             raise TypeError("Symmetrization should be a boolean.")

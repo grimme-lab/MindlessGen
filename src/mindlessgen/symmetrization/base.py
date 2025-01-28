@@ -1,5 +1,5 @@
 """
-This module defines the abstract base class for all structure modification methods.
+This module defines the abstract base class for all symmetrization methods.
 """
 
 from abc import ABC, abstractmethod
@@ -12,12 +12,12 @@ from ..molecules import check_distances, Molecule
 
 class Symmetrizer(ABC):
     """
-    This abstract base class defines the interface for all structure modification methods.
+    This abstract base class defines the interface for all symmetrization methods.
     """
 
     def __init__(self, config: SymmetrizationConfig):
         """
-        Initialize the structure modification class.
+        Initialize the symmetrization class.
         """
         self.cfg = config
 
@@ -28,11 +28,11 @@ class Symmetrizer(ABC):
         translation_distance: float,
     ) -> Molecule:
         """
-        Define the structure modification process.
+        Define the symmetrization process.
 
         Arguments:
         molecule (Molecule): Molecule to modify
-        config (StructureModConfig): Configuration for the structure modification
+        translation_distance (float): Distance to translate the molecule
 
         Returns:
         Molecule: Modified molecule
@@ -46,6 +46,13 @@ class Symmetrizer(ABC):
     ) -> Molecule:
         """
         Translate the molecule and add a little extra distance to the x axis.
+
+        Arguments:
+        mol (Molecule): Molecule to translate
+        x_vec_translation (float): Translation distance in x direction
+
+        Returns:
+        Molecule: Translated molecule
         """
         xyz = mol.xyz
         # Find the translation vector in x direction
@@ -67,6 +74,14 @@ class Symmetrizer(ABC):
     ) -> Molecule:
         """
         Combine the original and the modified molecule.
+
+        Arguments:
+        original_mol (Molecule): Original molecule
+        new_mol (Molecule): Modified molecule
+        addxyz (np.ndarray): Coordinates to add to the molecule
+
+        Returns:
+        Molecule: Combined molecule
         """
         new_mol.xyz = np.vstack((new_mol.xyz, addxyz))
         # add dimension of addxyz to the number of atoms
@@ -84,6 +99,12 @@ class Symmetrizer(ABC):
     ) -> Molecule:
         """
         Get the symmetric structure of the molecule.
+
+        Arguments:
+        mol (Molecule): Molecule to symmetrize
+
+        Returns:
+        Molecule: Symmetric molecule
         """
         orig_mol = mol.copy()
         if not check_distances(mol.xyz, mol.ati, 0.6):

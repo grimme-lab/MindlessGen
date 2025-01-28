@@ -346,8 +346,8 @@ def single_molecule_step(
         except RuntimeError as e:
             if config.general.verbosity > 0:
                 print(f"Structure modification failed for cycle {cycle + 1}.")
-            if config.general.verbosity > 1:
-                print(e)
+                if config.general.verbosity > 1:
+                    print(e)
             return None
 
     if config.general.postprocess:

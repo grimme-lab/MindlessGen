@@ -22,12 +22,11 @@ class Inversion(Symmetrizer):
         Invert the molecule.
         """
         mol = self.translation(mol, translation_distance)
-        xyz = mol.xyz
         inversion_matrix = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, -1]])
-        xyz_inversion = xyz.copy()
+        xyz_inversion = mol.xyz.copy()
         modified_molecule = mol.copy()
         for i in range(mol.num_atoms):
-            xyz_inversion[i] = np.dot(inversion_matrix, xyz[i])
+            xyz_inversion[i] = np.dot(inversion_matrix, mol.xyz[i])
         modified_molecule = self.combine_structure(
             mol, modified_molecule, xyz_inversion
         )

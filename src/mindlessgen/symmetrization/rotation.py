@@ -22,7 +22,6 @@ class CnRotation(Symmetrizer):
         Rotate the molecule around the z-axis.
         """
         mol = self.translation(mol, translation_distance)
-        xyz = mol.xyz
         n = self.cfg.rotation
         rotation_matrix = np.array(
             [
@@ -31,7 +30,7 @@ class CnRotation(Symmetrizer):
                 [0, 0, 1],
             ]
         )
-        xyz_rotation = xyz.copy()
+        xyz_rotation = mol.xyz.copy()
         modified_molecule = mol.copy()
         # For loop to get n times the molecule
         for _ in range(1, n):

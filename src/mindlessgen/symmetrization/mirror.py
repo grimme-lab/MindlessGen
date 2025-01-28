@@ -22,12 +22,11 @@ class Mirror(Symmetrizer):
         Mirror the molecule.
         """
         mol = self.translation(mol, translation_distance)
-        xyz = mol.xyz
         mirror_matrix = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        xyz_mirror = xyz.copy()
+        xyz_mirror = mol.xyz.copy()
         modified_molecule = mol.copy()
         for i in range(mol.num_atoms):
-            xyz_mirror[i] = np.dot(mirror_matrix, xyz[i])
+            xyz_mirror[i] = np.dot(mirror_matrix, mol.xyz[i])
         # Combine the original and the mirror image
         modified_molecule = self.combine_structure(mol, modified_molecule, xyz_mirror)
         return modified_molecule
