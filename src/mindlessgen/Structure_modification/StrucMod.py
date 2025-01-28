@@ -4,6 +4,8 @@ This module defines the abstract base class for all structure modification metho
 
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 from mindlessgen.molecules.molecule import Molecule
 from mindlessgen.prog.config import StructureModConfig
 
@@ -52,3 +54,22 @@ class StrucMod(ABC):
             xyz[i, 0] += xshift
         mol.xyz = xyz
         return mol
+
+    def combine_structure(
+        self,
+        original_mol: Molecule,
+        new_mol: Molecule,
+        addxyz: np.ndarray,
+    ) -> Molecule:
+        """
+        Combine the original and the modified molecule.
+        """
+        new_mol.xyz = np.vstack((new_mol.xyz, addxyz))
+        # add dimension of addxyz to the number of atoms
+        new_mol.num_atoms += original_mol.num_atoms
+        new_mol.ati = np.hstack((new_mol.ati, original_mol.ati))
+        new_mol.charge += original_mol.charge
+        new_mol.uhf += original_mol.uhf
+        new_mol.atlist += original_mol.atlist
+        new_mol.set_name_from_formula()
+        return new_mol

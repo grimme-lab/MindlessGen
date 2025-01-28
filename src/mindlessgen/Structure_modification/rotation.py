@@ -36,12 +36,7 @@ class CnRotation(StrucMod):
         for _ in range(1, n):
             for k in range(mol.num_atoms):
                 xyz_rotation[k] = np.dot(rotation_matrix, xyz_rotation[k])
-            xyz = np.vstack((xyz, xyz_rotation))
-            modified_molecule.num_atoms += mol.num_atoms
-            modified_molecule.ati = np.hstack((modified_molecule.ati, mol.ati))
-            modified_molecule.charge += mol.charge
-            modified_molecule.uhf += mol.uhf
-            modified_molecule.atlist += mol.atlist
-        modified_molecule.xyz = xyz
-        modified_molecule.set_name_from_formula()
+            modified_molecule = self.combine_structure(
+                mol, modified_molecule, xyz_rotation
+            )
         return modified_molecule

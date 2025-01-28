@@ -28,12 +28,5 @@ class Mirror(StrucMod):
         for i in range(mol.num_atoms):
             xyz_mirror[i] = np.dot(mirror_matrix, xyz[i])
         # Combine the original and the mirror image
-        xyz_combined = np.vstack((xyz, xyz_mirror))
-        modified_molecule.xyz = xyz_combined
-        modified_molecule.num_atoms += mol.num_atoms
-        modified_molecule.ati = np.hstack((modified_molecule.ati, mol.ati))
-        modified_molecule.charge += mol.charge
-        modified_molecule.uhf += mol.uhf
-        modified_molecule.atlist += mol.atlist
-        modified_molecule.set_name_from_formula()
+        modified_molecule = self.combine_structure(mol, modified_molecule, xyz_mirror)
         return modified_molecule

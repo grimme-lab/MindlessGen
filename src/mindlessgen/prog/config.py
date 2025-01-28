@@ -1171,11 +1171,11 @@ class StructureModConfig(BaseConfig):
                 raise ValueError(
                     "Rotation operations should be in the format 'c_<n>_rotation' where <n> is an integer."
                 )
-            self._rotation = int(parts[1])
+            self.rotation = int(parts[1])
         else:
-            self._rotation = None
+            self.rotation = None
 
-        if operation.split("_")[0] not in ["translation", "c", "mirror", "inversion"]:
+        if operation.split("_")[0] not in ["c", "mirror", "inversion"]:
             raise ValueError(
                 "Operation can only be translation, c_<n>_rotation, mirror or inversion."
             )
