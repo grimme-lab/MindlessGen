@@ -181,6 +181,7 @@ class Turbomole(QMMethod):
         tuple[str, str, int]: The output of the turbomole calculation (stdout and stderr)
                               and the return code
         """
+        output_file = temp_path / "job.last"
         try:
             tm_out = sp.run(
                 arguments,
@@ -190,7 +191,6 @@ class Turbomole(QMMethod):
                 shell=True,  # shell=True is necessary for inserting the `PARNODES=xx` command, unfortunately.
             )
             # Read the job-last file to get the output of the calculation
-            output_file = temp_path / "job.last"
             if output_file.exists():
                 with open(output_file, encoding="utf-8") as file:
                     tm_log_out = file.read()
@@ -207,7 +207,13 @@ class Turbomole(QMMethod):
                 )
             return tm_log_out, tm_log_err, 0
         except sp.CalledProcessError as e:
-            tm_log_out = e.stdout.decode("utf8", errors="replace")
+            if output_file.exists():
+                with open(output_file, encoding="utf-8") as file:
+                    tm_log_out = file.read()
+            else:
+                tm_log_out = e.stdout.decode(
+                    "utf8", errors="replace"
+                )  # To prevent the program from crashing a different output is used.
             tm_log_err = e.stderr.decode("utf8", errors="replace")
             return tm_log_out, tm_log_err, e.returncode
 
