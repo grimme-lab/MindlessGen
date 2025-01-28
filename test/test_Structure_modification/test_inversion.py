@@ -1,7 +1,7 @@
 import numpy as np
 from mindlessgen.symmetrization.inversion import Inversion  # type: ignore
 from mindlessgen.molecules.molecule import Molecule, ati_to_atlist  # type: ignore
-from mindlessgen.prog.config import StructureModConfig  # type: ignore
+from mindlessgen.prog.config import SymmetrizationConfig  # type: ignore
 
 
 def test_inversion_modify_structure():
@@ -15,7 +15,7 @@ def test_inversion_modify_structure():
     mol.atlist = ati_to_atlist(mol.ati)
 
     # Create a mock config
-    config = StructureModConfig()
+    config = SymmetrizationConfig()
     config.distance = 3.0
 
     # Initialize the Inversion class

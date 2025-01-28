@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from mindlessgen.symmetrization.mirror import Mirror  # type: ignore
 from mindlessgen.molecules.molecule import Molecule, ati_to_atlist  # type: ignore
-from mindlessgen.prog.config import StructureModConfig  # type: ignore
+from mindlessgen.prog.config import SymmetrizationConfig  # type: ignore
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def molecule():
 
 def test_mirror_modify_structure(molecule):
     # Create a mock config
-    config = StructureModConfig()
+    config = SymmetrizationConfig()
     config.distance = 4.0
     mirror = Mirror(config)
     modified_molecule = mirror.get_symmetric_structure(molecule)

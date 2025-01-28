@@ -1119,12 +1119,12 @@ class GXTBConfig(BaseConfig):
         self._scf_cycles = max_scf_cycles
 
 
-class StructureModConfig(BaseConfig):
+class SymmetrizationConfig(BaseConfig):
     """
-    Configuration class for structure modification settings.
+    Configuration class for the generation of symmetric complexes.
     """
 
-    def __init__(self: StructureModConfig) -> None:
+    def __init__(self: SymmetrizationConfig) -> None:
         self._distance: float = 3.0
         self._operation: str = "mirror"
         self._rotation: int | None = None
@@ -1165,6 +1165,11 @@ class StructureModConfig(BaseConfig):
         if not isinstance(operation, str):
             raise TypeError("Operation should be a string.")
 
+        if operation.split("_")[0] not in ["c", "mirror", "inversion"]:
+            raise ValueError(
+                "Operation can only be translation, c_<n>_rotation, mirror or inversion."
+            )
+
         if operation.endswith("rotation"):
             parts = operation.split("_")
             if len(parts) != 3 or not parts[1].isdigit():
@@ -1173,12 +1178,11 @@ class StructureModConfig(BaseConfig):
                 )
             self.rotation = int(parts[1])
         else:
+            if operation not in ["mirror", "inversion"]:
+                raise ValueError(
+                    "Operation can only be translation, c_<n>_rotation, mirror or inversion."
+                )
             self.rotation = None
-
-        if operation.split("_")[0] not in ["c", "mirror", "inversion"]:
-            raise ValueError(
-                "Operation can only be translation, c_<n>_rotation, mirror or inversion."
-            )
 
         self._operation = operation
 
@@ -1194,8 +1198,13 @@ class StructureModConfig(BaseConfig):
         """
         Set the rotation value.
         """
-        if not isinstance(rotation, int) and rotation is not None:
+        if rotation is None:
+            self._rotation = None
+            return
+        if not isinstance(rotation, int):
             raise TypeError("Rotation should be an integer or None.")
+        if rotation < 2:
+            raise ValueError("Rotation should be greater than or equal to 2.")
         self._rotation = rotation
 
 
@@ -1216,7 +1225,7 @@ class ConfigManager:
         self.postprocess = PostProcessConfig()
         self.generate = GenerateConfig()
         self.gxtb = GXTBConfig()
-        self.modification = StructureModConfig()
+        self.modification = SymmetrizationConfig()
 
         if config_file:
             self.load_from_toml(config_file)

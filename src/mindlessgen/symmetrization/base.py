@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ..prog.config import StructureModConfig
+from ..prog.config import SymmetrizationConfig
 from ..molecules import check_distances, Molecule
 
 
@@ -15,7 +15,7 @@ class Symmetrizer(ABC):
     This abstract base class defines the interface for all structure modification methods.
     """
 
-    def __init__(self, config: StructureModConfig):
+    def __init__(self, config: SymmetrizationConfig):
         """
         Initialize the structure modification class.
         """

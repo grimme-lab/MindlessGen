@@ -34,7 +34,7 @@ from ..qm import (
 from ..molecules import iterative_optimization, postprocess_mol
 from ..prog import (
     ConfigManager,
-    StructureModConfig,
+    SymmetrizationConfig,
     setup_managers,
     ResourceMonitor,
     setup_blocks,
@@ -460,7 +460,7 @@ def setup_engines(
 
 
 def setup_structure_modification_model(
-    structure_mod_type: str, config: StructureModConfig
+    structure_mod_type: str, config: SymmetrizationConfig
 ) -> Symmetrizer:
     """
     Set up the structure modification model.
