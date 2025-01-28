@@ -157,7 +157,10 @@ class Turbomole(QMMethod):
             tm_log_out = tm_out.stdout.decode("utf8", errors="replace")
             tm_log_err = tm_out.stderr.decode("utf8", errors="replace")
 
-            if "ridft : all done" not in tm_log_out:
+            if (
+                "ridft : all done" not in tm_log_out
+                or "ridft did not converge!" in tm_log_out
+            ):
                 raise sp.CalledProcessError(
                     1,
                     str(self.ridft_path),
@@ -207,6 +210,7 @@ class Turbomole(QMMethod):
                 )
             return tm_log_out, tm_log_err, 0
         except sp.CalledProcessError as e:
+            print(f"subprocess error: {e}")
             if output_file.exists():
                 with open(output_file, encoding="utf-8") as file:
                     tm_log_out = file.read()
