@@ -394,9 +394,9 @@ class Molecule:
         for i in range(self.num_atoms):
             xyz_str += (
                 f"{PSE[self.ati[i] + 1]:<5} "
-                + f"{self.xyz[i, 0]:>12.7f} "
-                + f"{self.xyz[i, 1]:>12.7f} "
-                + f"{self.xyz[i, 2]:>12.7f}\n"
+                + f"{self.xyz[i, 0]:>20.14f} "
+                + f"{self.xyz[i, 1]:>20.14f} "
+                + f"{self.xyz[i, 2]:>20.14f}\n"
             )
         return xyz_str
 
@@ -478,9 +478,9 @@ class Molecule:
         coord_str = "$coord\n"
         for i in range(self.num_atoms):
             coord_str += (
-                f"{self.xyz[i, 0] / BOHR2AA:>12.7f} "
-                + f"{self.xyz[i, 1] / BOHR2AA:>12.7f} "
-                + f"{self.xyz[i, 2] / BOHR2AA:>12.7f} "
+                f"{self.xyz[i, 0] / BOHR2AA:>20.14f} "
+                + f"{self.xyz[i, 1] / BOHR2AA:>20.14f} "
+                + f"{self.xyz[i, 2] / BOHR2AA:>20.14f} "
                 + f"{PSE[self.ati[i] + 1]:>5}\n"
             )
         coord_str += "$end\n"
