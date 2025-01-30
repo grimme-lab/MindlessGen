@@ -124,7 +124,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     blocks = setup_blocks(
         num_cores,
         config.general.num_molecules,
-        min(config.refine.ncores, config.postprocess.ncores),
+        max(config.refine.ncores, config.postprocess.ncores),
     )
     blocks.sort(key=lambda x: x.ncores)
 
