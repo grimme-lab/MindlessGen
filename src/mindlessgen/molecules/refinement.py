@@ -3,6 +3,7 @@ This module handles all optimization and fragment detection steps
 to obtain finally a valid molecule.
 """
 
+from threading import Event
 import warnings
 from pathlib import Path
 import networkx as nx  # type: ignore
@@ -30,8 +31,9 @@ def iterative_optimization(
     config_generate: GenerateConfig,
     config_refine: RefineConfig,
     resources_local: ResourceMonitor,
+    stop_event: Event,
     verbosity: int = 1,
-) -> Molecule:
+) -> Molecule | None:
     """
     Iterative optimization and fragment detection.
     """
@@ -45,7 +47,10 @@ def iterative_optimization(
         # Run single points first, start optimization if scf converges
         try:
             with resources_local.occupy_cores(1):
-                _ = engine.singlepoint(rev_mol, 1, verbosity)
+                if not stop_event.is_set():
+                    _ = engine.singlepoint(rev_mol, 1, verbosity)
+                else:
+                    return None
         except RuntimeError as e:
             raise RuntimeError(
                 f"Single-point calculation failed at fragmentation cycle {cycle}: {e}"
@@ -54,9 +59,12 @@ def iterative_optimization(
         # Optimize the current molecule
         try:
             with resources_local.occupy_cores(config_refine.ncores):
-                rev_mol = engine.optimize(
-                    rev_mol, config_refine.ncores, None, verbosity
-                )
+                if not stop_event.is_set():
+                    rev_mol = engine.optimize(
+                        rev_mol, config_refine.ncores, None, verbosity
+                    )
+                else:
+                    return None
         except RuntimeError as e:
             raise RuntimeError(
                 f"Optimization failed at fragmentation cycle {cycle}: {e}"
@@ -161,12 +169,15 @@ def iterative_optimization(
 
     try:
         with resources_local.occupy_cores(1):
-            gap_sufficient = engine.check_gap(
-                molecule=rev_mol,
-                threshold=config_refine.hlgap,
-                ncores=1,
-                verbosity=verbosity,
-            )
+            if not stop_event.is_set():
+                gap_sufficient = engine.check_gap(
+                    molecule=rev_mol,
+                    threshold=config_refine.hlgap,
+                    ncores=1,
+                    verbosity=verbosity,
+                )
+            else:
+                return None
     except NotImplementedError:
         warnings.warn("HOMO-LUMO gap check not implemented with this engine.")
     except RuntimeError as e:

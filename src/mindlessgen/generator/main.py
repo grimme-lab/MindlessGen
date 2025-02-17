@@ -147,6 +147,9 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         # a dynamic setting would also be thinkable and straightforward to implement
         tasks: list[Future[Molecule | None]] = []
         for block in blocks:
+            # Every block is tasked to find block.num_molecules sequentially,
+            # For every block there is only one single_molecule_generator active
+            # (the others wait for resources)
             for _ in range(block.num_molecules):
                 tasks.append(
                     executor.submit(
@@ -205,7 +208,7 @@ def single_molecule_generator(
     ncores: int,
 ) -> Molecule | None:
     """
-    Generate a single molecule (from start to finish).
+    Generate a single molecule (from start to finish). Returns None only if all cycles fail.
     """
 
     # Wait for enough cores (cores freed automatically upon leaving managed context)
@@ -258,7 +261,6 @@ def single_molecule_generator(
         if config.general.verbosity > 0:
             print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
     elif optimized_molecule is None:
-        # TODO: will this conflict with progress bar?
         warnings.warn(
             "Molecule generation including optimization (and postprocessing) "
             + f"failed for all cycles for molecule {molcount + 1}."
@@ -276,7 +278,7 @@ def single_molecule_step(
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
-    """Execute one step in a single molecule generation"""
+    """Execute one step in a single molecule generation. Returns None if stop_event is set at any point."""
 
     if stop_event.is_set():
         return None  # Exit early if a molecule has already been found
@@ -326,8 +328,15 @@ def single_molecule_step(
             config.generate,
             config.refine,
             resources_local,
+            stop_event,
             verbosity=config.general.verbosity,
         )
+        # NOTE: regarding parallelization: there can only be ONE external call running
+        # for the task that is set to use the maximum number of cores
+        # e.g. we have 4 cores available, xtb SP always uses 1, refine uses e.g. 2, postprocessing uses 4
+        # then only 1 postprocessing can run concurrently, 2 refinements, 4 xtb SP
+        # If multiple tasks run (e.g. 2 refinements) concurrently and the stop_event is set,
+        # the other tasks (the second refinement) will not get terminated
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
@@ -337,6 +346,11 @@ def single_molecule_step(
     finally:
         if config.refine.debug:
             stop_event.set()
+
+    # Catch any interrupted iterative optimization steps
+    # (None should only be returned if it got stopped early by the stop_event)
+    if optimized_molecule is None:
+        return None
 
     if config.general.symmetrization:
         try:
