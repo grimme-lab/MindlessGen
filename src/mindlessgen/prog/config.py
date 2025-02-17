@@ -741,7 +741,7 @@ class PostProcessConfig(BaseConfig):
 
     def __init__(self: PostProcessConfig) -> None:
         self._engine: str = "orca"
-        self._opt_cycles: int | None = 5
+        self._opt_cycles: int | None = None
         self._optimize: bool = True
         self._debug: bool = False
         self._ncores: int = 4
