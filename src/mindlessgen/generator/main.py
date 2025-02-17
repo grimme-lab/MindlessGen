@@ -32,7 +32,19 @@ from ..qm import (
     get_gxtb_path,
 )
 from ..molecules import iterative_optimization, postprocess_mol
-from ..prog import ConfigManager, setup_managers, ResourceMonitor, setup_blocks
+from ..prog import (
+    ConfigManager,
+    SymmetrizationConfig,
+    setup_managers,
+    ResourceMonitor,
+    setup_blocks,
+)
+from ..symmetrization import (
+    Symmetrizer,
+    CnRotation,
+    Mirror,
+    Inversion,
+)
 from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
@@ -71,6 +83,13 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         get_jobex_path,
     )
 
+    if config.general.symmetrization:
+        structure_mod_model: Symmetrizer | None = setup_structure_modification_model(
+            config.symmetrization.operation, config.symmetrization
+        )
+    else:
+        structure_mod_model = None
+
     if config.general.postprocess:
         postprocess_engine: QMMethod | None = setup_engines(
             config.postprocess.engine,
@@ -105,7 +124,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     blocks = setup_blocks(
         num_cores,
         config.general.num_molecules,
-        min(config.refine.ncores, config.postprocess.ncores),
+        max(config.refine.ncores, config.postprocess.ncores),
     )
     blocks.sort(key=lambda x: x.ncores)
 
@@ -137,6 +156,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
                         resources,
                         refine_engine,
                         postprocess_engine,
+                        structure_mod_model,
                         block.ncores,
                     )
                 )
@@ -181,6 +201,7 @@ def single_molecule_generator(
     resources: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
+    structure_mod_model: Symmetrizer,
     ncores: int,
 ) -> Molecule | None:
     """
@@ -191,12 +212,12 @@ def single_molecule_generator(
     with resources.occupy_cores(ncores):
         # print a decent header for each molecule iteration
         if config.general.verbosity > 0:
-            print(f"\n{'='*80}")
+            print(f"\n{'=' * 80}")
             print(
-                f"{'='*22} Generating molecule {molcount + 1:<4} of "
-                + f"{config.general.num_molecules:<4} {'='*24}"
+                f"{'=' * 22} Generating molecule {molcount + 1:<4} of "
+                + f"{config.general.num_molecules:<4} {'=' * 24}"
             )
-            print(f"{'='*80}")
+            print(f"{'=' * 80}")
 
         with setup_managers(ncores, ncores) as (executor, manager, resources_local):
             stop_event = manager.Event()
@@ -211,6 +232,7 @@ def single_molecule_generator(
                         resources_local,
                         refine_engine,
                         postprocess_engine,
+                        structure_mod_model,
                         cycle,
                         stop_event,
                     )
@@ -250,6 +272,7 @@ def single_molecule_step(
     resources_local: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
+    structure_mod_model: Symmetrizer,
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
@@ -314,6 +337,18 @@ def single_molecule_step(
     finally:
         if config.refine.debug:
             stop_event.set()
+
+    if config.general.symmetrization:
+        try:
+            optimized_molecule = structure_mod_model.get_symmetric_structure(
+                optimized_molecule,
+            )
+        except RuntimeError as e:
+            if config.general.verbosity > 0:
+                print(f"Structure modification failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1:
+                    print(e)
+            return None
 
     if config.general.postprocess:
         try:
@@ -422,3 +457,19 @@ def setup_engines(
         return GXTB(path, cfg.gxtb)
     else:
         raise NotImplementedError("Engine not implemented.")
+
+
+def setup_structure_modification_model(
+    structure_mod_type: str, config: SymmetrizationConfig
+) -> Symmetrizer:
+    """
+    Set up the structure modification model.
+    """
+    # TODO: Enable the use of more than one structure modification model at a time
+    if structure_mod_type.endswith("rotation"):
+        return CnRotation(config)
+    if structure_mod_type == "mirror":
+        return Mirror(config)
+    if structure_mod_type == "inversion":
+        return Inversion(config)
+    raise NotImplementedError("Structure modification not implemented.")

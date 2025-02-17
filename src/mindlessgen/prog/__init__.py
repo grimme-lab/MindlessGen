@@ -13,6 +13,7 @@ from .config import (
     GenerateConfig,
     RefineConfig,
     PostProcessConfig,
+    SymmetrizationConfig,
 )
 from .parallel import setup_managers, ResourceMonitor, setup_blocks
 
@@ -29,4 +30,5 @@ __all__ = [
     "setup_managers",
     "ResourceMonitor",
     "setup_blocks",
+    "SymmetrizationConfig",
 ]
