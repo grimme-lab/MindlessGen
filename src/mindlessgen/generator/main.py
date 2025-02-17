@@ -371,6 +371,7 @@ def single_molecule_step(
                 postprocess_engine,  # type: ignore
                 config.postprocess,
                 resources_local,
+                stop_event,
                 verbosity=config.general.verbosity,
             )
         except RuntimeError as e:
@@ -382,13 +383,17 @@ def single_molecule_step(
         finally:
             if config.postprocess.debug:
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
+        # Catch any interrupted postprocessing steps
+        # (None should only be returned if it got stopped early by the stop_event)
+        if optimized_molecule is None:
+            return None
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
         return optimized_molecule
-    elif config.refine.debug or config.postprocess.debug:
+    if config.refine.debug or config.postprocess.debug:
         return optimized_molecule
     else:
         return None
