@@ -171,6 +171,7 @@ class ORCA(QMMethod):
         """
         orca_input = f"! {self.cfg.functional} {self.cfg.basis}\n"
         orca_input += f"! DEFGRID{self.cfg.gridsize}\n"
+        orca_input += "! MiniPrint\n"
         orca_input += "! NoTRAH\n"
         # "! AutoAux" keyword for super-heavy elements as def2/J ends at Rn
         if any(atom >= 86 for atom in molecule.ati):
