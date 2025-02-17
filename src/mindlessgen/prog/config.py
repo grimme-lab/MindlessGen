@@ -795,10 +795,18 @@ class PostProcessConfig(BaseConfig):
         """
         Set the optimization cycles for post-processing.
         """
-        if not isinstance(opt_cycles, int):
-            raise TypeError("Optimization cycles should be an integer.")
+        if not isinstance(opt_cycles, (int, str)):
+            raise TypeError("Optimization cycles can only be an integer or a string.")
+        if isinstance(opt_cycles, str):
+            if opt_cycles.lower() != "none":
+                raise ValueError(
+                    "Optimization cycles can only be an integer or 'none'."
+                )
+            self._opt_cycles = None
+        if opt_cycles == 0:
+            self._opt_cycles = None
         if opt_cycles < 0:
-            raise ValueError("Optimization cycles should be 0 or greater.")
+            raise ValueError("Optimization cycles can only be 0 or greater.")
         self._opt_cycles = opt_cycles
 
     @property

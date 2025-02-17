@@ -69,8 +69,8 @@ ncores = 2
 engine = "orca"
 # > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
 optimize = true
-# > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
-opt_cycles = 5
+# > Optimization cycles for the post-processing part. If not given or set to "none" or 0, the program default is chosen. Options: <int> or "none"
+opt_cycles = "none"
 # > Debug this step. Leads to more verbose output as soon as the post-processing part is reached. Options: <bool>
 # > If `debug` is true, the process is terminated after the first (successful or not) post-processing step.
 # > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
