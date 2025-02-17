@@ -803,8 +803,10 @@ class PostProcessConfig(BaseConfig):
                     "Optimization cycles can only be an integer or 'none'."
                 )
             self._opt_cycles = None
+            return
         if opt_cycles == 0:
             self._opt_cycles = None
+            return
         if opt_cycles < 0:
             raise ValueError("Optimization cycles can only be 0 or greater.")
         self._opt_cycles = opt_cycles
