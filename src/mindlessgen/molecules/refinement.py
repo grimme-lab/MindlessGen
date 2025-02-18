@@ -47,10 +47,9 @@ def iterative_optimization(
         # Run single points first, start optimization if scf converges
         try:
             with resources_local.occupy_cores(1):
-                if not stop_event.is_set():
-                    _ = engine.singlepoint(rev_mol, 1, verbosity)
-                else:
+                if stop_event.is_set():
                     return None
+                _ = engine.singlepoint(rev_mol, 1, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
                 f"Single-point calculation failed at fragmentation cycle {cycle}: {e}"
