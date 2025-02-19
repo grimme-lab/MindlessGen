@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - dict keys for elemental compositions will now always be checked for validity
 - Renamed GP3-xTB to g-xTB
 - Moved constants and (empirical) parameters to the `data` module
+- Default for optimization cycles in the postprocessing step set to program default (convergence)
 
 ### Deprecated
 - Nothing will be printed while multiple molecules are generated in parallel, tqdm-based progress bar instead
@@ -20,12 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for TURBOMOLE as QM engine
 - updated the parallelization to work over the number of molecules
 - possibility to generate symmetrical molecules (choice from rotation, inversion, mirroring)
+- Number of optimization steps in the postprocessing part can be set to program default by `none`
 
 ### Fixed
 - version string is now correctly formatted and printed
 - precision (# significant digits) of the coordinate files (`get_coord_str` and `get_xyz_str`) increased from 7 to 14
 - catch encoding errors when reading `Turbomole._run_opt` output files
 - bug in the parallelization, leading to a dead `mindlessgen` execution as a consequence of not allowing the required number of cores
+- stop_event checked before every external call to avoid unnecessary executions
 
 ## [0.5.0] - 2024-12-16
 ### Changed
