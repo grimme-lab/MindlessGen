@@ -278,7 +278,12 @@ def single_molecule_step(
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
-    """Execute one step in a single molecule generation. Returns None if stop_event is set at any point."""
+    """
+    Execute one step in a single molecule generation.
+    Returns None if
+    ... stop_event is set at any point.
+    ... if the molecule generation failed for this trial.
+    """
 
     if stop_event.is_set():
         return None  # Exit early if a molecule has already been found
