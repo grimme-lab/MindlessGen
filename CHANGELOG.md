@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - precision (# significant digits) of the coordinate files (`get_coord_str` and `get_xyz_str`) increased from 7 to 14
 - catch encoding errors when reading `Turbomole._run_opt` output files
 - bug in the parallelization, leading to a dead `mindlessgen` execution as a consequence of not allowing the required number of cores
+- stop_event checked before every external call to avoid unnecessary executions
 
 ## [0.5.0] - 2024-12-16
 ### Changed

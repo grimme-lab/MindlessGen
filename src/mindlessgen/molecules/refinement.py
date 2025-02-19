@@ -3,6 +3,7 @@ This module handles all optimization and fragment detection steps
 to obtain finally a valid molecule.
 """
 
+from threading import Event
 import warnings
 from pathlib import Path
 import networkx as nx  # type: ignore
@@ -30,8 +31,9 @@ def iterative_optimization(
     config_generate: GenerateConfig,
     config_refine: RefineConfig,
     resources_local: ResourceMonitor,
+    stop_event: Event,
     verbosity: int = 1,
-) -> Molecule:
+) -> Molecule | None:
     """
     Iterative optimization and fragment detection.
     """
@@ -45,6 +47,8 @@ def iterative_optimization(
         # Run single points first, start optimization if scf converges
         try:
             with resources_local.occupy_cores(1):
+                if stop_event.is_set():
+                    return None
                 _ = engine.singlepoint(rev_mol, 1, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
@@ -54,6 +58,8 @@ def iterative_optimization(
         # Optimize the current molecule
         try:
             with resources_local.occupy_cores(config_refine.ncores):
+                if stop_event.is_set():
+                    return None
                 rev_mol = engine.optimize(
                     rev_mol, config_refine.ncores, None, verbosity
                 )
@@ -161,6 +167,8 @@ def iterative_optimization(
 
     try:
         with resources_local.occupy_cores(1):
+            if stop_event.is_set():
+                return None
             gap_sufficient = engine.check_gap(
                 molecule=rev_mol,
                 threshold=config_refine.hlgap,
