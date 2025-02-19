@@ -389,7 +389,7 @@ def single_molecule_step(
             if config.postprocess.debug:
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
         # Catch any interrupted postprocessing steps
-        # (None should only be returned if it got stopped early by the stop_event)
+        # (None should only be returned (if not caught by an exception) if it got stopped early by the stop_event)
         if optimized_molecule is None:
             return None
         if config.general.verbosity > 1:
