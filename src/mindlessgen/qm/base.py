@@ -9,15 +9,28 @@ class QMMethod(ABC):
     This abstract base class defines the interface for all QM methods.
     """
 
-    @abstractmethod
-    def __init__(self, path: str | Path, verbosity: int = 1):
-        if isinstance(path, str):
-            self.path: Path = Path(path).resolve()
-        elif isinstance(path, Path):
-            self.path = path
-        else:
-            raise TypeError("xtb_path should be a string or a Path object.")
-        self.verbosity = verbosity
+    def __init__(self):
+        pass
+
+    _temp_dir: None | str = None
+
+    @classmethod
+    def set_temporary_directory(cls, value: str) -> None:
+        """
+        Set the temporary directory for the QM methods.
+        """
+        if cls._temp_dir is not None:
+            raise ValueError("Parent class variable is already set.")
+        if not isinstance(value, str):
+            raise TypeError("Temporary directory should be a string.")
+        cls._temp_dir = value
+
+    @classmethod
+    def get_temporary_directory(cls) -> None | str:
+        """
+        Get the temporary directory for the QM methods.
+        """
+        return cls._temp_dir
 
     @abstractmethod
     def optimize(
