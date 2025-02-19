@@ -353,7 +353,7 @@ def single_molecule_step(
             stop_event.set()
 
     # Catch any interrupted iterative optimization steps
-    # (None should only be returned if it got stopped early by the stop_event)
+    # (None should only be returned (if not caught by an exception) if it got stopped early by the stop_event)
     if optimized_molecule is None:
         return None
 
