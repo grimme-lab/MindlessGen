@@ -32,7 +32,19 @@ from ..qm import (
     get_gxtb_path,
 )
 from ..molecules import iterative_optimization, postprocess_mol
-from ..prog import ConfigManager, setup_managers, ResourceMonitor, setup_blocks
+from ..prog import (
+    ConfigManager,
+    SymmetrizationConfig,
+    setup_managers,
+    ResourceMonitor,
+    setup_blocks,
+)
+from ..symmetrization import (
+    Symmetrizer,
+    CnRotation,
+    Mirror,
+    Inversion,
+)
 from ..__version__ import __version__
 
 MINDLESS_MOLECULES_FILE = "mindless.molecules"
@@ -72,6 +84,13 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         get_jobex_path,
     )
 
+    if config.general.symmetrization:
+        structure_mod_model: Symmetrizer | None = setup_structure_modification_model(
+            config.symmetrization.operation, config.symmetrization
+        )
+    else:
+        structure_mod_model = None
+
     if config.general.postprocess:
         postprocess_engine: QMMethod | None = setup_engines(
             config.postprocess.engine,
@@ -106,7 +125,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
     blocks = setup_blocks(
         num_cores,
         config.general.num_molecules,
-        min(config.refine.ncores, config.postprocess.ncores),
+        max(config.refine.ncores, config.postprocess.ncores),
     )
     blocks.sort(key=lambda x: x.ncores)
 
@@ -129,6 +148,9 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         # a dynamic setting would also be thinkable and straightforward to implement
         tasks: list[Future[Molecule | None]] = []
         for block in blocks:
+            # Every block is tasked to find block.num_molecules sequentially,
+            # For every block there is only one single_molecule_generator active
+            # (the others wait for resources)
             for _ in range(block.num_molecules):
                 tasks.append(
                     executor.submit(
@@ -138,6 +160,7 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
                         resources,
                         refine_engine,
                         postprocess_engine,
+                        structure_mod_model,
                         block.ncores,
                     )
                 )
@@ -182,10 +205,11 @@ def single_molecule_generator(
     resources: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
+    structure_mod_model: Symmetrizer,
     ncores: int,
 ) -> Molecule | None:
     """
-    Generate a single molecule (from start to finish).
+    Generate a single molecule (from start to finish). Returns None only if all cycles fail.
     """
 
     # Wait for enough cores (cores freed automatically upon leaving managed context)
@@ -212,6 +236,7 @@ def single_molecule_generator(
                         resources_local,
                         refine_engine,
                         postprocess_engine,
+                        structure_mod_model,
                         cycle,
                         stop_event,
                     )
@@ -237,7 +262,6 @@ def single_molecule_generator(
         if config.general.verbosity > 0:
             print(f"Written molecule file 'mlm_{optimized_molecule.name}.xyz'.\n")
     elif optimized_molecule is None:
-        # TODO: will this conflict with progress bar?
         warnings.warn(
             "Molecule generation including optimization (and postprocessing) "
             + f"failed for all cycles for molecule {molcount + 1}."
@@ -251,10 +275,16 @@ def single_molecule_step(
     resources_local: ResourceMonitor,
     refine_engine: QMMethod,
     postprocess_engine: QMMethod | None,
+    structure_mod_model: Symmetrizer,
     cycle: int,
     stop_event: Event,
 ) -> Molecule | None:
-    """Execute one step in a single molecule generation"""
+    """
+    Execute one step in a single molecule generation.
+    Returns None if
+    ... stop_event is set at any point.
+    ... if the molecule generation failed for this trial.
+    """
 
     if stop_event.is_set():
         return None  # Exit early if a molecule has already been found
@@ -304,8 +334,15 @@ def single_molecule_step(
             config.generate,
             config.refine,
             resources_local,
+            stop_event,
             verbosity=config.general.verbosity,
         )
+        # NOTE: regarding parallelization: there can only be ONE external call running
+        # for the task that is set to use the maximum number of cores
+        # e.g. we have 4 cores available, xtb SP always uses 1, refine uses e.g. 2, postprocessing uses 4
+        # then only 1 postprocessing can run concurrently, 2 refinements, 4 xtb SP
+        # If multiple tasks run (e.g. 2 refinements) concurrently and the stop_event is set,
+        # the other tasks (the second refinement) will not get terminated
     except RuntimeError as e:
         if config.general.verbosity > 0:
             print(f"Refinement failed for cycle {cycle + 1}.")
@@ -316,6 +353,23 @@ def single_molecule_step(
         if config.refine.debug:
             stop_event.set()
 
+    # Catch any interrupted iterative optimization steps
+    # (None should only be returned (if not caught by an exception) if it got stopped early by the stop_event)
+    if optimized_molecule is None:
+        return None
+
+    if config.general.symmetrization:
+        try:
+            optimized_molecule = structure_mod_model.get_symmetric_structure(
+                optimized_molecule,
+            )
+        except RuntimeError as e:
+            if config.general.verbosity > 0:
+                print(f"Structure modification failed for cycle {cycle + 1}.")
+                if config.general.verbosity > 1:
+                    print(e)
+            return None
+
     if config.general.postprocess:
         try:
             optimized_molecule = postprocess_mol(
@@ -323,6 +377,7 @@ def single_molecule_step(
                 postprocess_engine,  # type: ignore
                 config.postprocess,
                 resources_local,
+                stop_event,
                 verbosity=config.general.verbosity,
             )
         except RuntimeError as e:
@@ -334,13 +389,17 @@ def single_molecule_step(
         finally:
             if config.postprocess.debug:
                 stop_event.set()  # Stop further runs if debugging of this step is enabled
+        # Catch any interrupted postprocessing steps
+        # (None should only be returned (if not caught by an exception) if it got stopped early by the stop_event)
+        if optimized_molecule is None:
+            return None
         if config.general.verbosity > 1:
             print("Postprocessing successful.")
 
     if not stop_event.is_set():
         stop_event.set()  # Signal other processes to stop
         return optimized_molecule
-    elif config.refine.debug or config.postprocess.debug:
+    if config.refine.debug or config.postprocess.debug:
         return optimized_molecule
     else:
         return None
@@ -423,3 +482,19 @@ def setup_engines(
         return GXTB(path, cfg.gxtb)
     else:
         raise NotImplementedError("Engine not implemented.")
+
+
+def setup_structure_modification_model(
+    structure_mod_type: str, config: SymmetrizationConfig
+) -> Symmetrizer:
+    """
+    Set up the structure modification model.
+    """
+    # TODO: Enable the use of more than one structure modification model at a time
+    if structure_mod_type.endswith("rotation"):
+        return CnRotation(config)
+    if structure_mod_type == "mirror":
+        return Mirror(config)
+    if structure_mod_type == "inversion":
+        return Inversion(config)
+    raise NotImplementedError("Structure modification not implemented.")

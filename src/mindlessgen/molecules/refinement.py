@@ -3,6 +3,7 @@ This module handles all optimization and fragment detection steps
 to obtain finally a valid molecule.
 """
 
+from threading import Event
 import warnings
 from pathlib import Path
 import networkx as nx  # type: ignore
@@ -12,6 +13,7 @@ from ..qm.base import QMMethod
 from ..prog import GenerateConfig, RefineConfig, ResourceMonitor
 from .molecule import Molecule
 from .miscellaneous import (
+    get_cov_radii,
     set_random_charge,
     calculate_protons,
     calculate_ligand_electrons,
@@ -21,10 +23,6 @@ from .miscellaneous import (
 )
 
 COV_RADII = "pyykko"
-BOHR2AA = (
-    0.529177210544  # taken from https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
-)
-AA2BOHR = 1 / BOHR2AA
 
 
 def iterative_optimization(
@@ -33,8 +31,9 @@ def iterative_optimization(
     config_generate: GenerateConfig,
     config_refine: RefineConfig,
     resources_local: ResourceMonitor,
+    stop_event: Event,
     verbosity: int = 1,
-) -> Molecule:
+) -> Molecule | None:
     """
     Iterative optimization and fragment detection.
     """
@@ -48,6 +47,8 @@ def iterative_optimization(
         # Run single points first, start optimization if scf converges
         try:
             with resources_local.occupy_cores(1):
+                if stop_event.is_set():
+                    return None
                 _ = engine.singlepoint(rev_mol, 1, verbosity)
         except RuntimeError as e:
             raise RuntimeError(
@@ -57,6 +58,8 @@ def iterative_optimization(
         # Optimize the current molecule
         try:
             with resources_local.occupy_cores(config_refine.ncores):
+                if stop_event.is_set():
+                    return None
                 rev_mol = engine.optimize(
                     rev_mol, config_refine.ncores, None, verbosity
                 )
@@ -164,6 +167,8 @@ def iterative_optimization(
 
     try:
         with resources_local.occupy_cores(1):
+            if stop_event.is_set():
+                return None
             gap_sufficient = engine.check_gap(
                 molecule=rev_mol,
                 threshold=config_refine.hlgap,
@@ -263,235 +268,3 @@ def detect_fragments(
         fragment_molecules.append(fragment_molecule)
 
     return fragment_molecules
-
-
-def get_cov_radii(at: int, vdw_radii: str = "mlmgen") -> float:
-    """
-    Get the covalent radius of an atom in Angstrom, and scale it by a factor.
-    """
-    if vdw_radii == "mlmgen":
-        rcov = [  # CAUTION: array is given in units of Bohr!
-            0.80628308,
-            1.15903197,
-            3.02356173,
-            2.36845659,
-            1.94011865,
-            1.88972601,
-            1.78894056,
-            1.58736983,
-            1.61256616,
-            1.68815527,
-            3.52748848,
-            3.14954334,
-            2.84718717,
-            2.62041997,
-            2.77159820,
-            2.57002732,
-            2.49443835,
-            2.41884923,
-            4.43455700,
-            3.88023730,
-            3.35111422,
-            3.07395437,
-            3.04875805,
-            2.77159820,
-            2.69600923,
-            2.62041997,
-            2.51963467,
-            2.49443835,
-            2.54483100,
-            2.74640188,
-            2.82199085,
-            2.74640188,
-            2.89757982,
-            2.77159820,
-            2.87238349,
-            2.94797246,
-            4.76210950,
-            4.20778980,
-            3.70386304,
-            3.50229216,
-            3.32591790,
-            3.12434702,
-            2.89757982,
-            2.84718717,
-            2.84718717,
-            2.72120556,
-            2.89757982,
-            3.09915070,
-            3.22513231,
-            3.17473967,
-            3.17473967,
-            3.09915070,
-            3.32591790,
-            3.30072128,
-            5.26603625,
-            4.43455700,
-            4.08180818,
-            3.70386304,
-            3.98102289,
-            3.95582657,
-            3.93062995,
-            3.90543362,
-            3.80464833,
-            3.82984466,
-            3.80464833,
-            3.77945201,
-            3.75425569,
-            3.75425569,
-            3.72905937,
-            3.85504098,
-            3.67866672,
-            3.45189952,
-            3.30072128,
-            3.09915070,
-            2.97316878,
-            2.92277614,
-            2.79679452,
-            2.82199085,
-            2.84718717,
-            3.32591790,
-            3.27552496,
-            3.27552496,
-            3.42670319,
-            3.30072128,
-            3.47709584,
-            3.57788113,
-            5.06446567,
-            4.56053862,
-            4.20778980,
-            3.98102289,
-            3.82984466,
-            3.85504098,
-            3.88023730,
-            3.90543362,
-        ]
-        # multiply the whole array with the BOHR2AA factor to get the radii in Angstrom
-        rcov = [rad * BOHR2AA for rad in rcov]
-    elif vdw_radii == "pyykko":
-        # Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197)
-        # Values for metals decreased by 10%
-        # D3 covalent radii used to construct the coordination number
-        rcov = [
-            0.32,
-            0.46,  # H, He
-            1.20,
-            0.94,
-            0.77,
-            0.75,
-            0.71,
-            0.63,
-            0.64,
-            0.67,  # Li-Ne
-            1.40,
-            1.25,
-            1.13,
-            1.04,
-            1.10,
-            1.02,
-            0.99,
-            0.96,  # Na-Ar
-            1.76,
-            1.54,  # K, Ca
-            1.33,
-            1.22,
-            1.21,
-            1.10,
-            1.07,  # Sc-
-            1.04,
-            1.00,
-            0.99,
-            1.01,
-            1.09,  # -Zn
-            1.12,
-            1.09,
-            1.15,
-            1.10,
-            1.14,
-            1.17,  # Ga-Kr
-            1.89,
-            1.67,  # Rb, Sr
-            1.47,
-            1.39,
-            1.32,
-            1.24,
-            1.15,  # Y-
-            1.13,
-            1.13,
-            1.08,
-            1.15,
-            1.23,  # -Cd
-            1.28,
-            1.26,
-            1.26,
-            1.23,
-            1.32,
-            1.31,  # In-Xe
-            2.09,
-            1.76,  # Cs, Ba
-            1.62,
-            1.47,
-            1.58,
-            1.57,
-            1.56,
-            1.55,
-            1.51,  # La-Eu
-            1.52,
-            1.51,
-            1.50,
-            1.49,
-            1.49,
-            1.48,
-            1.53,  # Gd-Yb
-            1.46,
-            1.37,
-            1.31,
-            1.23,
-            1.18,  # Lu-
-            1.16,
-            1.11,
-            1.12,
-            1.13,
-            1.32,  # -Hg
-            1.30,
-            1.30,
-            1.36,
-            1.31,
-            1.38,
-            1.42,  # Tl-Rn
-            2.01,
-            1.81,  # Fr, Ra
-            1.67,
-            1.58,
-            1.52,
-            1.53,
-            1.54,
-            1.55,
-            1.49,  # Ac-Am
-            1.49,
-            1.51,
-            1.51,
-            1.48,
-            1.50,
-            1.56,
-            1.58,  # Cm-No
-            1.45,
-            1.41,
-            1.34,
-            1.29,
-            1.27,  # Lr-
-            1.21,
-            1.16,
-            1.15,
-            1.09,
-            1.22,  # -Cn
-            1.36,
-            1.43,
-            1.46,
-            1.58,
-            1.48,
-            1.57,  # Nh-Og
-        ]
-    else:
-        raise ValueError("Invalid vdw_radii argument.")
-    return rcov[at]

@@ -179,7 +179,8 @@ class ORCA(QMMethod):
         """
         orca_input = f"! {self.cfg.functional} {self.cfg.basis}\n"
         orca_input += f"! DEFGRID{self.cfg.gridsize}\n"
-        orca_input += "! NoTRAH NoSOSCF SlowConv\n"
+        orca_input += "! MiniPrint\n"
+        orca_input += "! NoTRAH\n"
         # "! AutoAux" keyword for super-heavy elements as def2/J ends at Rn
         if any(atom >= 86 for atom in molecule.ati):
             orca_input += "! AutoAux\n"
@@ -187,9 +188,10 @@ class ORCA(QMMethod):
             orca_input += "! OPT\n"
             if opt_cycles is not None:
                 orca_input += f"%geom MaxIter {opt_cycles} end\n"
-        orca_input += (
-            f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n\tConvergence Medium\nend\n"
-        )
+        orca_input += f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n"
+        if not optimization:
+            orca_input += "\tConvergence Medium\n"
+        orca_input += "end\n"
         orca_input += f"%pal nprocs {ncores} end\n\n"
         orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
         return orca_input

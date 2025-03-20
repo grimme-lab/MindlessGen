@@ -47,7 +47,7 @@ def setup_blocks(ncores: int, num_molecules: int, mincores: int) -> list[Block]:
     # Maximum and minimum number of parallel processes possible
     maxcores = ncores
     maxprocs = max(1, ncores // mincores)
-    minprocs = max(1, ncores // maxcores)
+    minprocs = 1
 
     # Distribute number of molecules among blocks
     # First (if possible) create the maximum number of parallel blocks (maxprocs) and distribute as many molecules as possible

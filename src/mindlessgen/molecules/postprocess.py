@@ -2,6 +2,7 @@
 Postprocess the generated molecules.
 """
 
+from threading import Event
 from .molecule import Molecule
 from ..qm import QMMethod
 from ..prog import PostProcessConfig, ResourceMonitor
@@ -12,8 +13,9 @@ def postprocess_mol(
     engine: QMMethod,
     config: PostProcessConfig,
     resources_local: ResourceMonitor,
+    stop_event: Event,
     verbosity: int = 1,
-) -> Molecule:
+) -> Molecule | None:
     """
     Postprocess the generated molecule.
 
@@ -31,6 +33,8 @@ def postprocess_mol(
     if config.optimize:
         try:
             with resources_local.occupy_cores(config.ncores):
+                if stop_event.is_set():
+                    return None
                 postprocmol = engine.optimize(
                     mol,
                     max_cycles=config.opt_cycles,
@@ -42,6 +46,8 @@ def postprocess_mol(
     else:
         try:
             with resources_local.occupy_cores(config.ncores):
+                if stop_event.is_set():
+                    return None
                 engine.singlepoint(mol, config.ncores, verbosity=verbosity)
             postprocmol = mol
         except RuntimeError as e:

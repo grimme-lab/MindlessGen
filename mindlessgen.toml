@@ -8,7 +8,7 @@
 # > Verbosity level defining the printout: Options: -1 = super-silent, 0 = silent, 1 = default, 2 = verbose, 3 = debug
 verbosity = 1
 # > Number of parallel processes to use. Corresponds to the number of physical CPU cores used. Options: <int>
-parallel = 1
+parallel = 4
 # > Maximum number of generation & optimization try-and-error cycles per molecule. Options: <int>
 max_cycles = 200
 # > Number of molecules to generate. Options: <int>
@@ -17,6 +17,9 @@ num_molecules = 1
 postprocess = false
 # > Switch molecule structure XYZ writing on and off. Default: true. Options: <bool>
 write_xyz = true
+# > Switch generation of symmetrical molecules consisting of substructures on and off. Defaul: false. Options: <bool>
+# > Postprocessing is recommended. Choosing "TURBOMOLE" as postprocessing engine is recommended due to symmetry handling.
+symmetrization = false
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>
@@ -59,21 +62,21 @@ hlgap = 0.5
 # > If `debug` is true, the process is terminated after the first (successful or not) refinement step.
 debug = false
 # > Number of cores to be used for geometry optimizations. Single-points will continue to use one core each.
-ncores = 4
+ncores = 2
 
 [postprocess]
 # > Engine for the post-processing part. Options: 'xtb', 'orca', 'turbomole'
 engine = "orca"
 # > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
 optimize = true
-# > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
-opt_cycles = 5
+# > Optimization cycles for the post-processing part. If not given or set to "none" or 0, the program default is chosen. Options: <int> or "none"
+opt_cycles = "none"
 # > Debug this step. Leads to more verbose output as soon as the post-processing part is reached. Options: <bool>
 # > If `debug` is true, the process is terminated after the first (successful or not) post-processing step.
 # > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
 debug = false
 # > Number of cores to be used for both single-point calculations and geometry optimizations.
-ncores = 4
+ncores = 2
 
 [xtb]
 # > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
@@ -104,3 +107,9 @@ functional = "PBE"
 basis = "def2-SVP"
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
+
+[symmetrization]
+# > Distance of the symmetric sub-structures on the translation axis (x). Options: <float>
+distance = 3.0
+# > Only one symmetry operation at a time can be chosen. Options: <mirror>, <inversion> and <c_<n>_rotation>. For n Options: <int>.
+operation = "mirror"

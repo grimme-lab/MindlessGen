@@ -144,18 +144,21 @@ def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> Non
     else:
         raise NotImplementedError("Engine not implemented.")
     mol = mol_C13H14
-    with setup_managers(1, 1) as (_, _, resources):
+    with setup_managers(1, 1) as (_, manager, resources):
+        stop_event = manager.Event()
         mol_opt = iterative_optimization(
             mol,
             engine,
             config.generate,
             config.refine,
             resources,
+            stop_event,
             verbosity=2,
         )
     mol_ref = mol_C7H8
 
     # assert number of atoms in mol_opt is equal to number of atoms in mol_ref
+    assert mol_opt is not None
     assert mol_opt.num_atoms == mol_ref.num_atoms
     # assert that the coordinates of mol_opt are close to the coordinates of mol_ref
     assert np.allclose(mol_opt.xyz, mol_ref.xyz, atol=1e-4)
