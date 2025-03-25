@@ -1,0 +1,87 @@
+# Default configuration for the 'Mindless Molecule GENerator' (MindlessGen) package
+# Following file locations are searched for in the following order:
+# 1. Location specified by the `--config < str | Path >` command-line argument
+# 2. Current working directory (`Path.cwd()`)
+# 3. User's home directory (`Path.home()`)
+
+[general]
+# > Verbosity level defining the printout: Options: 0 = silent, 1 = default, 2 = verbose, 3 = debug
+verbosity = 1
+# > Number of parallel processes to use. Corresponds to the number of physical CPU cores used. Options: <int>
+parallel = 28
+# > Maximum number of generation/optimization try-and-error cycles per molecule. Options: <int>
+max_cycles = 5000
+# > Number of molecules to generate. Options: <int>
+num_molecules = 1
+# > Do post-processing (checking for HL gap, etc.) after the optimization. Options: <bool>
+postprocess = false
+# > Switch molecule structure XYZ writing on and off (default: true). Options: <bool>
+write_xyz = true
+
+[generate]
+# > Minimum number of atoms in the generated molecule. Options: <int>
+min_num_atoms = 45
+# > Maximum number of atoms in the generated molecule. Options: <int>
+max_num_atoms = 65
+# > Initial coordinate scaling factor. Options: <float>
+init_scaling = 3.0
+# > Increase in the coordinate scaling factor per trial after check_distance was not met. Options: <float>
+increase_scaling_factor = 1.1
+# > Scaling factor for the van der Waals radii employed for the fragment detection. Options: <float>
+scale_fragment_detection = 1.25
+# > Scaling factor for the minimal distance between two atoms based on the sum of the van der Waals radii. Options: <float>
+scale_minimal_distance = 0.8
+# > Contract the coordinates after the initial generation. Leads to more cluster-like and less extended structures. Options: <bool>
+contract_coords = true
+# > Atom types and their minimum and maximum occurrences. Format: "<element>:<min_count>-<max_count>"
+# > Elements that are not specified are only added by random selection.
+# > A star sign (*) can be used as a wildcard for integer value.
+# element_composition = "C:2-3, H:1-2, O:1-2, N:1-*"
+element_composition = "H:5-50, C:5-50, O:1-20, N:1-20, F:0-10, Cl:0-10, Br:0-10, I:0-10, P:0-10, S:0-10"
+# > Atom types that are not chosen for random selection. Format: "<element1>, <element2>, ..."
+# > CAUTION: This option is overridden by the 'element_composition' option.
+# > I.e., if an element is specified in 'element_composition' with an occurrence > 0, it will be added to the molecule anyway.
+# > Example: forbidden_elements = "18,57-*"
+forbidden_elements = "2-5, 10-14, 18-34, 36-52, 54-*"
+
+[refine]
+# > Maximum number of fragment optimization cycles. Options: <int>
+max_frag_cycles = 10
+# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'
+engine = "xtb"
+# > HOMO-LUMO gap threshold applied at the end of the refinement step
+hlgap = 0.2
+# > Debug this step. Leads to more verbose output as soon as the refinement part is reached. Options: <bool>
+# > If `debug` is true, the process is terminated after the first (successful or not) refinement step.
+debug = false
+
+[postprocess]
+# > Engine for the post-processing part. Options: 'xtb', 'orca'
+engine = "orca"
+# > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
+optimize = true
+# > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
+opt_cycles = 5
+# > Debug this step. Leads to more verbose output as soon as the post-processing part is reached. Options: <bool>
+# > If `debug` is true, the process is terminated after the first (successful or not) post-processing step.
+# > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
+debug = false
+
+[xtb]
+# > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
+xtb_path = "/path/to/xtb"
+# > The GFN<n>-xTB method that should be used: Options: <int = 0> -> GFN-0-xTB, <int = 1> -> GFN-1-xTB, <int = 2> -> GFN-2-xTB
+level = 1
+
+[orca]
+# > Path to the orca executable. The names `orca` and `orca_dev` are automatically searched for. Options: <str | Path>
+orca_path = "/path/to/orca"
+# > Functional/Method: Options: <str>
+functional = "PBE"
+# > Basis set: Options: <str>
+basis = "def2-SVP"
+# > Gridsize for the numerical integration (corresponds to `DEFGRID<gridsize>`: Options: <int => 1> = coarse, <int = 2> => medium, <int = 3> => fine
+gridsize = 1
+# > Maximum number of SCF cycles: Options: <int>
+scf_cycles = 100
+
