@@ -50,7 +50,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "--parallel",
         type=int,
         required=False,
-        help="Number of parallel processes to run.",
+        help="Number of parallel processes to run (number of total CPU cores used).",
     )
     parser.add_argument(
         "-mc",
@@ -168,7 +168,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "--refine-engine",
         type=str,
         required=False,
-        choices=["xtb", "orca"],
+        choices=["xtb", "orca", "turbomole"],
         help="QM engine to use for refinement.",
     )
     parser.add_argument(
@@ -190,13 +190,19 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Print debug information during refinement.",
     )
+    parser.add_argument(
+        "--refine-ncores",
+        type=int,
+        required=False,
+        help="Number of CPU cores for the refinement step.",
+    )
 
     ### Postprocessing arguments ###
     parser.add_argument(
         "--postprocess-engine",
         type=str,
         required=False,
-        choices=["xtb", "orca"],
+        choices=["xtb", "orca", "turbomole"],
         help="QM engine to use for postprocessing.",
     )
     parser.add_argument(
@@ -212,6 +218,19 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Number of optimization cycles in postprocessing.",
     )
+    parser.add_argument(
+        "--postprocess-debug",
+        action="store_true",
+        default=None,
+        required=False,
+        help="Print debug information during postprocessing.",
+    )
+    parser.add_argument(
+        "--postprocess-ncores",
+        type=int,
+        required=False,
+        help="Number of CPU cores for the postprocessing step.",
+    )
 
     ### xTB specific arguments ###
     parser.add_argument(
@@ -225,13 +244,6 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         type=int,
         required=False,
         help="Level of theory to use in xTB.",
-    )
-    parser.add_argument(
-        "--postprocess-debug",
-        action="store_true",
-        default=None,
-        required=False,
-        help="Print debug information during postprocessing.",
     )
 
     ### ORCA specific arguments ###
@@ -317,6 +329,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "max_frag_cycles": args_dict["max_frag_cycles"],
         "hlgap": args_dict["refine_hlgap"],
         "debug": args_dict["refine_debug"],
+        "ncores": args_dict["refine_ncores"],
     }
     # Molecule generation arguments
     rev_args_dict["generate"] = {
@@ -355,6 +368,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "engine": args_dict["postprocess_engine"],
         "optimize": args_dict["postprocess_optimize"],
         "opt_cycles": args_dict["postprocess_opt_cycles"],
+        "ncores": args_dict["postprocess_ncores"],
         "debug": args_dict["postprocess_debug"],
     }
     # Symmetrization specific arguments
