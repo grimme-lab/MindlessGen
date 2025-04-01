@@ -19,8 +19,13 @@ class QMMethod(ABC):
     _temp_dir: None | str | Path = None
 
     # NOTE: Early tests have shown that the parallelization mechanism doesn't support
-    # taking the temporary directory as usual functions/attributes of the base class.
+    # taking the temporary directory as usual class functions/attributes of the QMMethod base class.
     # That's the reason for this seemingly overly complicated implementation.
+    # -> For each child class, we access the parent class variable QMMethod._temp_dir
+    #    at the time before forking subprocesses,
+    #    when accessing the class variable is possible.
+    #    The child class then sets the temporary directory (instance variable!)
+    #    to the QMMethod._temp_dir
     @classmethod
     def set_temporary_directory(cls, value: str | Path) -> None:
         """

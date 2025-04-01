@@ -32,6 +32,7 @@ class XTB(QMMethod):
         else:
             raise TypeError("xtb_path should be a string or a Path object.")
         self.cfg = xtb_config
+        self.tmp_dir = self.__class__.get_temporary_directory()
 
     def optimize(
         self,
@@ -57,7 +58,10 @@ class XTB(QMMethod):
             uhf_original = molecule.uhf
             molecule.uhf = 0
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="xtb_") as temp_dir:
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "xtb_"}
+        if self.tmp_dir is not None:
+            kwargs_temp_dir["dir"] = self.tmp_dir
+        with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molecule.write_xyz_to_file(str(temp_path / "molecule.xyz"))
@@ -124,7 +128,10 @@ class XTB(QMMethod):
             molecule.uhf = 0
 
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="xtb_") as temp_dir:
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "xtb_"}
+        if self.tmp_dir is not None:
+            kwargs_temp_dir["dir"] = self.tmp_dir
+        with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molecule.write_xyz_to_file(str(temp_path / "molecule.xyz"))

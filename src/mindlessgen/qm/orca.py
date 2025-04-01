@@ -30,7 +30,7 @@ class ORCA(QMMethod):
         self.cfg = orcacfg
         # must be explicitly initialized in current parallelization implementation
         # as accessing parent class variables might not be possible
-        self.tmp_dir = ORCA.get_temporary_directory()
+        self.tmp_dir = self.__class__.get_temporary_directory()
 
     def optimize(
         self,

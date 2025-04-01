@@ -74,7 +74,8 @@ def generator(config: ConfigManager) -> tuple[list[Molecule], int]:
         return [], 0
 
     # Import and set up required engines
-    QMMethod.set_temporary_directory("localtmp")
+    # QMMethod.set_temporary_directory("localtmp")
+    # NOTE: QMMethod.set_temporary_directory() must be executed before the engines are created
     refine_engine: QMMethod = setup_engines(
         config.refine.engine,
         config,
