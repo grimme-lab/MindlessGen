@@ -41,7 +41,7 @@ class GeneralConfig(BaseConfig):
         self._verbosity: int = 1
         self._max_cycles: int = 200
         self._print_config: bool = False
-        self._parallel: int = 1
+        self._parallel: int = 4
         self._num_molecules: int = 1
         self._postprocess: bool = False
         self._write_xyz: bool = True
@@ -669,7 +669,7 @@ class RefineConfig(BaseConfig):
         self._engine: str = "xtb"
         self._hlgap: float = 0.5
         self._debug: bool = False
-        self._ncores: int = 4
+        self._ncores: int = 2
 
     def get_identifier(self) -> str:
         return "refine"

@@ -80,7 +80,7 @@ opt_cycles = "none"
 # > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
 debug = false
 # > Number of cores to be used for both single-point calculations and geometry optimizations.
-ncores = 2
+ncores = 4
 
 [xtb]
 # > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
