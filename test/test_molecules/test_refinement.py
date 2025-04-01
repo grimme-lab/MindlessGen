@@ -11,7 +11,7 @@ from mindlessgen.prog import ConfigManager, GenerateConfig  # type: ignore
 from mindlessgen.molecules import detect_fragments  # type: ignore
 from mindlessgen.molecules import Molecule  # type: ignore
 from mindlessgen.molecules import iterative_optimization  # type: ignore
-from mindlessgen.prog.parallel import setup_managers
+from mindlessgen.prog.parallel import setup_managers  # type: ignore
 from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 
 TESTSDIR = Path(__file__).resolve().parents[1]
@@ -119,6 +119,8 @@ def test_detect_fragments_H6O2B2Ne2I1Os1Tl1(
     assert np.allclose(fragmols[0].xyz, mol_H2O2B2I1Os1.xyz)
 
 
+# NOTE: Can fail due to an xtb version more recent than 6.7.1
+#       See issue: https://github.com/grimme-lab/xtb/issues/1249
 @pytest.mark.optional
 def test_iterative_optimization(mol_C13H14: Molecule, mol_C7H8: Molecule) -> None:
     """
