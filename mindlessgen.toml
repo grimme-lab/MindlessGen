@@ -20,6 +20,10 @@ write_xyz = true
 # > Switch generation of symmetrical molecules consisting of substructures on and off. Defaul: false. Options: <bool>
 # > Postprocessing is recommended. Choosing "TURBOMOLE" as postprocessing engine is recommended due to symmetry handling.
 symmetrization = false
+# > Temporary directory for intermediate files. Default: System temporary directory (e.g., /tmp on Unix, %TEMP% on Windows, ...).
+# > Options: <str | Path>. Default is chosen if not given or "none".
+tmp_dir = "none"
+
 
 [generate]
 # > Minimum number of atoms in the generated molecule. Options: <int>

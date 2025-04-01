@@ -93,6 +93,12 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Generate symmetric MLM complexes.",
     )
+    parser.add_argument(
+        "--tmp-dir",
+        type=str,
+        required=False,
+        help="Path to the temporary directory where the QM methods will be executed.",
+    )
 
     ### Molecule generation arguments ###
     parser.add_argument(
@@ -310,6 +316,7 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         "postprocess": args_dict["postprocess"],
         "write_xyz": args_dict["write_xyz"],
         "symmetrization": args_dict["symmetrization"],
+        "tmp_dir": args_dict["tmp_dir"],
     }
     # Refinement arguments
     rev_args_dict["refine"] = {

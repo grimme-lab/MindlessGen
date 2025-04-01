@@ -46,6 +46,7 @@ class GeneralConfig(BaseConfig):
         self._postprocess: bool = False
         self._write_xyz: bool = True
         self._symmetrization: bool = False
+        self._tmp_dir: None | str | Path = None
 
     def get_identifier(self) -> str:
         return "general"
@@ -185,6 +186,32 @@ class GeneralConfig(BaseConfig):
         if not isinstance(symmetrization, bool):
             raise TypeError("Symmetrization should be a boolean.")
         self._symmetrization = symmetrization
+
+    @property
+    def tmp_dir(self):
+        """
+        Get the temporary directory.
+        """
+        return self._tmp_dir
+
+    @tmp_dir.setter
+    def tmp_dir(self, tmp_dir: str | Path):
+        """
+        Set the temporary directory.
+        """
+        if not isinstance(tmp_dir, (str, Path)):
+            raise TypeError("Temporary directory should be a string or a Path object.")
+        if isinstance(tmp_dir, str):
+            if tmp_dir == "" or tmp_dir.lower() == "none":
+                self._tmp_dir = None
+                return
+            tmp_dir = Path(tmp_dir).resolve()
+        elif isinstance(tmp_dir, Path):
+            tmp_dir = tmp_dir.resolve()
+        # raise error if value is a file
+        if tmp_dir.is_file():
+            raise ValueError("Temporary directory should not be a file.")
+        self._tmp_dir = tmp_dir
 
     def check_config(self, verbosity: int = 1) -> None:
         ### GeneralConfig checks ###
