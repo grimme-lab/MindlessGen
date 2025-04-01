@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for TURBOMOLE as QM engine
 - updated the parallelization to work over the number of molecules
 - possibility to generate symmetrical molecules (choice from rotation, inversion, mirroring)
-- Number of optimization steps in the postprocessing part can be set to program default by `none`
+- number of optimization steps in the postprocessing part can be set to program default by `none`
+- support for a manually defined temporary directory for the QM calculations
 
 ### Fixed
 - version string is now correctly formatted and printed

@@ -44,10 +44,9 @@ class ORCA(QMMethod):
         """
 
         # Create a unique temporary directory using TemporaryDirectory context manager
-        kwargs_temp_dir = {"prefix": "orca_"}
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "orca_"}
         if self.tmp_dir is not None:
             kwargs_temp_dir["dir"] = self.tmp_dir
-        print(kwargs_temp_dir)
         with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
             # NOTE: "prefix" and "dir" are valid keyword arguments for TemporaryDirectory
             temp_path = Path(temp_dir).resolve()
@@ -91,7 +90,12 @@ class ORCA(QMMethod):
         Perform a single point calculation using ORCA.
         """
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="orca_") as temp_dir:
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "orca_"}
+        if self.tmp_dir is not None:
+            kwargs_temp_dir["dir"] = self.tmp_dir
+        with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
+            # NOTE: "prefix" and "dir" (also as Path) are valid keyword arguments
+            # for TemporaryDirectory
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molfile = "mol.xyz"
