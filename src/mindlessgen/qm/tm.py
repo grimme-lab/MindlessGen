@@ -40,6 +40,7 @@ class Turbomole(QMMethod):
         else:
             raise TypeError("ridft_path should be a string or a Path object.")
         self.cfg = turbomolecfg
+        self.tmp_dir = self.__class__.get_temporary_directory()
 
     def optimize(
         self,
@@ -52,7 +53,10 @@ class Turbomole(QMMethod):
         Optimize a molecule using Turbomole.
         """
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="turbomole_") as temp_dir:
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "turbomole_"}
+        if self.tmp_dir is not None:
+            kwargs_temp_dir["dir"] = self.tmp_dir
+        with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molecule.write_coord_to_file(temp_path / "coord")
@@ -93,7 +97,10 @@ class Turbomole(QMMethod):
         Perform a single point calculation using Turbomole.
         """
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="turbomole_") as temp_dir:
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "turbomole_"}
+        if self.tmp_dir is not None:
+            kwargs_temp_dir["dir"] = self.tmp_dir
+        with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molfile = "coord"
