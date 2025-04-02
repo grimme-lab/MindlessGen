@@ -7,7 +7,7 @@
 <a href="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg">
   <img src="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg" alt="Python Versions"/>
 </a>
-<img align="right" src="assets/C1H2N1O2Te2Er1Lu2_89bd3e.png" height="150" />
+<img align="right" src="assets/example_MLMs/C1H2N1O2Te2Er1Lu2_89bd3e.png" height="150" />
 
 `mindlessgen` is a Python-based program for semi-automated generation of "mindless" small molecules, as described [here](https://pubs.acs.org/doi/full/10.1021/ct800511q).
 The rule-based algorithm places atoms randomly in coordinate space and applies several optimization, fragment detection, and sanity check steps.
