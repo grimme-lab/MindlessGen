@@ -1,0 +1,95 @@
+# Default configuration for the 'Mindless Molecule Generator' (MindlessGen) package
+# The following file locations are searched for in ascending order:
+# 1. Location specified by the `--config < str | Path >` command-line argument
+# 2. Current working directory (`Path.cwd()`)
+# 3. User's home directory (`Path.home()`)
+
+[general]
+# > Verbosity level defining the printout: Options: -1 = super-silent, 0 = silent, 1 = default, 2 = verbose, 3 = debug
+verbosity = 1
+# > Number of parallel processes to use. Corresponds to the number of physical CPU cores used. Options: <int>
+parallel = 28
+# > Maximum number of generation & optimization try-and-error cycles per molecule. Options: <int>
+max_cycles = 600
+# > Number of molecules to generate. Options: <int>
+num_molecules = 10
+# > Do post-processing after the optimization with another engine (e.g., `orca`). Default: false. Options: <bool>
+postprocess = true
+# > Switch molecule structure XYZ writing on and off. Default: true. Options: <bool>
+write_xyz = true
+# > Switch generation of symmetrical molecules consisting of substructures on and off. Defaul: false. Options: <bool>
+# > Postprocessing is recommended. Choosing "TURBOMOLE" as postprocessing engine is recommended due to symmetry handling.
+symmetrization = true
+
+[generate]
+# > Minimum number of atoms in the generated molecule. Options: <int>
+min_num_atoms = 7
+# > Maximum number of atoms in the generated molecule. Options: <int>
+max_num_atoms = 12
+# > Contract the coordinates after the initial generation. Leads to more cluster-like and less extended structures
+# and can speed-up the generation for larger molecules significantly. Options: <bool>
+contract_coords = true
+# > Atom types and their minimum and maximum occurrences. Format: "<element>:<min_count>-<max_count>"
+# > Elements that are not specified are only added by random selection.
+# > A star sign (*) can be used as a wildcard for integer value.
+# element_composition = "C:2-3, H:1-2, O:1-2, N:1-*"
+# > Set an exactly defined composition
+# > CAUTION: Only possible if 'element_composition' is set to defined values. Example: "C:3-3, H:8-8, O:1-1"
+fixed_composition = false
+# > Atom types that are not chosen for random selection. Format: "<element1>, <element2>, ..."
+# > CAUTION: This option is overridden by the 'element_composition' option.
+# > I.e., if an element is specified in 'element_composition' with an occurrence > 0, it will be added to the molecule anyway.
+forbidden_elements = "57-71"
+# > Set a charge for the molecule generation. Options: "none" (random charge assignment), "int" or <int> (fixed charge assignment)
+molecular_charge = "none"
+
+[refine]
+# > Maximum number of fragment optimization cycles. Options: <int>
+max_frag_cycles = 10
+# > Quantum Mechanics (QM) engine to use. Options: 'xtb', 'orca'. 'turbomole'
+engine = "xtb"
+# > HOMO-LUMO gap threshold applied at the end of the refinement step
+hlgap = 0.5
+# > Debug this step. Leads to more verbose output as soon as the refinement part is reached. Options: <bool>
+# > If `debug` is true, the process is terminated after the first (successful or not) refinement step.
+debug = false
+# > Number of cores to be used for geometry optimizations. Single-points will continue to use one core each.
+ncores = 4
+
+[postprocess]
+# > Engine for the post-processing part. Options: 'xtb', 'orca', 'turbomole'
+engine = "turbomole"
+# > Optimize geometry in the post-processing part. If `false`, only a single-point is conducted. Options: <bool>
+optimize = true
+# > Optimization cycles for the post-processing part. If not given, the program default is chosen. Options: <int>
+opt_cycles = 5
+# > Debug this step. Leads to more verbose output as soon as the post-processing part is reached. Options: <bool>
+# > If `debug` is true, the process is terminated after the first (successful or not) post-processing step.
+# > Note: This option is only relevant if the 'postprocess' option in the 'general' section is set to 'true'.
+debug = false
+# > Number of cores to be used for both single-point calculations and geometry optimizations.
+ncores = 4
+
+[xtb]
+# > Path to the xtb executable. The names `xtb` and `xtb_dev` are automatically searched for. Options: <str | Path>
+xtb_path = "/path/to/xtb"
+# > The GFN<n>-xTB method that should be used: Options: <int = 0> -> GFN-0-xTB, <int = 1> -> GFN-1-xTB, <int = 2> -> GFN-2-xTB
+level = 1
+
+[turbomole]
+# > Path to the ridft executable. The name `ridft` is automatically searched for. Options: <str | Path>
+ridft_path = "/path/to/ridft"
+# > Path to the jobex executable. The name `jobex` is automatically searched for. Options: <str | Path>
+jobex_path = "/path/to/jobex"
+# > Functional/Method: Options: <str>
+functional = "PBE"
+# > Basis set: Options: <str>
+basis = "def2-SVP"
+# > Maximum number of SCF cycles: Options: <int>
+scf_cycles = 100
+
+[symmetrization]
+# > Distance of the symmetric sub-structures on the translation axis (x). Options: <float>
+distance = 4.0
+# > Only one symmetry operation at a time can be chosen. Options: <mirror>, <inversion> and <c_<n>_rotation>. For n Options: <int>.
+operation = "c_3_rotation"

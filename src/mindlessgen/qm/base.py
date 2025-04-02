@@ -1,3 +1,7 @@
+"""
+This module defines the abstract base class for all QM methods.
+"""
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -9,15 +13,46 @@ class QMMethod(ABC):
     This abstract base class defines the interface for all QM methods.
     """
 
-    @abstractmethod
-    def __init__(self, path: str | Path, verbosity: int = 1):
-        if isinstance(path, str):
-            self.path: Path = Path(path).resolve()
-        elif isinstance(path, Path):
-            self.path = path
-        else:
-            raise TypeError("xtb_path should be a string or a Path object.")
-        self.verbosity = verbosity
+    def __init__(self):
+        pass
+
+    _temp_dir: None | str | Path = None
+
+    # NOTE: Early tests have shown that the parallelization mechanism doesn't support
+    # taking the temporary directory as usual class functions/attributes of the QMMethod base class.
+    # That's the reason for this seemingly overly complicated implementation.
+    # -> For each child class, we access the parent class variable QMMethod._temp_dir
+    #    at the time before forking subprocesses,
+    #    when accessing the class variable is possible.
+    #    The child class then sets the temporary directory (instance variable!)
+    #    to the QMMethod._temp_dir
+    @classmethod
+    def set_temporary_directory(cls, value: str | Path) -> None:
+        """
+        Set the temporary directory for the QM methods.
+        """
+        if cls._temp_dir is not None:
+            raise ValueError("Parent class variable is already set.")
+        if not isinstance(value, (str, Path)):
+            raise TypeError("Temporary directory should be a string or a Path object.")
+        if isinstance(value, str):
+            value = Path(value).resolve()
+        elif isinstance(value, Path):
+            value = value.resolve()
+        # raise error if value is a file
+        if value.is_file():
+            raise ValueError("Temporary directory should not be a file.")
+        value.mkdir(parents=True, exist_ok=True)
+        cls._temp_dir = value
+
+    @classmethod
+    def get_temporary_directory(cls) -> None | Path:
+        """
+        Get the temporary directory for the QM methods.
+        """
+        return cls._temp_dir  # type: ignore[return-value]
+        # NOTE: Since a string is always transformed to a Path object in set_temporary_directory,
+        #       this is safe to do. The type checker doesn't recognize this, though.
 
     @abstractmethod
     def optimize(

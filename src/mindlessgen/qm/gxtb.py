@@ -29,6 +29,7 @@ class GXTB(QMMethod):
         else:
             raise TypeError("gxtb_path should be a string or a Path object.")
         self.cfg = gxtbcfg
+        self.tmp_dir = self.__class__.get_temporary_directory()
 
     def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
         """
@@ -36,7 +37,10 @@ class GXTB(QMMethod):
         """
 
         # Create a unique temporary directory using TemporaryDirectory context manager
-        with TemporaryDirectory(prefix="gxtb_") as temp_dir:
+        kwargs_temp_dir: dict[str, str | Path] = {"prefix": "gxtb_"}
+        if self.tmp_dir is not None:
+            kwargs_temp_dir["dir"] = self.tmp_dir
+        with TemporaryDirectory(**kwargs_temp_dir) as temp_dir:  # type: ignore[call-overload]
             temp_path = Path(temp_dir).resolve()
             # write the molecule to a temporary file
             molecule.write_xyz_to_file(str(temp_path / "molecule.xyz"))

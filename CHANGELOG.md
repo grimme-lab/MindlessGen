@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.6.0] - 2025-04-01
 ### Changed
 - to set the elemental composition it is now possible to use dicts with not only int but also the element symbols (str)
 - dict keys for elemental compositions will now always be checked for validity
@@ -21,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for TURBOMOLE as QM engine
 - updated the parallelization to work over the number of molecules
 - possibility to generate symmetrical molecules (choice from rotation, inversion, mirroring)
-- Number of optimization steps in the postprocessing part can be set to program default by `none`
+- number of optimization steps in the postprocessing part can be set to program default by `none`
+- support for a manually defined temporary directory for the QM calculations
 
 ### Fixed
 - version string is now correctly formatted and printed

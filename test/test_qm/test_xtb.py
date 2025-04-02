@@ -13,6 +13,8 @@ from mindlessgen.prog import XTBConfig  # type: ignore
 
 # mark all tests as optional as they depend on the availability of xtb
 # test the XTB optimizer using the ethanol molecule
+# NOTE: Can fail due to an xtb version more recent than 6.7.1
+#       See issue: https://github.com/grimme-lab/xtb/issues/1249
 @pytest.mark.optional
 def test_xtb_optimize_xtb(coordinates_ethanol: np.ndarray) -> None:
     """
