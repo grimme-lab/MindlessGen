@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
-   sodipodi:docname="working_principle_v2.svg"
+   sodipodi:docname="working_principle_v2_vertical.svg"
    inkscape:export-filename="working_principle_v2_vertical.png"
    inkscape:export-xdpi="600"
    inkscape:export-ydpi="600"
@@ -27,15 +27,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.7350631"
-     inkscape:cx="55.329399"
-     inkscape:cy="325.34839"
+     inkscape:zoom="1.7127737"
+     inkscape:cx="170.77562"
+     inkscape:cy="281.7068"
      inkscape:window-width="1512"
      inkscape:window-height="856"
      inkscape:window-x="192"
      inkscape:window-y="1118"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g1"
+     inkscape:current-layer="g15"
      showguides="false"
      inkscape:lockguides="false" />
   <defs
@@ -3038,18 +3038,18 @@
           <text
              xml:space="preserve"
              style="font-style:italic;font-weight:300;font-size:2.46944px;line-height:1.2;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Light Italic';text-align:center;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#053d73;fill-opacity:1;stroke-width:0.15;stroke-linecap:square;stroke-miterlimit:4.1;paint-order:fill markers stroke"
-             x="42.705742"
-             y="21.361631"
+             x="42.569942"
+             y="21.586885"
              id="text1-2"><tspan
                sodipodi:role="line"
                id="tspan1-2"
                style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:2.46944px;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Medium';text-align:center;text-anchor:middle;fill:#ffffff;stroke-width:0.15"
-               x="42.705742"
-               y="21.361631">Coordinate</tspan><tspan
+               x="42.569942"
+               y="21.586885">Coordinate</tspan><tspan
                sodipodi:role="line"
                style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:2.46944px;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Medium';text-align:center;text-anchor:middle;fill:#ffffff;stroke-width:0.15"
-               x="42.705742"
-               y="24.324959"
+               x="42.569942"
+               y="24.550213"
                id="tspan4">generation</tspan></text>
         </g>
       </g>
@@ -3148,17 +3148,17 @@
           </g>
           <text
              xml:space="preserve"
-             style="font-style:italic;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.46944px;line-height:1.2;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Light Italic';text-align:center;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#aeb9d7;fill-opacity:1;stroke:#053d73;stroke-width:0.1;stroke-linecap:square;stroke-miterlimit:4.1;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+             style="font-style:italic;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.46944px;line-height:1.2;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Light Italic';text-align:center;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#aeb9d7;fill-opacity:1;stroke:#053d73;stroke-width:0.075;stroke-linecap:square;stroke-miterlimit:4.1;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
              x="50.960579"
              y="80.661674"
              id="text11-1"><tspan
                sodipodi:role="line"
-               style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Medium Italic';fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.1;stroke-dasharray:none;stroke-opacity:1"
+               style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Medium Italic';fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.075;stroke-dasharray:none;stroke-opacity:1"
                x="50.960579"
                y="80.661674"
                id="tspan12">&quot;mindless&quot;</tspan><tspan
                sodipodi:role="line"
-               style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Medium Italic';fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.1;stroke-dasharray:none;stroke-opacity:1"
+               style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed,  Medium Italic';fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.075;stroke-dasharray:none;stroke-opacity:1"
                x="50.960579"
                y="83.625"
                id="tspan11">molecule</tspan></text>
