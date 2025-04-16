@@ -9,15 +9,20 @@ from tqdm import tqdm
 from mindlessgen.molecules import Molecule  # type: ignore
 
 
-def get_molecules_from_filesystem(keyword: str) -> list[Molecule]:
+def get_molecules_from_filesystem(keyword: str, verbosity: int) -> list[Molecule]:
     """
     Get a list of molecules from the filesystem.
     """
     # check if the file exists
-    if not Path(keyword).exists():
-        raise FileNotFoundError(f"File '{keyword}' does not exist.")
+    file_object = Path(keyword).resolve()
+    if not file_object.exists():
+        raise FileNotFoundError(f"File/Directory '{keyword}' does not exist.")
+    if not file_object.is_file():
+        raise NotImplementedError("Reading from directories is not implemented yet.")
     # read the file
-    with open(keyword, encoding="utf-8") as file:
+    if verbosity > 0:
+        print(f"Reading file: {file_object}")
+    with open(file_object, encoding="utf-8") as file:
         mol_names = file.readlines()
     # get the molecules and return them
     mol_list: list[Molecule] = []
@@ -38,6 +43,9 @@ def get_args() -> argparse.Namespace:
         description="Detect fragments for a given list of molecules."
     )
     parser.add_argument(
+        "--verbosity", "-v", type=int, default=1, help="Verbosity level."
+    )
+    parser.add_argument(
         "--keyword",
         type=str,
         required=False,
@@ -50,6 +58,13 @@ def get_args() -> argparse.Namespace:
         required=True,
         default=None,
         help="Allowed elements for the molecules. Format example: `--allowed-elements '57-71, 81-*'",
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        required=False,
+        default="selected_elements_molecules.list",
+        help="Output file for the selected elements.",
     )
     return parser.parse_args()
 
@@ -90,15 +105,19 @@ def main() -> int:
     from the command line.
     """
     args = get_args()
-    mols = get_molecules_from_filesystem(keyword=args.keyword)
     allowed_elements = parse_allowed_elements(args.allowed_elements)
-    with open(
-        "selected_elements_molecules.list", "w", encoding="utf8"
-    ) as sel_elem_file:
-        for mol in tqdm(mols, desc="Detecting fragments...", unit="molecule"):
+    output_file = Path(args.output_file).resolve()
+    if args.verbosity > 0:
+        print(f"Allowed elements: {allowed_elements}")
+        print(f"Output file: {output_file}")
+
+    mols = get_molecules_from_filesystem(keyword=args.keyword, verbosity=args.verbosity)
+    with open(output_file, "w", encoding="utf8") as sel_elem_file:
+        for mol in tqdm(mols, desc="Checking composition...", unit="molecule"):
             # check if all elements in the molecule are allowed
             if all(ati in allowed_elements for ati in mol.ati):
-                print(f"Molecule {mol.name} has only allowed elements.")
+                if args.verbosity > 1:
+                    print(f"Molecule {mol.name} has only allowed elements.")
                 sel_elem_file.write(mol.name + "\n")
 
     return 0
