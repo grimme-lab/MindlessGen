@@ -19,20 +19,51 @@ def get_molecules_from_filesystem(keyword: str, verbosity: int) -> list[Molecule
         raise FileNotFoundError(f"File/Directory '{keyword}' does not exist.")
     if not file_object.is_file():
         raise NotImplementedError("Reading from directories is not implemented yet.")
-    # read the file
+    ### Process molecules from list of files (molecules)
     if verbosity > 0:
         print(f"Reading file: {file_object}")
     with open(file_object, encoding="utf-8") as file:
         mol_names = file.readlines()
-    # get the molecules and return them
+    ### Get the molecules and return them
+    # Test directory structure first
+    if Path(mol_names[0].strip() + ".xyz").exists():
+        format: str = "xyz"
+    elif Path(mol_names[0].strip()).is_dir():
+        format = "dir"
+        # search all XYZ files in the test directory
+        xyz_files = list(Path(mol_names[0].strip()).glob("*.xyz"))
+        # if more than one file is found, raise an error
+        if len(xyz_files) > 1:
+            raise ValueError(
+                "More than one XYZ file found in the directory. "
+                + "Please specify the file name."
+            )
     mol_list: list[Molecule] = []
-    for mol_name in tqdm(
-        mol_names, desc="Processing molecules from files...", unit="molecule"
-    ):
-        mol_name = mol_name.strip()
-        mol = Molecule.read_mol_from_file(mol_name + ".xyz")
-        mol_list.append(mol)
-    return mol_list
+    if format == "xyz":
+        for mol_name in tqdm(
+            mol_names, desc="Processing molecules from files...", unit="molecule"
+        ):
+            mol_name = mol_name.strip()
+            mol = Molecule.read_mol_from_file(mol_name + ".xyz")
+            mol_list.append(mol)
+        return mol_list
+    elif format == "dir":
+        # read all XYZ files in the directory
+        for mol_name in tqdm(
+            mol_names, desc="Processing molecules from files...", unit="molecule"
+        ):
+            # path to the xyz file is obtained by grepping for "*.xyz" in the mol_name directory
+            mol_name = mol_name.strip()
+            xyz_file = list(Path(mol_name).glob("*.xyz"))
+            mol = Molecule.read_mol_from_file(xyz_file[0])
+            mol.name = mol_name
+            mol_list.append(mol)
+        return mol_list
+    else:
+        raise ValueError(
+            "File format not supported. "
+            + "Please specify the file name with the extension."
+        )
 
 
 def get_args() -> argparse.Namespace:
@@ -201,8 +232,10 @@ def main() -> int:
                     if args.verbosity > 1:
                         print(f"Molecule {mol.name} has forbidden elements.")
                     continue
-            if not molecule_has_required_elements(
-                mol, required_elements, args.verbosity
+            if required_elements and (
+                not molecule_has_required_elements(
+                    mol, required_elements, args.verbosity
+                )
             ):
                 continue
 
