@@ -55,9 +55,27 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--allowed-elements",
         type=str,
-        required=True,
+        required=False,
         default=None,
-        help="Allowed elements for the molecules. Format example: `--allowed-elements '57-71, 81-*'",
+        help="Allowed elements for the molecules. "
+        + "Format example: `--allowed-elements '57-71, 81-*'",
+    )
+    parser.add_argument(
+        "--required-elements-all",
+        type=str,
+        required=False,
+        default=None,
+        help="Required element(s) that MUST be in each molecule (ALL of them must be contained). "
+        + "Format example: `--required-elements-all '57-71, 81-*'",
+    )
+    parser.add_argument(
+        "--required-elements-one",
+        type=str,
+        required=False,
+        default=None,
+        help="Required element(s) that MUST be in each molecule "
+        + "(at least one of them must be contained). "
+        + "Format example: `--required-elements-one '57-71, 81-*'",
     )
     parser.add_argument(
         "--output-file",
@@ -69,7 +87,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def parse_allowed_elements(allowed_elements: str) -> list[int]:
+def parse_element_list(allowed_elements: str) -> list[int]:
     """
     Parse the allowed elements from a string.
     """
@@ -105,20 +123,82 @@ def main() -> int:
     from the command line.
     """
     args = get_args()
-    allowed_elements = parse_allowed_elements(args.allowed_elements)
+    if (
+        not args.allowed_elements
+        and not args.required_elements_all
+        and not args.required_elements_one
+    ):
+        raise ValueError(
+            "Either --allowed-elements or --required-elements_XXX must be provided."
+        )
+    if args.required_elements_all and args.required_elements_one:
+        raise ValueError(
+            "Both --required-elements-all and --required-elements-one cannot be provided at the same time."
+        )
+    if args.allowed_elements:
+        allowed_elements = parse_element_list(args.allowed_elements)
+    if args.required_elements_all:
+        required_elements_all = parse_element_list(args.required_elements_all)
+    if args.required_elements_one:
+        required_elements_one = parse_element_list(args.required_elements_one)
+
     output_file = Path(args.output_file).resolve()
     if args.verbosity > 0:
-        print(f"Allowed elements: {allowed_elements}")
+        if args.allowed_elements:
+            print(f"Allowed elements: {allowed_elements}")
         print(f"Output file: {output_file}")
+
+    # required elements is a list of tuples
+    # one tuple per set of required elements that must be contained at the same time
+    # e.g. [(55, 56)] means that both 55 and 56 must be contained in the molecule
+    # [(54),(55)] means that either 54 or 55 must be contained in the molecule
+    required_elements: list[tuple] = []
+    if args.required_elements_all:
+        required_elements.append(tuple(required_elements_all))
+    if args.required_elements_one:
+        for elem in required_elements_one:
+            required_elements.append(tuple([elem]))
+    if args.verbosity > 0:
+        print(f"Required elements: {required_elements}")
 
     mols = get_molecules_from_filesystem(keyword=args.keyword, verbosity=args.verbosity)
     with open(output_file, "w", encoding="utf8") as sel_elem_file:
         for mol in tqdm(mols, desc="Checking composition...", unit="molecule"):
             # check if all elements in the molecule are allowed
-            if all(ati in allowed_elements for ati in mol.ati):
-                if args.verbosity > 1:
-                    print(f"Molecule {mol.name} has only allowed elements.")
-                sel_elem_file.write(mol.name + "\n")
+            if args.allowed_elements:
+                if all(ati in allowed_elements for ati in mol.ati):
+                    if args.verbosity > 1:
+                        print(f"Molecule {mol.name} has only allowed elements.")
+                else:
+                    if args.verbosity > 1:
+                        print(f"Molecule {mol.name} has forbidden elements.")
+                    continue
+            if required_elements:
+                # check if all required elements are in the molecule
+                # loop over all tuples of required element combinations
+                contained_combinations: list[bool] = [False] * len(required_elements)
+                for k, req_elem in enumerate(required_elements):
+                    # list of boolean values with the same length as the number of req_elem
+                    contained: list[bool] = [False] * len(req_elem)
+                    for i, ati in enumerate(req_elem):
+                        # check if the required element is in the molecule
+                        if ati in mol.ati:
+                            contained[i] = True
+                    # check if all elements of the respective required element combination are found
+                    if all(contained):
+                        contained_combinations[k] = True
+                # check if any of the combinations is True
+                if any(contained_combinations):
+                    if args.verbosity > 1:
+                        print(f"Molecule {mol.name} has the required elements.")
+                else:
+                    if args.verbosity > 1:
+                        print(
+                            f"Molecule {mol.name} does not have the required elements."
+                        )
+                    continue
+
+            sel_elem_file.write(mol.name + "\n")
 
     return 0
 
