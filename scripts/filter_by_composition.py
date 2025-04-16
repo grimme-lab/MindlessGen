@@ -117,6 +117,34 @@ def parse_element_list(allowed_elements: str) -> list[int]:
     return sorted(list(set_allowed_elements))
 
 
+def molecule_has_required_elements(
+    mol: Molecule, required_elements: list[tuple], verbosity: int
+) -> bool:
+    """
+    Check whether a molecule contains the required elements.
+    """
+    # loop over all tuples of required element combinations
+    contained_combinations: list[bool] = [False] * len(required_elements)
+    for k, req_elem in enumerate(required_elements):
+        # list of boolean values with the same length as the number of req_elem
+        contained: list[bool] = [False] * len(req_elem)
+        for i, ati in enumerate(req_elem):
+            # check if the required element is in the molecule
+            if ati in mol.ati:
+                contained[i] = True
+        # check if all elements of the respective required element combination are found
+        if all(contained):
+            contained_combinations[k] = True
+    # check if any of the combinations is True
+    if any(contained_combinations):
+        if verbosity > 1:
+            print(f"Molecule {mol.name} has the required elements.")
+        return True
+    if verbosity > 1:
+        print(f"Molecule {mol.name} does not have the required elements.")
+    return False
+
+
 def main() -> int:
     """
     Main function that is called when the script is executed
@@ -173,30 +201,10 @@ def main() -> int:
                     if args.verbosity > 1:
                         print(f"Molecule {mol.name} has forbidden elements.")
                     continue
-            if required_elements:
-                # check if all required elements are in the molecule
-                # loop over all tuples of required element combinations
-                contained_combinations: list[bool] = [False] * len(required_elements)
-                for k, req_elem in enumerate(required_elements):
-                    # list of boolean values with the same length as the number of req_elem
-                    contained: list[bool] = [False] * len(req_elem)
-                    for i, ati in enumerate(req_elem):
-                        # check if the required element is in the molecule
-                        if ati in mol.ati:
-                            contained[i] = True
-                    # check if all elements of the respective required element combination are found
-                    if all(contained):
-                        contained_combinations[k] = True
-                # check if any of the combinations is True
-                if any(contained_combinations):
-                    if args.verbosity > 1:
-                        print(f"Molecule {mol.name} has the required elements.")
-                else:
-                    if args.verbosity > 1:
-                        print(
-                            f"Molecule {mol.name} does not have the required elements."
-                        )
-                    continue
+            if not molecule_has_required_elements(
+                mol, required_elements, args.verbosity
+            ):
+                continue
 
             sel_elem_file.write(mol.name + "\n")
 
