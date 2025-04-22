@@ -7,63 +7,7 @@ import argparse
 from pathlib import Path
 from tqdm import tqdm
 from mindlessgen.molecules import Molecule  # type: ignore
-
-
-def get_molecules_from_filesystem(keyword: str, verbosity: int) -> list[Molecule]:
-    """
-    Get a list of molecules from the filesystem.
-    """
-    # check if the file exists
-    file_object = Path(keyword).resolve()
-    if not file_object.exists():
-        raise FileNotFoundError(f"File/Directory '{keyword}' does not exist.")
-    if not file_object.is_file():
-        raise NotImplementedError("Reading from directories is not implemented yet.")
-    ### Process molecules from list of files (molecules)
-    if verbosity > 0:
-        print(f"Reading file: {file_object}")
-    with open(file_object, encoding="utf-8") as file:
-        mol_names = file.readlines()
-    ### Get the molecules and return them
-    # Test directory structure first
-    if Path(mol_names[0].strip() + ".xyz").exists():
-        format: str = "xyz"
-    elif Path(mol_names[0].strip()).is_dir():
-        format = "dir"
-        # search all XYZ files in the test directory
-        xyz_files = list(Path(mol_names[0].strip()).glob("*.xyz"))
-        # if more than one file is found, raise an error
-        if len(xyz_files) > 1:
-            raise ValueError(
-                "More than one XYZ file found in the directory. "
-                + "Please specify the file name."
-            )
-    mol_list: list[Molecule] = []
-    if format == "xyz":
-        for mol_name in tqdm(
-            mol_names, desc="Processing molecules from files...", unit="molecule"
-        ):
-            mol_name = mol_name.strip()
-            mol = Molecule.read_mol_from_file(mol_name + ".xyz")
-            mol_list.append(mol)
-        return mol_list
-    elif format == "dir":
-        # read all XYZ files in the directory
-        for mol_name in tqdm(
-            mol_names, desc="Processing molecules from files...", unit="molecule"
-        ):
-            # path to the xyz file is obtained by grepping for "*.xyz" in the mol_name directory
-            mol_name = mol_name.strip()
-            xyz_file = list(Path(mol_name).glob("*.xyz"))
-            mol = Molecule.read_mol_from_file(xyz_file[0])
-            mol.name = mol_name
-            mol_list.append(mol)
-        return mol_list
-    else:
-        raise ValueError(
-            "File format not supported. "
-            + "Please specify the file name with the extension."
-        )
+from mindlessgen.molecules import get_molecules_from_filesystem  # type: ignore
 
 
 def get_args() -> argparse.Namespace:
@@ -107,6 +51,20 @@ def get_args() -> argparse.Namespace:
         help="Required element(s) that MUST be in each molecule "
         + "(at least one of them must be contained). "
         + "Format example: `--required-elements-one '57-71, 81-*'",
+    )
+    parser.add_argument(
+        "--min-charge",
+        type=int,
+        required=False,
+        default=None,
+        help="Minimum charge for the molecules." + "Format example: `--min-charge -1`",
+    )
+    parser.add_argument(
+        "--max-charge",
+        type=int,
+        required=False,
+        default=None,
+        help="Maximum charge for the molecules." + "Format example: `--max-charge 2`",
     )
     parser.add_argument(
         "--output-file",
@@ -237,6 +195,15 @@ def main() -> int:
                     mol, required_elements, args.verbosity
                 )
             ):
+                continue
+
+            if args.min_charge is not None and mol.charge < args.min_charge:
+                if args.verbosity > 1:
+                    print(f"Molecule {mol.name} has charge {mol.charge}.")
+                continue
+            if args.max_charge is not None and mol.charge > args.max_charge:
+                if args.verbosity > 1:
+                    print(f"Molecule {mol.name} has charge {mol.charge}.")
                 continue
 
             sel_elem_file.write(mol.name + "\n")

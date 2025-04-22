@@ -2,9 +2,12 @@
 Molecule-related helper tools.
 """
 
+from pathlib import Path
+from tqdm import tqdm
+
 import numpy as np
 
-from .molecule import ati_to_atlist
+from .molecule import ati_to_atlist, Molecule
 from ..data.parameters import COV_RADII_PYYKKO, COV_RADII_MLMGEN
 
 
@@ -173,3 +176,91 @@ def get_actinides() -> list[int]:
     """
     actinides = list(range(88, 103))
     return actinides
+
+
+# NOTE: Required by external helper scripts.
+def get_molecules_from_filesystem(keyword: str, verbosity: int) -> list[Molecule]:
+    """
+    Get a list of molecules from the filesystem.
+    """
+    # check if the file exists
+    file_object = Path(keyword).resolve()
+    if not file_object.exists():
+        raise FileNotFoundError(f"File/Directory '{keyword}' does not exist.")
+    if not file_object.is_file():
+        raise NotImplementedError("Reading from directories is not implemented yet.")
+    ### Process molecules from list of files (molecules)
+    if verbosity > 0:
+        print(f"Reading file: {file_object}")
+    with open(file_object, encoding="utf-8") as file:
+        mol_names = file.readlines()
+    ### Get the molecules and return them
+    # Test directory structure first
+    if Path(mol_names[0].strip() + ".xyz").exists():
+        xyzformat: str = "xyz"
+    elif Path(mol_names[0].strip()).is_dir():
+        xyzformat = "dir"
+        # search all XYZ files in the test directory
+        xyz_files = list(Path(mol_names[0].strip()).glob("*.xyz"))
+        # if more than one file is found, raise an error
+        if len(xyz_files) > 1:
+            raise ValueError(
+                "More than one XYZ file found in the directory. "
+                + "Please specify the file name."
+            )
+    else:
+        raise ValueError(
+            "File format not supported. "
+            + "Please specify the file name with the extension."
+        )
+    mol_list: list[Molecule] = []
+    if xyzformat == "xyz":
+        for mol_name in tqdm(
+            mol_names, desc="Processing molecules from files...", unit="molecule"
+        ):
+            mol_name = mol_name.strip()
+            mol = Molecule.read_mol_from_file(mol_name + ".xyz")
+            mol_list.append(mol)
+        return mol_list
+    elif xyzformat == "dir":
+        # read all XYZ files in the directory
+        for mol_name in tqdm(
+            mol_names, desc="Processing molecules from files...", unit="molecule"
+        ):
+            # path to the xyz file is obtained by grepping for "*.xyz" in the mol_name directory
+            mol_name = mol_name.strip()
+            xyz_file = list(Path(mol_name).glob("*.xyz"))
+            mol = Molecule.read_mol_from_file(xyz_file[0])
+            mol.name = mol_name
+            # check if the directory contains a ".CHRG" file
+            chrg_file = Path(mol_name).parent / ".CHRG"
+            if chrg_file.exists():
+                with open(chrg_file, encoding="utf-8") as chrg:
+                    chrg_lines = chrg.readlines()
+                # check if the file contains a charge
+                if len(chrg_lines) > 0:
+                    try:
+                        mol.charge = int(chrg_lines[0].strip())
+                    except ValueError as e:
+                        raise ValueError(
+                            f"Charge in file {chrg_file} is not an integer."
+                        ) from e
+            uhf_file = Path(mol_name).parent / ".UHF"
+            if uhf_file.exists():
+                with open(uhf_file, encoding="utf-8") as uhf:
+                    uhf_lines = uhf.readlines()
+                # check if the file contains a charge
+                if len(uhf_lines) > 0:
+                    try:
+                        mol.charge = int(uhf_lines[0].strip())
+                    except ValueError as e:
+                        raise ValueError(
+                            f"Charge in file {uhf_file} is not an integer."
+                        ) from e
+            mol_list.append(mol)
+        return mol_list
+    else:
+        raise ValueError(
+            "File format not supported. "
+            + "Please specify the file name with the extension."
+        )
