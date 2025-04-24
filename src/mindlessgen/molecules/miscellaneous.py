@@ -252,10 +252,10 @@ def get_molecules_from_filesystem(keyword: str, verbosity: int) -> list[Molecule
                 # check if the file contains a charge
                 if len(uhf_lines) > 0:
                     try:
-                        mol.charge = int(uhf_lines[0].strip())
+                        mol.uhf = int(uhf_lines[0].strip())
                     except ValueError as e:
                         raise ValueError(
-                            f"Charge in file {uhf_file} is not an integer."
+                            f"UHF in file {uhf_file} is not an integer."
                         ) from e
             mol_list.append(mol)
         return mol_list
