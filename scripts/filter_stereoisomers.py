@@ -65,9 +65,10 @@ def main() -> int:
             g_hash = nx.weisfeiler_lehman_graph_hash(graph, node_attr="element")
 
             if g_hash in seen_hashes.keys():
-                if args.verbosity > 0:
+                if args.verbosity > 1:
                     print(
-                        f"Found stereoisomer: {seen_hashes[g_hash]} and {mol.name} with hash {g_hash}"
+                        f"Found stereoisomer: {seen_hashes[g_hash]} "
+                        + f"and {mol.name} with hash {g_hash}"
                     )
                 seen_hashes[g_hash].append(mol.name)
                 continue
