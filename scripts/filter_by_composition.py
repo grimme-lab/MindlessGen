@@ -67,6 +67,14 @@ def get_args() -> argparse.Namespace:
         help="Maximum charge for the molecules." + "Format example: `--max-charge 2`",
     )
     parser.add_argument(
+        "--max-uhf",
+        type=int,
+        required=False,
+        default=None,
+        help="Maximum number of unpaired electrons (UHF) for the molecules."
+        + " Format example: `--max-uhf 2`",
+    )
+    parser.add_argument(
         "--output-file",
         type=str,
         required=False,
@@ -144,13 +152,18 @@ def main() -> int:
         not args.allowed_elements
         and not args.required_elements_all
         and not args.required_elements_one
+        and not args.min_charge
+        and not args.max_charge
+        and not args.max_uhf
     ):
         raise ValueError(
-            "Either --allowed-elements or --required-elements_XXX must be provided."
+            "Either --allowed-elements, --required-elements_XXX, --min-charge, "
+            + "--max-charge, or --max-uhf must be provided."
         )
     if args.required_elements_all and args.required_elements_one:
         raise ValueError(
-            "Both --required-elements-all and --required-elements-one cannot be provided at the same time."
+            "Both --required-elements-all and "
+            + "--required-elements-one cannot be provided at the same time."
         )
     if args.allowed_elements:
         allowed_elements = parse_element_list(args.allowed_elements)
@@ -204,6 +217,10 @@ def main() -> int:
             if args.max_charge is not None and mol.charge > args.max_charge:
                 if args.verbosity > 1:
                     print(f"Molecule {mol.name} has charge {mol.charge}.")
+                continue
+            if args.max_uhf is not None and mol.uhf > args.max_uhf:
+                if args.verbosity > 1:
+                    print(f"Molecule {mol.name} has UHF {mol.uhf}.")
                 continue
 
             sel_elem_file.write(mol.name + "\n")
