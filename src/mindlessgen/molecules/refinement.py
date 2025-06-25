@@ -203,29 +203,8 @@ def detect_fragments(
     Returns:
     - A list of fragments, where each fragment is a Molecule object.
     """
-    graph = nx.Graph()
 
-    # Add nodes (atoms) to the graph
-    graph.add_nodes_from(range(mol.num_atoms))
-
-    # Calculate pairwise distances and add edges if atoms are bonded
-    for i in range(mol.num_atoms - 1):
-        for j in range(i + 1, mol.num_atoms):
-            distance = np.linalg.norm(mol.xyz[i] - mol.xyz[j])
-            sum_radii = get_cov_radii(mol.ati[i], COV_RADII) + get_cov_radii(
-                mol.ati[j], COV_RADII
-            )
-            if verbosity > 2:
-                print(f"Distance between atom {i} and {j}: {distance:6.3f}")
-                print(
-                    f"Covalent radii of atom {i} and {j}, "
-                    + "and the effective threshold: "
-                    + f"{get_cov_radii(mol.ati[i], COV_RADII):6.3f}, "
-                    + f"{get_cov_radii(mol.ati[j], COV_RADII):6.3f}, "
-                    + f"{(sum_radii * vdw_scaling):6.3f}"
-                )
-            if distance <= sum_radii * vdw_scaling:
-                graph.add_edge(i, j)
+    graph = get_molecular_graph(mol, vdw_scaling, verbosity)
 
     # Detect connected components (fragments)
     fragments = [list(component) for component in nx.connected_components(graph)]
@@ -268,3 +247,42 @@ def detect_fragments(
         fragment_molecules.append(fragment_molecule)
 
     return fragment_molecules
+
+
+def get_molecular_graph(
+    mol: Molecule,
+    vdw_scaling: float,
+    verbosity: int = 1,
+) -> nx.Graph:
+    """
+    Generate a molecular graph from the molecule object.
+    The graph is undirected and contains nodes for each atom.
+    Edges are added between atoms that are bonded based on their distances
+    and covalent radii.
+    """
+    graph = nx.Graph()
+
+    # Add nodes (atoms) to the graph with atomic type as attribute
+    for i in range(mol.num_atoms):
+        graph.add_node(i, element=mol.ati[i])
+
+    # Calculate pairwise distances and add edges if atoms are bonded
+    for i in range(mol.num_atoms - 1):
+        for j in range(i + 1, mol.num_atoms):
+            distance = np.linalg.norm(mol.xyz[i] - mol.xyz[j])
+            sum_radii = get_cov_radii(mol.ati[i], COV_RADII) + get_cov_radii(
+                mol.ati[j], COV_RADII
+            )
+            if verbosity > 2:
+                print(f"Distance between atom {i} and {j}: {distance:6.3f}")
+                print(
+                    f"Covalent radii of atom {i} and {j}, "
+                    + "and the effective threshold: "
+                    + f"{get_cov_radii(mol.ati[i], COV_RADII):6.3f}, "
+                    + f"{get_cov_radii(mol.ati[j], COV_RADII):6.3f}, "
+                    + f"{(sum_radii * vdw_scaling):6.3f}"
+                )
+            if distance <= sum_radii * vdw_scaling:
+                graph.add_edge(i, j)
+
+    return graph
