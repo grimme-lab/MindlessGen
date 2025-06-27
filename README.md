@@ -161,11 +161,29 @@ if __name__ == "__main__":
     main()
 ```
 
-## Citation
+## Citations
 
-When using the program for academic purposes, please cite _i)_ the original idea and _ii)_ the new Python implementation.
+When using the program for academic purposes, please cite _1)_ the new Python implementation and _2)_ the original idea and benchmark study from 2009.
 
-1.  _J. Chem. Theory Comput._ 2009, **5**, 4, 993–1003
+
+1.  The new implementation of `mindlessgen`, accompanied by a benchmark study evaluating density functionals, semiempirical quantum-mechanical methods, and machine learning potentials:
+    T. Gasevic, M. Müller, J. Schöps, S. Lanius, J. Hermann, S. Grimme, and A. Hansen, “Chemical Space Exploration with Artificial ”Mindless” Molecules,” (2025)
+    ```
+    @misc{gasevicChemicalSpaceExploration2025,
+      title = {Chemical {{Space Exploration}} with {{Artificial}} ''{{Mindless}}'' {{Molecules}}},
+      author = {Gasevic, Thomas and M{\"u}ller, Marcel and Sch{\"o}ps, Jonathan and Lanius, Stephanie and Hermann, Jan and Grimme, Stefan and Hansen, Andreas},
+      year = {2025},
+      month = jun,
+      publisher = {ChemRxiv},
+      doi = {10.26434/chemrxiv-2025-rdsd0},
+      urldate = {2025-06-14},
+      archiveprefix = {ChemRxiv},
+      langid = {english},
+      keywords = {benchmarking,DFT,FF,MLIP,SQM}
+    }
+
+2.  The original idea of "mindless" molecules for benchmarking density functional theory:
+    M. Korth, and S. Grimme, “Mindless DFT benchmarking,” _J. Chem. Theory Comput._ **5**(4), 993–1003 (2009).
     ```
     @article{korth_mindless_2009,
     	title = {Mindless {DFT} benchmarking},
@@ -184,9 +202,9 @@ When using the program for academic purposes, please cite _i)_ the original idea
     }
     ```
 
-2.  A new publication featuring all functionalities and improvements of `mindlessgen` is in preparation.
-    In the meantime, please refer to the original publication and to the following publication, which uses the `mindlessgen` program for the first time:
-    Marcel Müller, Thomas Froitzheim, Andreas Hansen, and Stefan Grimme, *The Journal of Physical Chemistry A* **2024** *128* (49), 10723-10736, DOI: 10.1021/acs.jpca.4c06989.
+3.  First use of the novel `mindlessgen` implementation:
+    M. Müller, T. Froitzheim, A. Hansen, and S. Grimme, “Advanced Charge Extended Hückel (CEH) Model and a Consistent Adaptive Minimal Basis Set for the Elements Z = 1–103,” _J. Phys. Chem. A_ **128**(49), 10723–10736 (2024).
+
     ```
     @article{
         doi:10.1021/acs.jpca.4c06989,
