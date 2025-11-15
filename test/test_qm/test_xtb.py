@@ -172,8 +172,8 @@ def test_prepare_distance_constraint_file_missing_atoms(tmp_path):
     xtb = XTB("/path/to/xtb", cfg)
     mol = Molecule("hydrogen")
     mol.ati = np.array([0, 0])
-    with pytest.warns(UserWarning):
-        assert xtb._prepare_distance_constraint_file(mol, tmp_path) is False
+    with pytest.raises(RuntimeError):
+        xtb._prepare_distance_constraint_file(mol, tmp_path)
 
 
 @pytest.mark.optional

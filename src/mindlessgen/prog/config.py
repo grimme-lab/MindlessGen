@@ -34,48 +34,97 @@ class BaseConfig(ABC):
         """
 
 
+def _symbol_to_atomic_number(symbol: str) -> int:
+    """
+    Convert an element symbol to its atomic number.
+    """
+    if not isinstance(symbol, str):
+        raise TypeError("Element symbol must be a string.")
+    normalized = symbol.strip().lower()
+    atomic_number = PSE_NUMBERS.get(normalized)
+    if atomic_number is None:
+        raise ValueError(f"Element '{symbol}' not found in the periodic table.")
+    return atomic_number
+
+
+def _parse_distance(value: Any) -> float:
+    """
+    Convert a user-provided distance into a validated float.
+    """
+    if isinstance(value, (float, int)):
+        distance = float(value)
+    elif isinstance(value, str):
+        try:
+            distance = float(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"Distance '{value}' could not be parsed as float."
+            ) from exc
+    else:
+        raise TypeError("Distance must be a float-compatible value.")
+
+    if distance <= 0:
+        raise ValueError("Distance must be greater than 0.")
+    return distance
+
+
 @dataclass
 class DistanceConstraint:
     """
     Representation of an atom-type distance constraint.
     """
 
-    element_a: str
-    element_b: str
+    atom_a: int
+    atom_b: int
     distance: float
 
     def __post_init__(self) -> None:
-        self._resolve_atomic_number(self.element_a)
-        self._resolve_atomic_number(self.element_b)
+        for attr in ("atom_a", "atom_b"):
+            value = getattr(self, attr)
+            if not isinstance(value, int):
+                raise TypeError("Atomic numbers must be integers.")
+            if value <= 0 or value not in PSE:
+                raise ValueError("Atomic numbers must reference known elements.")
         if not isinstance(self.distance, (float, int)):
             raise TypeError("Distance must be a float.")
-        distance_val = float(self.distance)
-        if distance_val <= 0:
+        self.distance = float(self.distance)
+        if self.distance <= 0:
             raise ValueError("Distance must be greater than 0.")
-        self.distance = distance_val
 
-    @staticmethod
-    def _resolve_atomic_number(symbol: str) -> int:
+    @property
+    def element_a(self) -> str:
         """
-        Resolve and validate the atomic number using the periodic table.
+        Canonical symbol of the first atom type.
         """
-        if not isinstance(symbol, str):
-            raise TypeError("Element symbol must be a string.")
-        normalized = symbol.strip().lower()
-        atomic_number = PSE_NUMBERS.get(normalized)
-        if atomic_number is None:
-            raise ValueError(f"Element '{symbol}' not found in the periodic table.")
-        return atomic_number
+        return PSE[self.atom_a]
+
+    @property
+    def element_b(self) -> str:
+        """
+        Canonical symbol of the second atom type.
+        """
+        return PSE[self.atom_b]
 
     @property
     def atomic_numbers(self) -> tuple[int, int]:
         """
         Atomic numbers of the constrained atom pair.
         """
-        return (
-            self._resolve_atomic_number(self.element_a),
-            self._resolve_atomic_number(self.element_b),
-        )
+        return (self.atom_a, self.atom_b)
+
+    def required_counts(self) -> dict[int, int]:
+        """
+        Minimum number of atoms required in the molecule for this constraint.
+        """
+        if self.atom_a == self.atom_b:
+            return {self.atom_a: 2}
+        return {self.atom_a: 1, self.atom_b: 1}
+
+    def symbol_for(self, atomic_number: int) -> str:
+        """
+        Return the canonical element symbol for a stored atomic number.
+        """
+        return PSE[atomic_number]
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any]) -> DistanceConstraint:
@@ -98,7 +147,9 @@ class DistanceConstraint:
         distance = data.get("distance")
         if distance is None:
             raise KeyError("Distance constraint requires a 'distance' value.")
-        return cls(str(pair[0]), str(pair[1]), float(distance))
+        atom_a = _symbol_to_atomic_number(str(pair[0]))
+        atom_b = _symbol_to_atomic_number(str(pair[1]))
+        return cls(atom_a, atom_b, _parse_distance(distance))
 
     @classmethod
     def from_cli_string(cls, spec: str) -> DistanceConstraint:
@@ -112,18 +163,12 @@ class DistanceConstraint:
             raise ValueError(
                 "Constraint specification must be formatted as 'ElementA,ElementB,distance'."
             )
-        try:
-            distance_value = float(parts[2])
-        except ValueError as exc:
-            raise ValueError(
-                f"Could not parse distance value '{parts[2]}' as float."
-            ) from exc
-        return cls(parts[0], parts[1], distance_value)
+        atom_a = _symbol_to_atomic_number(parts[0])
+        atom_b = _symbol_to_atomic_number(parts[1])
+        return cls(atom_a, atom_b, _parse_distance(parts[2]))
 
     def __str__(self) -> str:
-        symbol_a = PSE_SYMBOLS[self._resolve_atomic_number(self.element_a)]
-        symbol_b = PSE_SYMBOLS[self._resolve_atomic_number(self.element_b)]
-        return f"{symbol_a}-{symbol_b}: {self.distance:g} Å"
+        return f"{self.element_a}-{self.element_b}: {self.distance:g} Å"
 
 
 class GeneralConfig(BaseConfig):
@@ -1618,25 +1663,27 @@ class ConfigManager:
             )
 
         for constraint in constraints:
-            atom_a, atom_b = constraint.atomic_numbers
-            required_counts: dict[int, int]
-            if atom_a == atom_b:
-                required_counts = {atom_a: 2}
-            else:
-                required_counts = {atom_a: 1, atom_b: 1}
-
-            for atomic_number, target_count in required_counts.items():
-                element_symbol = PSE[atomic_number]
+            counts = constraint.required_counts()
+            for atomic_number, expected in counts.items():
                 idx = atomic_number - 1
+                element_symbol = constraint.symbol_for(atomic_number)
+
                 if idx not in element_composition:
                     raise ValueError(
                         f"Distance constraint {constraint} requires element "
-                        + f"{element_symbol}, but it is not fixed in the element composition."
+                        + f"{element_symbol}, but it is not part of the fixed composition."
                     )
+
                 min_count, max_count = element_composition[idx]
-                if min_count != target_count or max_count != target_count:
+                if min_count is None or max_count is None or min_count != max_count:
+                    raise ValueError(
+                        f"Distance constraint {constraint} requires a fixed number of "
+                        + f"{element_symbol} atoms. Please set matching minimum and maximum values."
+                    )
+
+                actual = min_count
+                if actual != expected:
                     raise ValueError(
                         f"Distance constraint {constraint} requires exactly "
-                        + f"{target_count} {element_symbol} atom(s). "
-                        + "Please set both minimum and maximum counts accordingly."
+                        + f"{expected} {element_symbol} atom(s) but the composition fixes {actual}."
                     )

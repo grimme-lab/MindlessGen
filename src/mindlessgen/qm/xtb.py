@@ -7,7 +7,6 @@ from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-import warnings
 import numpy as np
 from ..molecules import Molecule
 from .base import QMMethod
@@ -235,10 +234,9 @@ class XTB(QMMethod):
         for constraint in self.cfg.distance_constraints:
             pairs = self._generate_constraint_pairs(element_map, constraint)
             if not pairs:
-                warnings.warn(
-                    f"No atoms found for distance constraint {constraint}. Skipping."
+                raise RuntimeError(
+                    f"No atom pairs found for distance constraint {constraint}."
                 )
-                continue
             for first, second in pairs:
                 constraint_lines.append(
                     f" distance: {first + 1}, {second + 1}, {constraint.distance}"
@@ -269,8 +267,6 @@ class XTB(QMMethod):
         atom_b_idx = atom_b - 1
         indices_a = element_map.get(atom_a_idx, [])
         indices_b = element_map.get(atom_b_idx, [])
-        if not indices_a or not indices_b:
-            return []
 
         pairs: set[tuple[int, int]] = set()
         if atom_a == atom_b:
