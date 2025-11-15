@@ -6,13 +6,15 @@ from __future__ import annotations
 
 from pathlib import Path
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import warnings
 import multiprocessing as mp
+from typing import Mapping, Sequence, Any
 
 import numpy as np
 import toml
 
-from mindlessgen.data.constants import PSE_SYMBOLS, PSE_NUMBERS
+from mindlessgen.data.constants import PSE_SYMBOLS, PSE_NUMBERS, PSE
 
 
 # abstract base class for configuration
@@ -30,6 +32,143 @@ class BaseConfig(ABC):
         """
         Get the identifier of the configuration.
         """
+
+
+def _symbol_to_atomic_number(symbol: str) -> int:
+    """
+    Convert an element symbol to its atomic number.
+    """
+    if not isinstance(symbol, str):
+        raise TypeError("Element symbol must be a string.")
+    normalized = symbol.strip().lower()
+    atomic_number = PSE_NUMBERS.get(normalized)
+    if atomic_number is None:
+        raise ValueError(f"Element '{symbol}' not found in the periodic table.")
+    return atomic_number
+
+
+def _parse_distance(value: Any) -> float:
+    """
+    Convert a user-provided distance into a validated float.
+    """
+    if isinstance(value, (float, int)):
+        distance = float(value)
+    elif isinstance(value, str):
+        try:
+            distance = float(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"Distance '{value}' could not be parsed as float."
+            ) from exc
+    else:
+        raise TypeError("Distance must be a float-compatible value.")
+
+    if distance <= 0:
+        raise ValueError("Distance must be greater than 0.")
+    return distance
+
+
+@dataclass
+class DistanceConstraint:
+    """
+    Representation of an atom-type distance constraint.
+    """
+
+    atom_a: int
+    atom_b: int
+    distance: float
+
+    def __post_init__(self) -> None:
+        for attr in ("atom_a", "atom_b"):
+            value = getattr(self, attr)
+            if not isinstance(value, int):
+                raise TypeError("Atomic numbers must be integers.")
+            if value <= 0 or value not in PSE:
+                raise ValueError("Atomic numbers must reference known elements.")
+        if not isinstance(self.distance, (float, int)):
+            raise TypeError("Distance must be a float.")
+        self.distance = float(self.distance)
+        if self.distance <= 0:
+            raise ValueError("Distance must be greater than 0.")
+
+    @property
+    def element_a(self) -> str:
+        """
+        Canonical symbol of the first atom type.
+        """
+        return PSE[self.atom_a]
+
+    @property
+    def element_b(self) -> str:
+        """
+        Canonical symbol of the second atom type.
+        """
+        return PSE[self.atom_b]
+
+    @property
+    def atomic_numbers(self) -> tuple[int, int]:
+        """
+        Atomic numbers of the constrained atom pair.
+        """
+        return (self.atom_a, self.atom_b)
+
+    def required_counts(self) -> dict[int, int]:
+        """
+        Minimum number of atoms required in the molecule for this constraint.
+        """
+        if self.atom_a == self.atom_b:
+            return {self.atom_a: 2}
+        return {self.atom_a: 1, self.atom_b: 1}
+
+    def symbol_for(self, atomic_number: int) -> str:
+        """
+        Return the canonical element symbol for a stored atomic number.
+        """
+        return PSE[atomic_number]
+
+    @classmethod
+    def from_mapping(cls, data: Mapping[str, Any]) -> DistanceConstraint:
+        """
+        Build a constraint from TOML data.
+        """
+        if "pair" in data:
+            pair = data["pair"]
+        elif "elements" in data:
+            pair = data["elements"]
+        elif all(key in data for key in ("element_a", "element_b")):
+            pair = [data["element_a"], data["element_b"]]
+        else:
+            raise KeyError(
+                "Distance constraint requires either 'pair', 'elements', or "
+                + "both 'element_a'/'element_b'."
+            )
+        if not isinstance(pair, Sequence) or len(pair) != 2:
+            raise TypeError("Constraint pair must contain two entries.")
+        distance = data.get("distance")
+        if distance is None:
+            raise KeyError("Distance constraint requires a 'distance' value.")
+        atom_a = _symbol_to_atomic_number(str(pair[0]))
+        atom_b = _symbol_to_atomic_number(str(pair[1]))
+        return cls(atom_a, atom_b, _parse_distance(distance))
+
+    @classmethod
+    def from_cli_string(cls, spec: str) -> DistanceConstraint:
+        """
+        Parse a CLI constraint string formatted as 'A,B,distance'.
+        """
+        if not isinstance(spec, str):
+            raise TypeError("Constraint specification must be a string.")
+        parts = [part.strip() for part in spec.split(",")]
+        if len(parts) != 3:
+            raise ValueError(
+                "Constraint specification must be formatted as 'ElementA,ElementB,distance'."
+            )
+        atom_a = _symbol_to_atomic_number(parts[0])
+        atom_b = _symbol_to_atomic_number(parts[1])
+        return cls(atom_a, atom_b, _parse_distance(parts[2]))
+
+    def __str__(self) -> str:
+        return f"{self.element_a}-{self.element_b}: {self.distance:g} Å"
 
 
 class GeneralConfig(BaseConfig):
@@ -879,6 +1018,8 @@ class XTBConfig(BaseConfig):
     def __init__(self: XTBConfig) -> None:
         self._xtb_path: str | Path = "xtb"
         self._level: int = 2
+        self._distance_constraints: list[DistanceConstraint] = []
+        self._distance_constraint_force_constant: float | None = None
 
     def get_identifier(self) -> str:
         return "xtb"
@@ -916,6 +1057,71 @@ class XTBConfig(BaseConfig):
         if level < 0 or level > 2:
             raise ValueError("xtb level should be 0, 1, or 2.")
         self._level = level
+
+    @property
+    def distance_constraints(self) -> list[DistanceConstraint]:
+        """
+        Distance constraints applied during xTB optimizations.
+        """
+        return self._distance_constraints
+
+    @distance_constraints.setter
+    def distance_constraints(
+        self,
+        constraints: DistanceConstraint
+        | Sequence[DistanceConstraint | Mapping[str, Any] | str]
+        | None,
+    ):
+        """
+        Set the distance constraints from CLI or TOML input.
+        """
+        if constraints is None:
+            self._distance_constraints = []
+            return
+        if isinstance(constraints, DistanceConstraint):
+            self._distance_constraints = [constraints]
+            return
+        if not isinstance(constraints, Sequence):
+            raise TypeError("Distance constraints must be provided as a sequence.")
+
+        parsed: list[DistanceConstraint] = []
+        for entry in constraints:
+            parsed.append(self._parse_distance_constraint(entry))
+        self._distance_constraints = parsed
+
+    @staticmethod
+    def _parse_distance_constraint(
+        entry: DistanceConstraint | Mapping[str, Any] | str,
+    ) -> DistanceConstraint:
+        if isinstance(entry, DistanceConstraint):
+            return entry
+        if isinstance(entry, Mapping):
+            return DistanceConstraint.from_mapping(entry)
+        if isinstance(entry, str):
+            return DistanceConstraint.from_cli_string(entry)
+        raise TypeError("Unsupported distance constraint entry.")
+
+    @property
+    def distance_constraint_force_constant(self) -> float | None:
+        """
+        Shared force constant applied to all distance constraints.
+        """
+        return self._distance_constraint_force_constant
+
+    @distance_constraint_force_constant.setter
+    def distance_constraint_force_constant(self, value: float | int | None):
+        """
+        Set the shared force constant for distance constraints.
+        """
+        if value is None:
+            self._distance_constraint_force_constant = None
+            return
+        if not isinstance(value, (float, int)):
+            raise TypeError("Force constant must be a float.")
+        float_value = float(value)
+        if float_value <= 0:
+            raise ValueError("Force constant must be positive.")
+        self._distance_constraint_force_constant = float_value
 
 
 class ORCAConfig(BaseConfig):
@@ -1346,6 +1552,8 @@ class ConfigManager:
                             "Postprocessing is turned off. The structure will not be relaxed."
                         )
 
+            self._check_distance_constraint_requirements()
+
     def get_all_identifiers(self):
         """
         Returns the identifiers of all subconfiguration classes, e.g. "orca", "refinement", ...
@@ -1433,3 +1641,49 @@ class ConfigManager:
                     )
                 configstr += "\n"
         return configstr
+
+    def _check_distance_constraint_requirements(self) -> None:
+        """
+        Ensure distance constraints can be fulfilled with the configured composition.
+        """
+        constraints = self.xtb.distance_constraints
+        if not constraints:
+            return
+
+        if not self.generate.fixed_composition:
+            raise ValueError(
+                "Distance constraints require 'generate.fixed_composition = true' "
+                + "so individual atoms can be uniquely addressed."
+            )
+
+        element_composition = self.generate.element_composition
+        if not element_composition:
+            raise ValueError(
+                "Distance constraints require explicit element composition entries."
+            )
+
+        for constraint in constraints:
+            counts = constraint.required_counts()
+            for atomic_number, expected in counts.items():
+                idx = atomic_number - 1
+                element_symbol = constraint.symbol_for(atomic_number)
+
+                if idx not in element_composition:
+                    raise ValueError(
+                        f"Distance constraint {constraint} requires element "
+                        + f"{element_symbol}, but it is not part of the fixed composition."
+                    )
+
+                min_count, max_count = element_composition[idx]
+                if min_count is None or max_count is None or min_count != max_count:
+                    raise ValueError(
+                        f"Distance constraint {constraint} requires a fixed number of "
+                        + f"{element_symbol} atoms. Please set matching minimum and maximum values."
+                    )
+
+                actual = min_count
+                if actual != expected:
+                    raise ValueError(
+                        f"Distance constraint {constraint} requires exactly "
+                        + f"{expected} {element_symbol} atom(s) but the composition fixes {actual}."
+                    )

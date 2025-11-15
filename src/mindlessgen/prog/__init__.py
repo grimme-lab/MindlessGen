@@ -14,6 +14,7 @@ from .config import (
     RefineConfig,
     PostProcessConfig,
     SymmetrizationConfig,
+    DistanceConstraint,
 )
 from .parallel import setup_managers, ResourceMonitor, setup_blocks
 
@@ -31,4 +32,5 @@ __all__ = [
     "ResourceMonitor",
     "setup_blocks",
     "SymmetrizationConfig",
+    "DistanceConstraint",
 ]

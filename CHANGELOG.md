@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -6,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Distance constraints for xTB (normalized parsing, config validation, runtime enforcement, and optional integration test).
+
 ## [0.6.0] - 2025-04-01
+
 ### Changed
+
 - to set the elemental composition it is now possible to use dicts with not only int but also the element symbols (str)
 - dict keys for elemental compositions will now always be checked for validity
 - Renamed GP3-xTB to g-xTB
@@ -15,10 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default for optimization cycles in the postprocessing step set to program default (convergence)
 
 ### Deprecated
+
 - Nothing will be printed while multiple molecules are generated in parallel, tqdm-based progress bar instead
 - Some debugging statements from generate had to be removed (esp. w.r.t. early stopping)
 
 ### Added
+
 - `GXTBConfig` class for the g-xTB method, supporting SCF cycles check
 - support for TURBOMOLE as QM engine
 - updated the parallelization to work over the number of molecules
@@ -27,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for a manually defined temporary directory for the QM calculations
 
 ### Fixed
+
 - version string is now correctly formatted and printed
 - precision (# significant digits) of the coordinate files (`get_coord_str` and `get_xyz_str`) increased from 7 to 14
 - catch encoding errors when reading `Turbomole._run_opt` output files
@@ -34,7 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - stop_event checked before every external call to avoid unnecessary executions
 
 ## [0.5.0] - 2024-12-16
+
 ### Changed
+
 - vdW radii scaling parameter can now be adjusted via `mindlessgen.toml` or CLI
 - check_distance function now checks based on the sum of the van der Waals radii and a scaling factor acessible via `mindlessgen.toml` or CLI
 - better type hints for `Callables`
@@ -46,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - modify atom list adaption to `element_composition` such that a random integer in the given range is taken and not the lower/upper bound
 
 ### Fixed
+
 - unit conversion for (currenly unused) vdW radii from the original Fortran project
 - minor print output issues (no new line breaks, more consistent verbosity differentiation, ...)
 - bug in `postprocess_mol` which led to an unassigned return variable in the single-point case
@@ -55,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - legacy pseudo random number generation removed and replaced by `np.random.default_rng()` for avoiding interference with other packages
 
 ### Added
+
 - support for the novel "g-xTB" method (previous working title: GP3-xTB)
 - function which contracts the coordinates after the initial generation
 - function which is able to printout the xyz coordinates to the terminal similar to the `.xyz` layout
@@ -64,13 +78,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `element_composition` and `forbidden_elements` can now be directly set to a `dict` or `list`, respectively, via API access
 
 ### Breaking Changes
+
 - Removal of the `dist_threshold` flag and in the `-toml` file.
 - The number of unpaired electrons (`Molecule.uhf`) is now set to 0 if `xtb` is used as `QMMethod` and a lanthanide is within the molecule to match the `f-in-core` approximation.
 - "Contract Coordinates" functionality set to `true` by default in the `mindlessgen.toml` file.
 - `basename.UHF` and `basename.CHRG` are only written to disk if they differ from the default value (0 and 0, respectively).
 
 ## [0.4.0] - 2024-09-19
+
 ### Changed
+
 - Default file name of `.xyz` file contains prefix `mlm_`
 - Comment line of `.xyz` file contains the total charge and number of unpaired electrons
 - Default ORCA calculation changed from r2SCAN-3c to PBE/def2-SVP
@@ -82,12 +99,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `mindless.molecules` file is written continuously during generation
 
 ### Fixed
+
 - `test_iterative_optimization` more deterministic
 - wrong atom range check in for the isomerization mode ([#21](https://github.com/grimme-lab/MindlessGen/pull/21))
 - `forbidden_elements` and `element_composition` influences hydrogen and organic element addition
 - more realistic default `mindlessgen.toml` entries
 
 ### Added
+
 - Optimization via DFT in the post-processing step
 - Detailed input of ORCA settings (functional, basis, grid size, SCF cycles, ...) possible
 - `min_num_atoms` and `max_num_atoms` consistency check
@@ -101,20 +120,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PyPi` and `TestPyPi` upload of releases (new workflow)
 
 ## [0.3.0] - 2024-08-20
+
 ### Breaking Changes
+
 - ...
 
 ### Added
+
 - ...
 
 ### Changed
+
 - ...
 
 ### Removed
+
 - ...
 
 ### Fixed
+
 - ...
 
 ### Deprecations
+
 - ...
