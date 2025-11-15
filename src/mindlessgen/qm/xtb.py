@@ -6,10 +6,12 @@ import subprocess as sp
 from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
+from collections import defaultdict
+import warnings
 import numpy as np
 from ..molecules import Molecule
 from .base import QMMethod
-from ..prog import XTBConfig
+from ..prog import XTBConfig, DistanceConstraint
 from ..molecules.miscellaneous import (
     get_lanthanides,
     get_actinides,
@@ -81,6 +83,12 @@ class XTB(QMMethod):
                 arguments += ["--uhf", str(molecule.uhf)]
             if max_cycles is not None:
                 arguments += ["--cycles", str(max_cycles)]
+            print(self.cfg.distance_constraints)
+            if self.cfg.distance_constraints:
+                print("Preparing distance constraint file...")
+                if self._prepare_distance_constraint_file(molecule, temp_path):
+                    print("Distance constraint file prepared.")
+                    arguments += ["--input", "xtb.inp"]
 
             if verbosity > 2:
                 print(f"Running command: {' '.join(arguments)}")
@@ -212,6 +220,77 @@ class XTB(QMMethod):
             return True
         else:
             return False
+
+    def _prepare_distance_constraint_file(
+        self, molecule: Molecule, temp_path: Path
+    ) -> bool:
+        """
+        Write an xtb.inp file describing user supplied distance constraints.
+        """
+        element_map: defaultdict[int, list[int]] = defaultdict(list)
+        for idx, atomic_number in enumerate(molecule.ati):
+            element_map[int(atomic_number)].append(idx)
+
+        constraint_lines: list[str] = []
+        for constraint in self.cfg.distance_constraints:
+            pairs = self._generate_constraint_pairs(element_map, constraint)
+            if not pairs:
+                warnings.warn(
+                    f"No atoms found for distance constraint {constraint}. Skipping."
+                )
+                continue
+            for first, second in pairs:
+                constraint_lines.append(
+                    f" distance: {first + 1}, {second + 1}, {constraint.distance}"
+                )
+
+        if not constraint_lines:
+            return False
+
+        contents = ["$constrain"]
+        if self.cfg.distance_constraint_force_constant is not None:
+            contents.append(
+                f" force constant= {self.cfg.distance_constraint_force_constant}"
+            )
+        contents.extend(constraint_lines)
+        contents.append("$end")
+        (temp_path / "xtb.inp").write_text("\n".join(contents) + "\n", encoding="utf8")
+        return True
+
+    @staticmethod
+    def _generate_constraint_pairs(
+        element_map: dict[int, list[int]], constraint: DistanceConstraint
+    ) -> list[tuple[int, int]]:
+        """
+        Generate all index pairs for the provided constraint.
+        """
+        atom_a, atom_b = constraint.atomic_numbers
+        atom_a_idx = atom_a - 1
+        atom_b_idx = atom_b - 1
+        indices_a = element_map.get(atom_a_idx, [])
+        indices_b = element_map.get(atom_b_idx, [])
+        if not indices_a or not indices_b:
+            return []
+
+        pairs: set[tuple[int, int]] = set()
+        if atom_a == atom_b:
+            for idx, first in enumerate(indices_a):
+                for second in indices_a[idx + 1 :]:
+                    if first < second:
+                        pairs.add((first, second))
+                    else:
+                        pairs.add((second, first))
+        else:
+            for first in indices_a:
+                for second in indices_b:
+                    if first == second:
+                        continue
+                    if first < second:
+                        pairs.add((first, second))
+                    else:
+                        pairs.add((second, first))
+
+        return sorted(pairs)
 
     def _run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
         """
