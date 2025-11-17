@@ -7,6 +7,17 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 from ..__version__ import __version__
+from ..prog import DistanceConstraint
+
+
+def _parse_distance_constraint_arg(value: str) -> DistanceConstraint:
+    """
+    Parse CLI distance constraint specifications formatted as A,B,d.
+    """
+    try:
+        return DistanceConstraint.from_cli_string(value)
+    except (ValueError, TypeError) as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
 def cli_parser(argv: Sequence[str] | None = None) -> dict:
@@ -251,6 +262,26 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
         required=False,
         help="Level of theory to use in xTB.",
     )
+    parser.add_argument(
+        "--xtb-distance-constraint",
+        action="append",
+        type=_parse_distance_constraint_arg,
+        required=False,
+        help=(
+            "Distance constraint applied during xTB optimization. "
+            "Format: ElementA,ElementB,distance (Å). "
+            "Option can be provided multiple times."
+        ),
+    )
+    parser.add_argument(
+        "--xtb-distance-constraint-force-constant",
+        type=float,
+        required=False,
+        help=(
+            "Force constant applied to all xTB distance constraints. "
+            "Provide a positive float value."
+        ),
+    )
 
     ### ORCA specific arguments ###
     parser.add_argument(
@@ -356,6 +387,10 @@ def cli_parser(argv: Sequence[str] | None = None) -> dict:
     rev_args_dict["xtb"] = {
         "xtb_path": args_dict["xtb_path"],
         "level": args_dict["xtb_level"],
+        "distance_constraints": args_dict["xtb_distance_constraint"],
+        "distance_constraint_force_constant": args_dict[
+            "xtb_distance_constraint_force_constant"
+        ],
     }
     # ORCA specific arguments
     rev_args_dict["orca"] = {
