@@ -6,28 +6,8 @@ and is used to detect fragments for a given list of molecules.
 import argparse
 from pathlib import Path
 from tqdm import tqdm
-from mindlessgen.molecules import Molecule, detect_fragments  # type: ignore
-
-
-def get_molecules_from_filesystem(keyword: str) -> list[Molecule]:
-    """
-    Get a list of molecules from the filesystem.
-    """
-    # check if the file exists
-    if not Path(keyword).exists():
-        raise FileNotFoundError(f"File '{keyword}' does not exist.")
-    # read the file
-    with open(keyword, encoding="utf-8") as file:
-        mol_names = file.readlines()
-    # get the molecules and return them
-    mol_list: list[Molecule] = []
-    for mol_name in tqdm(
-        mol_names, desc="Processing molecules from files...", unit="molecule"
-    ):
-        mol_name = mol_name.strip()
-        mol = Molecule.read_mol_from_file(mol_name + ".xyz")
-        mol_list.append(mol)
-    return mol_list
+from mindlessgen.molecules import detect_fragments  # type: ignore
+from mindlessgen.molecules import get_molecules_from_filesystem  # type: ignore
 
 
 def get_args() -> argparse.Namespace:
@@ -61,7 +41,7 @@ def main() -> int:
     from the command line.
     """
     args = get_args()
-    mols = get_molecules_from_filesystem(keyword=args.keyword)
+    mols = get_molecules_from_filesystem(keyword=args.keyword, verbosity=0)
     # create new directory "new_single_molecules" if it does not exist
     newmoldir = Path("fragments").resolve()
     newmoldir.mkdir(exist_ok=True, parents=True)

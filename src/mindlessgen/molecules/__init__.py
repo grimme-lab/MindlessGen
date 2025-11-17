@@ -13,7 +13,7 @@ from .generate_molecule import (
     generate_atom_list,
     check_distances,
 )
-from .refinement import iterative_optimization, detect_fragments
+from .refinement import iterative_optimization, detect_fragments, get_molecular_graph
 from .postprocess import postprocess_mol
 from .miscellaneous import (
     get_cov_radii,
@@ -25,6 +25,7 @@ from .miscellaneous import (
     get_actinides,
     get_alkali_metals,
     get_alkaline_earth_metals,
+    get_molecules_from_filesystem,
 )
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "generate_atom_list",
     "iterative_optimization",
     "detect_fragments",
+    "get_molecular_graph",
     "get_cov_radii",
     "set_random_charge",
     "check_distances",
@@ -44,6 +46,7 @@ __all__ = [
     "get_actinides",
     "get_alkali_metals",
     "get_alkaline_earth_metals",
+    "get_molecules_from_filesystem",
     "ati_to_atlist",
     "atlist_to_ati",
     "postprocess_mol",
