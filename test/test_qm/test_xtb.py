@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 from mindlessgen.qm import XTB, get_xtb_path  # type: ignore
 from mindlessgen.molecules import Molecule  # type: ignore
-from mindlessgen.prog import XTBConfig  # type: ignore
+from mindlessgen.prog import XTBConfig, DistanceConstraint  # type: ignore
 
 
 # mark all tests as optional as they depend on the availability of xtb
@@ -134,3 +134,82 @@ def test_check_gap_low_gap(mol_C2H4N1O1Au1: Molecule, mol_H3B4Pd1Rn1: Molecule):
     # Test for molecule with high gap
     result_high_gap = engine.check_gap(mol_C2H4N1O1Au1, 1, threshold=0.5)
     assert result_high_gap is True
+
+
+def test_prepare_distance_constraint_file_hetero(tmp_path):
+    cfg = XTBConfig()
+    cfg.distance_constraints = [
+        DistanceConstraint.from_cli_string("O,H,1.0"),
+    ]
+    cfg.distance_constraint_force_constant = 0.5
+    xtb = XTB("/path/to/xtb", cfg)
+    mol = Molecule("OH")
+    mol.ati = np.array([7, 0])
+    assert xtb._prepare_distance_constraint_file(mol, tmp_path) is True
+    contents = (tmp_path / "xtb.inp").read_text(encoding="utf8").splitlines()
+    assert contents[0] == "$constrain"
+    assert "force constant=" in contents[1]
+    assert any("1, 2" in line for line in contents)
+
+
+def test_prepare_distance_constraint_file_homo(tmp_path):
+    cfg = XTBConfig()
+    cfg.distance_constraints = [
+        DistanceConstraint.from_cli_string("H,H,0.9"),
+    ]
+    xtb = XTB("/path/to/xtb", cfg)
+    mol = Molecule("H2")
+    mol.ati = np.array([0, 0])
+    assert xtb._prepare_distance_constraint_file(mol, tmp_path) is True
+    contents = (tmp_path / "xtb.inp").read_text(encoding="utf8").splitlines()
+    assert contents[0] == "$constrain"
+    assert any("1, 2" in line for line in contents)
+
+
+def test_prepare_distance_constraint_file_missing_atoms(tmp_path):
+    cfg = XTBConfig()
+    cfg.distance_constraints = [DistanceConstraint.from_cli_string("F,F,1.0")]
+    xtb = XTB("/path/to/xtb", cfg)
+    mol = Molecule("hydrogen")
+    mol.ati = np.array([0, 0])
+    with pytest.raises(RuntimeError):
+        xtb._prepare_distance_constraint_file(mol, tmp_path)
+
+
+@pytest.mark.optional
+def test_xtb_distance_constraint_enforced(tmp_path):
+    """
+    Run a short xtb optimization with a distance constraint and verify
+    that the final geometry follows the requested distance.
+    """
+    cfg = XTBConfig()
+    cfg.distance_constraints = [
+        DistanceConstraint.from_mapping({"pair": ["He", "He"], "distance": 2.0})
+    ]
+    cfg.distance_constraint_force_constant = 0.5
+
+    try:
+        xtb_path = get_xtb_path()
+        if not xtb_path:
+            raise ImportError("xtb not found.")
+    except ImportError as exc:
+        raise ImportError("xtb not found.") from exc
+
+    xtb = XTB(xtb_path, cfg)
+
+    mol = Molecule("He2")
+    mol.num_atoms = 2
+    mol.ati = np.array([1, 1])
+    mol.xyz = np.array(
+        [
+            [0.0, 0.0, 2.33020164364074],
+            [0.0, 0.0, -0.33020164364074],
+        ]
+    )
+    mol.charge = 0
+    mol.uhf = 0
+
+    optimized = xtb.optimize(mol, ncores=1)
+    distance = np.linalg.norm(optimized.xyz[0] - optimized.xyz[1])
+
+    assert distance == pytest.approx(2.0, abs=0.1)
