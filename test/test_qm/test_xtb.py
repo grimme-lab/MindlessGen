@@ -176,6 +176,25 @@ def test_prepare_distance_constraint_file_missing_atoms(tmp_path):
         xtb._prepare_distance_constraint_file(mol, tmp_path)
 
 
+def test_distance_constraint_applies_only_first_atoms(tmp_path):
+    cfg = XTBConfig()
+    cfg.distance_constraints = [
+        DistanceConstraint.from_mapping({"pair": ["Fe", "Fe"], "distance": 2.5})
+    ]
+    xtb = XTB("/path/to/xtb", cfg)
+    mol = Molecule("Fe3")
+    mol.ati = np.array([25, 25, 25])
+
+    assert xtb._prepare_distance_constraint_file(mol, tmp_path) is True
+
+    contents = (tmp_path / "xtb.inp").read_text(encoding="utf8").splitlines()
+    distance_lines = [line for line in contents if "distance:" in line]
+
+    assert len(distance_lines) == 1
+    assert "1, 2" in distance_lines[0]
+    assert ", 3," not in distance_lines[0]
+
+
 @pytest.mark.optional
 def test_xtb_distance_constraint_enforced(tmp_path):
     """

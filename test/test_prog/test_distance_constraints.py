@@ -36,25 +36,25 @@ def test_force_constant_validation():
         cfg.distance_constraint_force_constant = 0
 
 
-def test_check_config_requires_fixed_composition():
+def test_check_config_allows_non_fixed_composition():
     config = ConfigManager()
     config.general.parallel = 1
     config.refine.ncores = 1
     config.xtb.distance_constraints = [DistanceConstraint.from_cli_string("He,He,2.0")]
     config.generate.fixed_composition = False
+    config.generate.element_composition = "He:2-*"
     config.refine.engine = "xtb"
 
-    with pytest.raises(ValueError):
-        config.check_config()
+    config.check_config()
 
 
-def test_check_config_requires_matching_counts():
+def test_check_config_requires_matching_counts_when_fixed():
     config = ConfigManager()
     config.general.parallel = 1
     config.refine.ncores = 1
     config.xtb.distance_constraints = [DistanceConstraint.from_cli_string("He,He,2.0")]
     config.generate.fixed_composition = True
-    config.generate.element_composition = "He:1-3"
+    config.generate.element_composition = "He:1-1"
     config.refine.engine = "xtb"
 
     with pytest.raises(ValueError):

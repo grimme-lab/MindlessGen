@@ -1650,17 +1650,10 @@ class ConfigManager:
         if not constraints:
             return
 
-        if not self.generate.fixed_composition:
-            raise ValueError(
-                "Distance constraints require 'generate.fixed_composition = true' "
-                + "so individual atoms can be uniquely addressed."
-            )
-
         element_composition = self.generate.element_composition
-        if not element_composition:
-            raise ValueError(
-                "Distance constraints require explicit element composition entries."
-            )
+        # When composition is not fixed, defer feasibility checks until runtime.
+        if not self.generate.fixed_composition or not element_composition:
+            return
 
         for constraint in constraints:
             counts = constraint.required_counts()
@@ -1682,8 +1675,8 @@ class ConfigManager:
                     )
 
                 actual = min_count
-                if actual != expected:
+                if actual < expected:
                     raise ValueError(
-                        f"Distance constraint {constraint} requires exactly "
+                        f"Distance constraint {constraint} requires at least "
                         + f"{expected} {element_symbol} atom(s) but the composition fixes {actual}."
                     )

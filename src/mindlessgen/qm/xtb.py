@@ -82,11 +82,12 @@ class XTB(QMMethod):
                 arguments += ["--uhf", str(molecule.uhf)]
             if max_cycles is not None:
                 arguments += ["--cycles", str(max_cycles)]
-            print(self.cfg.distance_constraints)
             if self.cfg.distance_constraints:
-                print("Preparing distance constraint file...")
+                if verbosity > 1:
+                    print("Preparing distance constraint file...")
                 if self._prepare_distance_constraint_file(molecule, temp_path):
-                    print("Distance constraint file prepared.")
+                    if verbosity > 1:
+                        print("Distance constraint file prepared.")
                     arguments += ["--input", "xtb.inp"]
 
             if verbosity > 2:
@@ -232,6 +233,7 @@ class XTB(QMMethod):
 
         constraint_lines: list[str] = []
         for constraint in self.cfg.distance_constraints:
+            self._ensure_constraint_atoms_present(element_map, constraint)
             pairs = self._generate_constraint_pairs(element_map, constraint)
             if not pairs:
                 raise RuntimeError(
@@ -260,7 +262,7 @@ class XTB(QMMethod):
         element_map: dict[int, list[int]], constraint: DistanceConstraint
     ) -> list[tuple[int, int]]:
         """
-        Generate all index pairs for the provided constraint.
+        Generate the index pair for the provided constraint.
         """
         atom_a, atom_b = constraint.atomic_numbers
         atom_a_idx = atom_a - 1
@@ -268,25 +270,38 @@ class XTB(QMMethod):
         indices_a = element_map.get(atom_a_idx, [])
         indices_b = element_map.get(atom_b_idx, [])
 
-        pairs: set[tuple[int, int]] = set()
         if atom_a == atom_b:
-            for idx, first in enumerate(indices_a):
-                for second in indices_a[idx + 1 :]:
-                    if first < second:
-                        pairs.add((first, second))
-                    else:
-                        pairs.add((second, first))
-        else:
-            for first in indices_a:
-                for second in indices_b:
-                    if first == second:
-                        continue
-                    if first < second:
-                        pairs.add((first, second))
-                    else:
-                        pairs.add((second, first))
+            if len(indices_a) < 2:
+                return []
+            first, second = sorted(indices_a[:2])
+            return [(first, second)]
 
-        return sorted(pairs)
+        if not indices_a or not indices_b:
+            return []
+
+        first, second = indices_a[0], indices_b[0]
+        if first == second:
+            return []
+        if first > second:
+            first, second = second, first
+        return [(first, second)]
+
+    @staticmethod
+    def _ensure_constraint_atoms_present(
+        element_map: dict[int, list[int]], constraint: DistanceConstraint
+    ) -> None:
+        """
+        Validate that the molecule contains enough atoms for the constraint.
+        """
+        for atomic_number, required in constraint.required_counts().items():
+            idx = atomic_number - 1
+            available = len(element_map.get(idx, []))
+            if available < required:
+                symbol = constraint.symbol_for(atomic_number)
+                raise RuntimeError(
+                    f"Distance constraint {constraint} requires at least "
+                    f"{required} atom(s) of {symbol}, but only {available} present."
+                )
 
     def _run(self, temp_path: Path, arguments: list[str]) -> tuple[str, str, int]:
         """
