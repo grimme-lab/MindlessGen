@@ -52,7 +52,7 @@ def test_run_xtb_driver_success(monkeypatch, tmp_path):
     monkeypatch.setattr(sp, "run", fake_run)
     out, err, code = orca._run_xtb_driver(tmp_path, "geom.xyz", "ctrl.inp", ncores=4)
     assert captured["args"] == [
-        "/fake/xtb",
+        str(Path("/fake/xtb")),
         "geom.xyz",
         "--opt",
         "tight",
