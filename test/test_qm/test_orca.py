@@ -66,10 +66,12 @@ def test_run_xtb_driver_success(monkeypatch, tmp_path):
 
 
 def test_run_xtb_driver_failure_returns_error(monkeypatch, tmp_path):
+    """Ensure the ORCA wrapper surfaces errors from the xTB driver."""
     orca = make_orca()
     monkeypatch.setattr(orca, "_get_xtb_executable", lambda: Path("/fake/xtb"))
 
-    def fake_run(*_, **__):
+    def fake_run(*_, **kwargs):
+        del kwargs
         raise sp.CalledProcessError(1, "xtb", output=b"bad", stderr=b"worse")
 
     monkeypatch.setattr(sp, "run", fake_run)
