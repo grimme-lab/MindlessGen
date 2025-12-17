@@ -118,18 +118,34 @@ def test_write_xtb_input_creates_expected_file(monkeypatch, tmp_path):
         distance_constraints=["dummy"], distance_constraint_force_constant=0.7
     )
     orca = make_orca(xtb_cfg=xtb_cfg)
+    monkeypatch.setattr(orca, "_get_xtb_executable", lambda: Path("/fake/xtb"))
+
+    def fake_prepare(self, molecule, temp_dir):
+        assert temp_dir == tmp_path
+        (temp_dir / "xtb.inp").write_text(
+            "\n".join(
+                [
+                    "$constrain",
+                    " force constant= 0.7",
+                    " distance: 1, 2, 1.00000",
+                    "$end",
+                    "",
+                ]
+            ),
+            encoding="utf8",
+        )
+        return True
+
     monkeypatch.setattr(
-        ORCA,
-        "_prepare_distance_constraint_section",
-        lambda self, mol: ["  distance: 1, 2, 1.00000"],
+        "mindlessgen.qm.orca.XTB._prepare_distance_constraint_file", fake_prepare
     )
     target = tmp_path / "xtb.inp"
     orca._write_xtb_input(DummyMolecule(), target, "orca.inp")
     content = target.read_text().splitlines()
     assert content[:4] == [
         "$constrain",
-        "  force constant= 0.7",
-        "  distance: 1, 2, 1.00000",
+        " force constant= 0.7",
+        " distance: 1, 2, 1.00000",
         "$end",
     ]
     assert "$external" in content

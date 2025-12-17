@@ -2,16 +2,15 @@
 This module handles all ORCA-related functionality.
 """
 
-from collections import defaultdict
 from pathlib import Path
 import shutil
 import subprocess as sp
 from tempfile import TemporaryDirectory
 
 from ..molecules import Molecule
-from ..prog import DistanceConstraint, ORCAConfig, XTBConfig
+from ..prog import ORCAConfig, XTBConfig
 from .base import QMMethod
-from .xtb import get_xtb_path
+from .xtb import XTB, get_xtb_path
 
 
 class ORCA(QMMethod):
@@ -271,90 +270,20 @@ class ORCA(QMMethod):
             raise RuntimeError(
                 "xTB configuration missing but constraints were requested."
             )
-        constraint_lines = self._prepare_distance_constraint_section(molecule)
-        lines: list[str] = []
-        if constraint_lines:
-            lines.append("$constrain")
-            if self.xtb_cfg.distance_constraint_force_constant is not None:
-                lines.append(
-                    f"  force constant= {self.xtb_cfg.distance_constraint_force_constant}"
-                )
-            lines.extend(constraint_lines)
-            lines.append("$end")
-        lines.append("$external")
-        lines.append(f"  orca input file= {input_file}")
-        lines.append(f"  orca bin= {self.path}")
-        lines.append("$end")
-        xtb_input.write_text("\n".join(lines) + "\n", encoding="utf8")
-
-    def _prepare_distance_constraint_section(self, molecule: Molecule) -> list[str]:
-        """
-        Convert configured distance constraints to xcontrol instructions.
-        """
-        if not self.xtb_cfg or not self.xtb_cfg.distance_constraints:
-            return []
-        element_map: defaultdict[int, list[int]] = defaultdict(list)
-        for idx, atomic_number in enumerate(molecule.ati):
-            element_map[int(atomic_number)].append(idx)
-        constraint_lines: list[str] = []
-        for constraint in self.xtb_cfg.distance_constraints:
-            self._ensure_constraint_atoms_present(element_map, constraint)
-            pairs = self._generate_constraint_pairs(element_map, constraint)
-            if not pairs:
-                raise RuntimeError(
-                    f"No atom pairs found for distance constraint {constraint}."
-                )
-            for first, second in pairs:
-                constraint_lines.append(
-                    f"  distance: {first + 1}, {second + 1}, {constraint.distance:.5f}"
-                )
-        return constraint_lines
-
-    @staticmethod
-    def _generate_constraint_pairs(
-        element_map: dict[int, list[int]], constraint: DistanceConstraint
-    ) -> list[tuple[int, int]]:
-        """
-        Generate index pairs for the provided constraint.
-        """
-        atom_a, atom_b = constraint.atomic_numbers
-        atom_a_idx = atom_a - 1
-        atom_b_idx = atom_b - 1
-        indices_a = element_map.get(atom_a_idx, [])
-        indices_b = element_map.get(atom_b_idx, [])
-
-        if atom_a == atom_b:
-            if len(indices_a) < 2:
-                return []
-            first, second = sorted(indices_a[:2])
-            return [(first, second)]
-
-        if not indices_a or not indices_b:
-            return []
-
-        first, second = indices_a[0], indices_b[0]
-        if first == second:
-            return []
-        if first > second:
-            first, second = second, first
-        return [(first, second)]
-
-    @staticmethod
-    def _ensure_constraint_atoms_present(
-        element_map: dict[int, list[int]], constraint: DistanceConstraint
-    ) -> None:
-        """
-        Validate that the molecule contains enough atoms for the constraint.
-        """
-        for atomic_number, required in constraint.required_counts().items():
-            idx = atomic_number - 1
-            available = len(element_map.get(idx, []))
-            if available < required:
-                symbol = constraint.symbol_for(atomic_number)
-                raise RuntimeError(
-                    f"Distance constraint {constraint} requires at least "
-                    f"{required} atom(s) of {symbol}, but only {available} present."
-                )
+        xtb_path = self._get_xtb_executable()
+        xtb_writer = XTB(xtb_path, self.xtb_cfg)
+        generated = xtb_writer._prepare_distance_constraint_file(
+            molecule, xtb_input.parent
+        )
+        if not generated:
+            raise RuntimeError(
+                "xTB driver requested but no distance constraints were generated."
+            )
+        with xtb_input.open("a", encoding="utf8") as handle:
+            handle.write("$external\n")
+            handle.write(f"  orca input file= {input_file}\n")
+            handle.write(f"  orca bin= {self.path}\n")
+            handle.write("$end\n")
 
     def _gen_input(
         self,
