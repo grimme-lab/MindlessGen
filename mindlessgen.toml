@@ -106,6 +106,8 @@ basis = "def2-SVP"
 gridsize = 1
 # > Maximum number of SCF cycles: Options: <int>
 scf_cycles = 100
+# > Use xTB as an external ORCA driver to keep distance constraints during postprocessing. Options: <bool>
+use_xtb_driver = false
 
 [turbomole]
 # > Path to the ridft executable. The name `ridft` is automatically searched for. Options: <str | Path>

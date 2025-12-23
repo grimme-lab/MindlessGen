@@ -1135,6 +1135,7 @@ class ORCAConfig(BaseConfig):
         self._basis: str = "def2-SVP"
         self._gridsize: int = 1
         self._scf_cycles: int = 100
+        self._use_xtb_driver: bool = False
 
     def get_identifier(self) -> str:
         return "orca"
@@ -1224,6 +1225,22 @@ class ORCAConfig(BaseConfig):
         if max_scf_cycles < 1:
             raise ValueError("Max SCF cycles should be greater than 0.")
         self._scf_cycles = max_scf_cycles
+
+    @property
+    def use_xtb_driver(self) -> bool:
+        """
+        Determine whether the xTB external driver can be used during post-processing.
+        """
+        return self._use_xtb_driver
+
+    @use_xtb_driver.setter
+    def use_xtb_driver(self, enabled: bool):
+        """
+        Enable or disable the usage of the xTB external driver during post-processing.
+        """
+        if not isinstance(enabled, bool):
+            raise TypeError("use_xtb_driver should be a boolean.")
+        self._use_xtb_driver = enabled
 
 
 class TURBOMOLEConfig(BaseConfig):

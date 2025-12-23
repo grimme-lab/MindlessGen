@@ -32,6 +32,9 @@ class ORCA(QMMethod):
             raise TypeError("orca_path should be a string or a Path object.")
         self.cfg = orcacfg
         self.xtb_cfg = xtb_config
+        self.xtb_driver_enabled = bool(xtb_config) and bool(
+            getattr(self.cfg, "use_xtb_driver", False)
+        )
         # must be explicitly initialized in current parallelization implementation
         # as accessing parent class variables might not be possible
         self.tmp_dir = self.__class__.get_temporary_directory()
@@ -58,60 +61,48 @@ class ORCA(QMMethod):
             xyz_filename = "molecule.xyz"
             molecule.write_xyz_to_file(temp_path / xyz_filename)
 
-            inputname = "orca_opt.inp"
-            use_xtb_driver = self._should_use_xtb_driver()
-            xtb_input = temp_path / "xtb.inp"
-            if use_xtb_driver:
-                self._write_xtb_input(molecule, xtb_input, inputname)
-            orca_input = self._gen_input(
-                molecule,
-                xyz_filename,
-                temp_path,
-                ncores,
-                True,
-                max_cycles,
-                use_xtb_driver=use_xtb_driver,
-            )
-            if verbosity > 1:
-                print("ORCA input file:\n##################")
-                print(orca_input)
-                print("##################")
-            with open(temp_path / inputname, "w", encoding="utf8") as f:
-                f.write(orca_input)
-
-            # run orca
-            if use_xtb_driver:
-                orca_log_out, orca_log_err, return_code = self._run_xtb_driver(
+            if self._should_use_xtb_driver():
+                optimized_molecule = self.optimize_xtb_driver(
                     temp_path=temp_path,
-                    geometry_filename=xyz_filename,
-                    xcontrol_name=xtb_input.name,
+                    molecule=molecule,
+                    xyz_filename=xyz_filename,
                     ncores=ncores,
+                    max_cycles=max_cycles,
+                    verbosity=verbosity,
                 )
             else:
+                inputname = "orca_opt.inp"
+                orca_input = self._gen_input(
+                    molecule,
+                    xyz_filename,
+                    temp_path,
+                    ncores,
+                    True,
+                    max_cycles,
+                )
+                if verbosity > 1:
+                    print("ORCA input file:\n##################")
+                    print(orca_input)
+                    print("##################")
+                with open(temp_path / inputname, "w", encoding="utf8") as f:
+                    f.write(orca_input)
+                # run orca
                 arguments = [
                     inputname,
                 ]
                 orca_log_out, orca_log_err, return_code = self._run(
                     temp_path=temp_path, arguments=arguments
                 )
-            if verbosity > 2:
-                print(orca_log_out)
-            if return_code != 0:
-                raise RuntimeError(
-                    f"ORCA failed with return code {return_code}:\n{orca_log_err}"
-                )
-
-            # read the optimized molecule from the output file
-            if use_xtb_driver:
-                xyzfile = temp_path / "xtbopt.xyz"
-                if not xyzfile.exists():
+                if verbosity > 2:
+                    print(orca_log_out)
+                if return_code != 0:
                     raise RuntimeError(
-                        "xTB-driven ORCA optimization did not produce 'xtbopt.xyz'."
+                        f"ORCA failed with return code {return_code}:\n{orca_log_err}"
                     )
-            else:
+                # read the optimized molecule from the output file
                 xyzfile = Path(temp_path / inputname).resolve().with_suffix(".xyz")
-            optimized_molecule = molecule.copy()
-            optimized_molecule.read_xyz_from_file(xyzfile)
+                optimized_molecule = molecule.copy()
+                optimized_molecule.read_xyz_from_file(xyzfile)
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
@@ -199,6 +190,102 @@ class ORCA(QMMethod):
             orca_log_err = e.stderr.decode("utf8", errors="replace")
             return orca_log_out, orca_log_err, e.returncode
 
+    def _gen_input(
+        self,
+        molecule: Molecule,
+        xyzfile: str,
+        _temp_path: Path,
+        ncores: int,
+        optimization: bool = False,
+        opt_cycles: int | None = None,
+    ) -> str:
+        """
+        Generate a default input file for ORCA.
+        """
+        orca_input = f"! {self.cfg.functional} {self.cfg.basis}\n"
+        orca_input += f"! DEFGRID{self.cfg.gridsize}\n"
+        orca_input += "! MiniPrint\n"
+        orca_input += "! NoTRAH\n"
+        # "! AutoAux" keyword for super-heavy elements as def2/J ends at Rn
+        if any(atom >= 86 for atom in molecule.ati):
+            orca_input += "! AutoAux\n"
+        if optimization:
+            orca_input += "! OPT\n"
+            if opt_cycles is not None:
+                orca_input += f"%geom MaxIter {opt_cycles} end\n"
+        orca_input += f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n"
+        if not optimization:
+            orca_input += "\tConvergence Medium\n"
+        orca_input += "end\n"
+        orca_input += f"%pal nprocs {ncores} end\n\n"
+        orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
+        return orca_input
+
+    def _should_use_xtb_driver(self) -> bool:
+        """
+        Determine whether the xTB driver should be used for this optimization.
+        """
+        if not self.xtb_driver_enabled or not self.xtb_cfg:
+            return False
+        if hasattr(self.xtb_cfg, "has_constraints"):
+            return self.xtb_cfg.has_constraints()
+        constraints = getattr(self.xtb_cfg, "distance_constraints", None)
+        return bool(constraints)
+
+    def optimize_xtb_driver(
+        self,
+        temp_path: Path,
+        molecule: Molecule,
+        xyz_filename: str,
+        ncores: int,
+        max_cycles: int | None = None,
+        verbosity: int = 1,
+    ) -> Molecule:
+        """
+        Optimize a molecule using ORCA through the xTB external driver.
+        """
+
+        xtb_input = temp_path / "xtb.inp"
+        inputname = "orca_opt.inp"
+        self._write_xtb_input(molecule, xtb_input, inputname)
+        orca_input = self._gen_input_xtb_driver(
+            molecule,
+            xyz_filename,
+            temp_path,
+            ncores,
+            True,
+            max_cycles,
+        )
+        if verbosity > 1:
+            print("ORCA input file:\n##################")
+            print(orca_input)
+            print("##################")
+        with open(temp_path / inputname, "w", encoding="utf8") as f:
+            f.write(orca_input)
+        # run orca with xTB as a driver
+        orca_log_out, orca_log_err, return_code = self._run_xtb_driver(
+            temp_path=temp_path,
+            geometry_filename=xyz_filename,
+            xcontrol_name=xtb_input.name,
+            ncores=ncores,
+        )
+        if verbosity > 2:
+            print(orca_log_out)
+        if return_code != 0:
+            raise RuntimeError(
+                f"ORCA failed with return code {return_code}:\n{orca_log_err}"
+            )
+
+        # read the optimized molecule from the output file
+        xyzfile = temp_path / "xtbopt.xyz"
+        if not xyzfile.exists():
+            raise RuntimeError(
+                "xTB-driven ORCA optimization did not produce 'xtbopt.xyz'."
+            )
+        optimized_molecule = molecule.copy()
+        optimized_molecule.read_xyz_from_file(xyzfile)
+        return optimized_molecule
+
     def _run_xtb_driver(
         self,
         temp_path: Path,
@@ -238,9 +325,14 @@ class ORCA(QMMethod):
         """
         Determine the path to the xTB executable for external ORCA optimizations.
         """
-        for attr_name in ("xtb_driver_path", "xtb_path"):
-            candidate = getattr(self.cfg, attr_name, None)
-            if candidate:
+        candidates: list[ORCAConfig | XTBConfig | None] = [self.xtb_cfg, self.cfg]
+        for source in candidates:
+            if source is None:
+                continue
+            for attr_name in ("xtb_path",):
+                candidate = getattr(source, attr_name, None)
+                if not candidate:
+                    continue
                 try:
                     return get_xtb_path(candidate)
                 except ImportError as exc:
@@ -253,12 +345,6 @@ class ORCA(QMMethod):
             raise RuntimeError(
                 "xTB executable not found. Required for constrained ORCA optimizations."
             ) from exc
-
-    def _should_use_xtb_driver(self) -> bool:
-        """
-        Determine if the xTB external driver should be used (constraints configured).
-        """
-        return bool(self.xtb_cfg and self.xtb_cfg.distance_constraints)
 
     def _write_xtb_input(
         self, molecule: Molecule, xtb_input: Path, input_file: str
@@ -285,7 +371,7 @@ class ORCA(QMMethod):
             handle.write(f"  orca bin= {self.path}\n")
             handle.write("$end\n")
 
-    def _gen_input(
+    def _gen_input_xtb_driver(
         self,
         molecule: Molecule,
         xyzfile: str,
@@ -293,8 +379,6 @@ class ORCA(QMMethod):
         ncores: int,
         optimization: bool = False,
         opt_cycles: int | None = None,
-        *,
-        use_xtb_driver: bool = False,
     ) -> str:
         """
         Generate a default input file for ORCA.
@@ -303,15 +387,10 @@ class ORCA(QMMethod):
         orca_input += f"! DEFGRID{self.cfg.gridsize}\n"
         orca_input += "! MiniPrint\n"
         orca_input += "! NoTRAH\n"
-        if use_xtb_driver:
-            orca_input += "! Engrad\n"
+        orca_input += "! Engrad\n"
         # "! AutoAux" keyword for super-heavy elements as def2/J ends at Rn
         if any(atom >= 86 for atom in molecule.ati):
             orca_input += "! AutoAux\n"
-        if optimization:
-            orca_input += "! OPT\n"
-            if opt_cycles is not None:
-                orca_input += f"%geom MaxIter {opt_cycles} end\n"
         orca_input += f"%scf\n\tMaxIter {self.cfg.scf_cycles}\n"
         if not optimization:
             orca_input += "\tConvergence Medium\n"
