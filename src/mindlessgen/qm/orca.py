@@ -32,9 +32,6 @@ class ORCA(QMMethod):
             raise TypeError("orca_path should be a string or a Path object.")
         self.cfg = orcacfg
         self.xtb_cfg = xtb_config
-        self.xtb_driver_enabled = bool(xtb_config) and bool(
-            getattr(self.cfg, "use_xtb_driver", False)
-        )
         # must be explicitly initialized in current parallelization implementation
         # as accessing parent class variables might not be possible
         self.tmp_dir = self.__class__.get_temporary_directory()
@@ -61,7 +58,7 @@ class ORCA(QMMethod):
             xyz_filename = "molecule.xyz"
             molecule.write_xyz_to_file(temp_path / xyz_filename)
 
-            if self._should_use_xtb_driver():
+            if self.cfg.use_xtb_driver:
                 optimized_molecule = self.optimize_xtb_driver(
                     temp_path=temp_path,
                     molecule=molecule,
@@ -70,39 +67,39 @@ class ORCA(QMMethod):
                     max_cycles=max_cycles,
                     verbosity=verbosity,
                 )
-            else:
-                inputname = "orca_opt.inp"
-                orca_input = self._gen_input(
-                    molecule,
-                    xyz_filename,
-                    temp_path,
-                    ncores,
-                    True,
-                    max_cycles,
+                return optimized_molecule
+            inputname = "orca_opt.inp"
+            orca_input = self._gen_input(
+                molecule,
+                xyz_filename,
+                temp_path,
+                ncores,
+                True,
+                max_cycles,
+            )
+            if verbosity > 1:
+                print("ORCA input file:\n##################")
+                print(orca_input)
+                print("##################")
+            with open(temp_path / inputname, "w", encoding="utf8") as f:
+                f.write(orca_input)
+            # run orca
+            arguments = [
+                inputname,
+            ]
+            orca_log_out, orca_log_err, return_code = self._run(
+                temp_path=temp_path, arguments=arguments
+            )
+            if verbosity > 2:
+                print(orca_log_out)
+            if return_code != 0:
+                raise RuntimeError(
+                    f"ORCA failed with return code {return_code}:\n{orca_log_err}"
                 )
-                if verbosity > 1:
-                    print("ORCA input file:\n##################")
-                    print(orca_input)
-                    print("##################")
-                with open(temp_path / inputname, "w", encoding="utf8") as f:
-                    f.write(orca_input)
-                # run orca
-                arguments = [
-                    inputname,
-                ]
-                orca_log_out, orca_log_err, return_code = self._run(
-                    temp_path=temp_path, arguments=arguments
-                )
-                if verbosity > 2:
-                    print(orca_log_out)
-                if return_code != 0:
-                    raise RuntimeError(
-                        f"ORCA failed with return code {return_code}:\n{orca_log_err}"
-                    )
-                # read the optimized molecule from the output file
-                xyzfile = Path(temp_path / inputname).resolve().with_suffix(".xyz")
-                optimized_molecule = molecule.copy()
-                optimized_molecule.read_xyz_from_file(xyzfile)
+            # read the optimized molecule from the output file
+            xyzfile = Path(temp_path / inputname).resolve().with_suffix(".xyz")
+            optimized_molecule = molecule.copy()
+            optimized_molecule.read_xyz_from_file(xyzfile)
             return optimized_molecule
 
     def singlepoint(self, molecule: Molecule, ncores: int, verbosity: int = 1) -> str:
@@ -221,17 +218,6 @@ class ORCA(QMMethod):
         orca_input += f"* xyzfile {molecule.charge} {molecule.uhf + 1} {xyzfile}\n"
         return orca_input
 
-    def _should_use_xtb_driver(self) -> bool:
-        """
-        Determine whether the xTB driver should be used for this optimization.
-        """
-        if not self.xtb_driver_enabled or not self.xtb_cfg:
-            return False
-        if hasattr(self.xtb_cfg, "has_constraints"):
-            return self.xtb_cfg.has_constraints()
-        constraints = getattr(self.xtb_cfg, "distance_constraints", None)
-        return bool(constraints)
-
     def optimize_xtb_driver(
         self,
         temp_path: Path,
@@ -259,6 +245,9 @@ class ORCA(QMMethod):
         if verbosity > 1:
             print("ORCA input file:\n##################")
             print(orca_input)
+            print("##################")
+            print("XTB input file:\n##################")
+            print(xtb_input)
             print("##################")
         with open(temp_path / inputname, "w", encoding="utf8") as f:
             f.write(orca_input)
@@ -296,9 +285,13 @@ class ORCA(QMMethod):
         """
         Run the optimization through the xTB external driver when constraints are requested.
         """
-        xtb_executable = self._get_xtb_executable()
+        xtb_executable = get_xtb_path()
+        if self.xtb_cfg is None:
+            raise RuntimeError(
+                "xTB driver requested but no xTB configuration provided."
+            )
+        xtb_runner = XTB(path=xtb_executable, xtb_config=self.xtb_cfg)
         arguments = [
-            str(xtb_executable),
             geometry_filename,
             "--opt",
         ]
@@ -306,45 +299,10 @@ class ORCA(QMMethod):
         if opt_level not in (None, ""):
             arguments.append(str(opt_level))
         arguments.extend(["--orca", "-I", xcontrol_name])
-        try:
-            xtb_out = sp.run(
-                arguments,
-                cwd=temp_path,
-                capture_output=True,
-                check=True,
-            )
-            xtb_log_out = xtb_out.stdout.decode("utf8", errors="replace")
-            xtb_log_err = xtb_out.stderr.decode("utf8", errors="replace")
-            return xtb_log_out, xtb_log_err, 0
-        except sp.CalledProcessError as e:
-            xtb_log_out = e.stdout.decode("utf8", errors="replace")
-            xtb_log_err = e.stderr.decode("utf8", errors="replace")
-            return xtb_log_out, xtb_log_err, e.returncode
-
-    def _get_xtb_executable(self) -> Path:
-        """
-        Determine the path to the xTB executable for external ORCA optimizations.
-        """
-        candidates: list[ORCAConfig | XTBConfig | None] = [self.xtb_cfg, self.cfg]
-        for source in candidates:
-            if source is None:
-                continue
-            for attr_name in ("xtb_path",):
-                candidate = getattr(source, attr_name, None)
-                if not candidate:
-                    continue
-                try:
-                    return get_xtb_path(candidate)
-                except ImportError as exc:
-                    raise RuntimeError(
-                        f"xTB executable defined via '{attr_name}' could not be found."
-                    ) from exc
-        try:
-            return get_xtb_path(None)
-        except ImportError as exc:
-            raise RuntimeError(
-                "xTB executable not found. Required for constrained ORCA optimizations."
-            ) from exc
+        xtb_log_out, xtb_log_err, returncode = xtb_runner._run(
+            temp_path=temp_path, arguments=arguments
+        )
+        return xtb_log_out, xtb_log_err, returncode
 
     def _write_xtb_input(
         self, molecule: Molecule, xtb_input: Path, input_file: str
@@ -356,7 +314,7 @@ class ORCA(QMMethod):
             raise RuntimeError(
                 "xTB configuration missing but constraints were requested."
             )
-        xtb_path = self._get_xtb_executable()
+        xtb_path = get_xtb_path()
         xtb_writer = XTB(xtb_path, self.xtb_cfg)
         generated = xtb_writer._prepare_distance_constraint_file(
             molecule, xtb_input.parent

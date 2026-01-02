@@ -44,8 +44,11 @@ def make_orca():
 
 
 def test_run_xtb_driver_success(monkeypatch, tmp_path, make_orca):
-    orca = make_orca(cfg=DummyORCAConfig(optlevel="tight"))
-    monkeypatch.setattr(orca, "_get_xtb_executable", lambda: Path("/fake/xtb"))
+    orca = make_orca(
+        cfg=DummyORCAConfig(optlevel="tight"),
+        xtb_cfg_param=DummyXTBConfig(),
+    )
+    monkeypatch.setattr("mindlessgen.qm.orca.get_xtb_path", lambda: Path("/fake/xtb"))
     captured = {}
 
     def fake_run(args, cwd, capture_output, check):
@@ -72,8 +75,8 @@ def test_run_xtb_driver_success(monkeypatch, tmp_path, make_orca):
 
 def test_run_xtb_driver_failure_returns_error(monkeypatch, tmp_path, make_orca):
     """Ensure the ORCA wrapper surfaces errors from the xTB driver."""
-    orca = make_orca()
-    monkeypatch.setattr(orca, "_get_xtb_executable", lambda: Path("/fake/xtb"))
+    orca = make_orca(xtb_cfg_param=DummyXTBConfig())
+    monkeypatch.setattr("mindlessgen.qm.orca.get_xtb_path", lambda: Path("/fake/xtb"))
 
     def fake_run(*_, **kwargs):
         del kwargs
@@ -86,47 +89,11 @@ def test_run_xtb_driver_failure_returns_error(monkeypatch, tmp_path, make_orca):
     assert (out, err, code) == ("bad", "worse", 1)
 
 
-def test_get_xtb_executable_raises_when_missing(monkeypatch, make_orca):
+def test_run_xtb_driver_requires_xtb_cfg(monkeypatch, tmp_path, make_orca):
     orca = make_orca()
-
-    def fake_get_xtb_path(candidate):
-        raise ImportError("not found")
-
-    monkeypatch.setattr("mindlessgen.qm.orca.get_xtb_path", fake_get_xtb_path)
-    with pytest.raises(RuntimeError, match="xTB executable not found"):
-        orca._get_xtb_executable()
-
-
-def test_get_xtb_executable_prefers_xtb_cfg_path(monkeypatch, make_orca):
-    xtb_cfg_constraints = DummyXTBConfig()
-    xtb_cfg_constraints.xtb_path = "xtb_from_xtb_cfg"
-    orca = make_orca(xtb_cfg_param=xtb_cfg_constraints)
-    called = {}
-
-    def fake_get_xtb_path(candidate):
-        called.setdefault("candidates", []).append(candidate)
-        return Path("/resolved/xtb_cfg")
-
-    monkeypatch.setattr("mindlessgen.qm.orca.get_xtb_path", fake_get_xtb_path)
-    assert orca._get_xtb_executable() == Path("/resolved/xtb_cfg")
-    assert called["candidates"][0] == "xtb_from_xtb_cfg"
-
-
-def test_should_use_xtb_driver_checks_distance_constraints(make_orca):
-    cfg = DummyORCAConfig(use_xtb_driver=True)
-    xtb_constraints = DummyXTBConfig(distance_constraints=[object()])
-    orca = make_orca(cfg=cfg, xtb_cfg_param=xtb_constraints)
-    assert orca._should_use_xtb_driver() is True
-
-    no_constraints = DummyXTBConfig(distance_constraints=[])
-    orca_no_constraints = make_orca(cfg=cfg, xtb_cfg_param=no_constraints)
-    assert orca_no_constraints._should_use_xtb_driver() is False
-
-    cfg_disabled = DummyORCAConfig(use_xtb_driver=False)
-    orca_disabled = make_orca(cfg=cfg_disabled, xtb_cfg_param=xtb_constraints)
-    assert orca_disabled._should_use_xtb_driver() is False
-    orca_missing_xtb = make_orca(cfg=cfg, xtb_cfg_param=None)
-    assert orca_missing_xtb._should_use_xtb_driver() is False
+    monkeypatch.setattr("mindlessgen.qm.orca.get_xtb_path", lambda: Path("/fake/xtb"))
+    with pytest.raises(RuntimeError, match="xTB driver requested"):
+        orca._run_xtb_driver(tmp_path, "geom.xyz", "ctrl.inp", ncores=1)
 
 
 def test_write_xtb_input_creates_expected_file(monkeypatch, tmp_path, make_orca):
@@ -134,7 +101,7 @@ def test_write_xtb_input_creates_expected_file(monkeypatch, tmp_path, make_orca)
         distance_constraints=["dummy"], distance_constraint_force_constant=0.7
     )
     orca = make_orca(xtb_cfg_param=xtb_cfg_instance)
-    monkeypatch.setattr(orca, "_get_xtb_executable", lambda: Path("/fake/xtb"))
+    monkeypatch.setattr("mindlessgen.qm.orca.get_xtb_path", lambda: Path("/fake/xtb"))
 
     def fake_prepare(self, molecule, temp_dir):
         assert temp_dir == tmp_path
