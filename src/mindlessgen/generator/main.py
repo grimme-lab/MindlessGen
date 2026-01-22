@@ -508,7 +508,7 @@ def setup_engines(
                 raise ImportError("orca not found.")
         except ImportError as e:
             raise ImportError("orca not found.") from e
-        return ORCA(path, cfg.orca)
+        return ORCA(path, cfg.orca, cfg.xtb)
     elif engine_type == "turbomole":
         try:
             jobex_path = jobex_path_func(cfg.turbomole.jobex_path)

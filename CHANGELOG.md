@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Distance constraints for xTB (normalized parsing, config validation, runtime enforcement, and optional integration test).
+- Distance constrains for ORCA (uses xTB as as driver to set the same distance constrains for the postprocess).
 
 ## [0.6.0] - 2025-04-01
 
